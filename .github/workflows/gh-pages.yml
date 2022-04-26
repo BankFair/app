@@ -1,0 +1,31 @@
+name: Deploy to GitHub Pages
+
+on:
+    push:
+        branches: [main]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+            - name: Download Yarn
+              run: '${GITHUB_WORKSPACE}/download-yarn.sh'
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: '16'
+                  cache: 'yarn'
+            - name: Install packages
+              run: yarn install
+            - name: Build project
+              run: yarn build
+            - name: Export static files
+              run: yarn next export
+            - name: Add .nojekyll file
+              run: touch ./out/.nojekyll
+            - name: Deploy
+              uses: JamesIves/github-pages-deploy-action@v4.3.3
+              with:
+                  branch: gh-pages
+                  folder: out
