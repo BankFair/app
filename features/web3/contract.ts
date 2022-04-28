@@ -21,6 +21,15 @@ interface CoreContract extends CustomBaseContract {
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakeable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber>
+    maxDuration: ContractFunction<BigNumber>
+    minAmount: ContractFunction<BigNumber>
+    minDuration: ContractFunction<BigNumber>
+    requestLoan: ContractFunction<void, [BigNumber, BigNumber]>
+    cancelLoan: ContractFunction<void, [BigNumber]>
+    repay: ContractFunction<void, [BigNumber, BigNumber]>
+    approveLoan: ContractFunction<void, [BigNumber]>
+    denyLoan: ContractFunction<void, [BigNumber]>
+    defaultLoan: ContractFunction<void, [BigNumber]>
 }
 
 export const contract = new Contract(

@@ -129,7 +129,6 @@ function Deposit() {
             <input
                 type="number"
                 inputMode="decimal"
-                name="value"
                 onChange={(event) => void setValue(event.target.value)}
                 value={value}
             />

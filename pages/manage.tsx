@@ -130,7 +130,6 @@ function Stake() {
             <input
                 type="number"
                 inputMode="decimal"
-                name="value"
                 onChange={(event) => void setValue(event.target.value)}
                 value={value}
             />
@@ -189,7 +188,6 @@ function Unstake() {
             <input
                 type="number"
                 inputMode="decimal"
-                name="value"
                 onChange={(event) => void setValue(event.target.value)}
                 value={value}
             />
