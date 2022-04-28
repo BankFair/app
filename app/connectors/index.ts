@@ -32,6 +32,20 @@ export function useActiveConnector() {
     }
 }
 
+export function useProvider() {
+    const isWalletConnectActive = walletConnectHooks.useIsActive()
+    const isEip1193Active = eip1193Hooks.useIsActive()
+
+    const walletConnectProvider = walletConnectHooks.useProvider()
+    const eip1193Provider = eip1193Hooks.useProvider()
+
+    if (isWalletConnectActive) {
+        return walletConnectProvider
+    } else if (isEip1193Active) {
+        return eip1193Provider
+    }
+}
+
 export function useAccount() {
     const isWalletConnectActive = walletConnectHooks.useIsActive()
     const isEip1193Active = eip1193Hooks.useIsActive()

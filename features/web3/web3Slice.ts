@@ -6,16 +6,21 @@ import {
     jsonParse,
     LOCAL_STORAGE_LAST_CONNECTOR_KEY,
 } from '../../app'
+import { getERC20Contract } from './utils'
 
 export interface Web3State {
     lastConnectorName: string | null
-    manager: string | undefined
+    managerAddress: string | undefined
+    tokenAddress: string | undefined
+    tokenDecimals: number | undefined
 }
 
 const initialState: Web3State = {
     lastConnectorName:
         typeof window === 'object' ? getLastConnectorName() : null,
-    manager: undefined,
+    managerAddress: undefined, // TODO: Cache on build time
+    tokenAddress: undefined, // TODO: Cache on build time
+    tokenDecimals: undefined, // TODO: Cache on build time
 }
 
 type Action<T> = {
@@ -43,21 +48,40 @@ export const navigationSlice = createSlice({
             state.lastConnectorName = null
         },
 
-        setManager(state, action: Action<string>) {
-            state.manager = action.payload
+        setManagerAddress(state, action: Action<string>) {
+            state.managerAddress = action.payload
+        },
+        setTokenAddress(state, action: Action<string>) {
+            state.tokenAddress = action.payload
+        },
+        setTokenDecimals(state, action: Action<number>) {
+            state.tokenDecimals = action.payload
         },
     },
 })
 
-export const { setLastConnectorName, clearLastConnectorName, setManager } =
-    navigationSlice.actions
+export const {
+    setLastConnectorName,
+    clearLastConnectorName,
+    setManagerAddress,
+    setTokenAddress,
+    setTokenDecimals,
+} = navigationSlice.actions
 
 export const selectLastConnector = (state: AppState): Connector | undefined =>
     connectorsObject[
         state.web3.lastConnectorName as keyof typeof connectorsObject
     ]
 
-export const selectManager = (state: AppState) => state.web3.manager
+export const selectManagerAddress = (state: AppState) =>
+    state.web3.managerAddress
+export const selectTokenAddress = (state: AppState) => state.web3.tokenAddress
+export const selectTokenContract = (state: AppState) => {
+    const tokenAddress = state.web3.tokenAddress
+    if (tokenAddress) return getERC20Contract(tokenAddress)
+    return null
+}
+export const selectTokenDecimals = (state: AppState) => state.web3.tokenDecimals
 
 export default navigationSlice.reducer
 

@@ -40,6 +40,10 @@ yarn dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Environment
+
+The contract address is hard-coded in the `.env` file. Changing that value requires the development server to be restarted.
+
 ## Libraries used by this project
 
 -   Next.js

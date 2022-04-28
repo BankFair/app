@@ -1,16 +1,24 @@
-import { BaseContract, ContractFunction, ethers } from 'ethers'
+import { BaseContract, BigNumber, Contract } from 'ethers'
 import { useEffect, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { CONTRACT_ADDRESS } from '../../app'
 import abi from './abi.json'
 import provider from './provider'
-import { setManager } from './web3Slice'
+import {
+    setManagerAddress,
+    setTokenAddress,
+    setTokenDecimals,
+} from './web3Slice'
+import { ContractFunction, CustomBaseContract, getERC20Contract } from './utils'
 
-interface CoreContract extends BaseContract {
+interface CoreContract extends CustomBaseContract {
     manager: ContractFunction<string>
+    token: ContractFunction<string>
+    stake: ContractFunction<void, [BigNumber]>
+    unstake: ContractFunction<void, [BigNumber]>
 }
 
-const contract = new ethers.Contract(
+export const contract = new Contract(
     CONTRACT_ADDRESS,
     abi,
     provider,
@@ -26,7 +34,15 @@ export function useFetchContractPropertiesOnce() {
         ref.current = true
 
         contract.manager().then((manager) => {
-            dispatch(setManager(manager))
+            dispatch(setManagerAddress(manager))
+        })
+        contract.token().then((token) => {
+            dispatch(setTokenAddress(token))
+
+            const tokenContract = getERC20Contract(token)
+            tokenContract.decimals().then((decimals) => {
+                dispatch(setTokenDecimals(decimals))
+            })
         })
     }, [dispatch])
 }

@@ -17,7 +17,7 @@ import { RiAccountCircleFill } from 'react-icons/ri'
 import { MdOutlineAdminPanelSettings } from 'react-icons/md'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
-import { selectManager } from '../web3/web3Slice'
+import { selectManagerAddress } from '../web3/web3Slice'
 
 export default function Sidebar({
     isVisible,
@@ -28,7 +28,7 @@ export default function Sidebar({
 }) {
     const { pathname } = useRouter()
     const account = useAccount()
-    const managerAddress = useSelector(selectManager)
+    const managerAddress = useSelector(selectManagerAddress)
 
     return (
         <div className="sidebar">
