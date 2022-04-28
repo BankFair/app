@@ -17,9 +17,11 @@ export function Button({
     ghost?: boolean
     blue?: boolean
 }) {
+    const { disabled } = classModifiers
+
     const anchor = (
         <a
-            onClick={onClick}
+            onClick={disabled ? undefined : onClick}
             className={className(classModifiers as Record<string, boolean>)}
             style={style}
         >
