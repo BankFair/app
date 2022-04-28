@@ -16,6 +16,11 @@ interface CoreContract extends CustomBaseContract {
     token: ContractFunction<string>
     stake: ContractFunction<void, [BigNumber]>
     unstake: ContractFunction<void, [BigNumber]>
+    deposit: ContractFunction<void, [BigNumber]>
+    withdraw: ContractFunction<void, [BigNumber]>
+    amountDepositable: ContractFunction<BigNumber>
+    amountUnstakeable: ContractFunction<BigNumber>
+    amountWithdrawable: ContractFunction<BigNumber>
 }
 
 export const contract = new Contract(

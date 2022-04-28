@@ -1,9 +1,15 @@
-import { BigNumber } from '@ethersproject/bignumber'
-import { parseUnits } from '@ethersproject/units'
+import { parseUnits, formatUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
+import Head from 'next/head'
 import { FormEventHandler, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { CONTRACT_ADDRESS, timeout, useAccount, useProvider } from '../app'
+import {
+    APP_NAME,
+    CONTRACT_ADDRESS,
+    timeout,
+    useAccount,
+    useProvider,
+} from '../app'
 import { Page } from '../components'
 import { contract } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
@@ -19,6 +25,15 @@ const Manage: NextPage = () => {
 
     return (
         <Page>
+            <Head>
+                <title>Earn - {APP_NAME}</title>
+                <meta
+                    name="description"
+                    content="" // TODO: Fix
+                />
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+
             {managerAddress ? (
                 managerAddress === account ? (
                     <>
@@ -148,14 +163,24 @@ function Unstake() {
         const amount = parseUnits(value, tokenDecimals)
         const signer = provider.getSigner()
 
-        contract
-            .connect(signer)
-            .unstake(amount)
-            .then(() => {
-                // TODO: In page notification
-
+        contract.amountUnstakeable().then(async (unstakableAmount) => {
+            if (amount.gt(unstakableAmount)) {
+                alert(
+                    `Maximum unstakable amount is ${formatUnits(
+                        unstakableAmount,
+                        tokenDecimals,
+                    )}`,
+                )
                 setLoading(false)
-            })
+                return
+            }
+
+            await contract.connect(signer).unstake(amount)
+
+            // TODO: In page notification
+
+            setLoading(false)
+        })
     }
 
     return (
