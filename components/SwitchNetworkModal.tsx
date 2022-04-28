@@ -97,6 +97,7 @@ function switchNetwork(provider: any) {
                 if (
                     error.message === 'May not specify default MetaMask chain.'
                 ) {
+                    // https://github.com/MetaMask/controllers/issues/740
                     alert(
                         'You will need to add the Optimism network manually due to a known bug in MetaMask Mobile',
                     )

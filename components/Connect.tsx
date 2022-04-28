@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { FaWallet } from 'react-icons/fa'
 import { Button } from '.'
 import { walletConnect } from '../app/connectors/walletconnect'
@@ -7,14 +6,13 @@ import { useWeb3React } from '@web3-react/core'
 import {
     APP_NAME,
     LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
-    LOCAL_STORAGE_LAST_CONNECTOR_KEY,
     LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
     RPC_NETWORK_ID,
 } from '../app'
 import { useDispatch } from 'react-redux'
 import { setLastConnectorName } from '../features/web3/web3Slice'
 
-const prefix = process.env.NODE_ENV === 'production' ? '/interface' : ''
+const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
 
 export function Connect() {
     const { isActivating } = useWeb3React()

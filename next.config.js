@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 
-const isProd = process.env.NODE_ENV === 'production'
+const buildingForGitHubPages = Boolean(process.env.BUILDING_FOR_GITHUB_PAGES)
 
-const nextConfig = {
-    basePath: isProd ? '/interface' : '',
-    assetPrefix: isProd ? '/interface/' : '',
+module.exports = {
+    env: { BUILDING_FOR_GITHUB_PAGES: process.env.BUILDING_FOR_GITHUB_PAGES },
+    basePath: buildingForGitHubPages ? '/app' : '',
+    assetPrefix: buildingForGitHubPages ? '/app/' : '',
     reactStrictMode: true,
 }
-
-module.exports = nextConfig
