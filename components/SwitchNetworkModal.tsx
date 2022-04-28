@@ -1,26 +1,17 @@
 import { Modal } from './Modal'
 import { eip1193 } from '../app/connectors/eip1193'
-import {
-    CHAIN,
-    connectorsObject,
-    LOCAL_STORAGE_LAST_CONNECTOR_KEY,
-    RPC_NETWORK_ID,
-    useWeb3,
-} from '../app'
+import { CHAIN, RPC_NETWORK_ID, useWeb3 } from '../app'
 import { Button } from './Button'
 import { useDispatch, useSelector } from 'react-redux'
 import {
     clearLastConnectorName,
-    selectLastConnectorName,
+    selectLastConnector,
 } from '../features/web3/web3Slice'
 import { walletConnect } from '../app/connectors/walletconnect'
 
 export function SwitchNetworkModal() {
-    const lastConnectorName = useSelector(
-        selectLastConnectorName,
-    ) as keyof typeof connectorsObject
-    const connector = connectorsObject[lastConnectorName]
-    const web3 = useWeb3(connector)
+    const lastConnector = useSelector(selectLastConnector)
+    const web3 = useWeb3(lastConnector)
     const dispatch = useDispatch()
 
     if (!web3 || !web3.chainId || web3.chainId === RPC_NETWORK_ID) return null
@@ -48,10 +39,10 @@ export function SwitchNetworkModal() {
                 <Button
                     onClick={() => {
                         const provider =
-                            connector === eip1193
+                            lastConnector === eip1193
                                 ? (window as any).ethereum
-                                : connector === walletConnect
-                                ? connector.provider
+                                : lastConnector === walletConnect
+                                ? lastConnector.provider
                                 : null
                         if (!provider) return
                         switchNetwork(provider)

@@ -1,3 +1,5 @@
+import { utils } from 'ethers'
+
 export const networks = {
     optimism: 10,
     kovan: 42,
@@ -48,3 +50,7 @@ export const COLOR_BLUE = '#3790ff'
 export const LOCAL_STORAGE_LAST_CONNECTOR_KEY = 'bankfair_lastConnector'
 export const LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT = 'WalletConnect'
 export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'
+
+export const CONTRACT_ADDRESS = utils.getAddress(
+    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
+)

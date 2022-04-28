@@ -1,5 +1,9 @@
 import Link from 'next/link'
-import { COLOR_GREEN, SIDEBAR_ALWAYS_VISIBLE_WIDTH } from '../../app'
+import {
+    COLOR_GREEN,
+    SIDEBAR_ALWAYS_VISIBLE_WIDTH,
+    useAccount,
+} from '../../app'
 import {
     NAV_HEIGHT,
     SIDEBAR_CLOSE_MARGIN,
@@ -10,7 +14,10 @@ import { GrClose } from 'react-icons/gr'
 import { TiChartAreaOutline } from 'react-icons/ti'
 import { AiFillBank } from 'react-icons/ai'
 import { RiAccountCircleFill } from 'react-icons/ri'
+import { MdOutlineAdminPanelSettings } from 'react-icons/md'
 import { useRouter } from 'next/router'
+import { useSelector } from 'react-redux'
+import { selectManager } from '../web3/web3Slice'
 
 export default function Sidebar({
     isVisible,
@@ -20,6 +27,8 @@ export default function Sidebar({
     hideSidebar: () => void
 }) {
     const { pathname } = useRouter()
+    const account = useAccount()
+    const managerAddress = useSelector(selectManager)
 
     return (
         <div className="sidebar">
@@ -118,6 +127,22 @@ export default function Sidebar({
                         </a>
                     </Link>
                 </li>
+                {managerAddress && account && account === managerAddress && (
+                    <li>
+                        <Link href="/manage">
+                            <a
+                                className={getSidebarItemClass(
+                                    '/manage',
+                                    pathname,
+                                )}
+                                onClick={hideSidebar}
+                            >
+                                <MdOutlineAdminPanelSettings size={24} />
+                                Manage
+                            </a>
+                        </Link>
+                    </li>
+                )}
                 <li>
                     <Link href="/account">
                         <a

@@ -8,9 +8,7 @@ import { eip1193, hooks as eip1193Hooks } from './eip1193'
 import {
     LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
     LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
-    LOCAL_STORAGE_LAST_CONNECTOR_KEY,
 } from '../constants'
-import { jsonParse } from '../utils'
 
 export const connectors: [EIP1193 | WalletConnect | Network, Web3ReactHooks][] =
     [
@@ -93,14 +91,4 @@ export function useWeb3(forConnector?: Connector): {
     }
 
     return null
-}
-
-export function getLastConnectorName(): string | null {
-    return jsonParse(localStorage.getItem(LOCAL_STORAGE_LAST_CONNECTOR_KEY))
-}
-
-export function getLastConnector(): Connector | undefined {
-    return connectorsObject[
-        getLastConnectorName() as keyof typeof connectorsObject
-    ]
 }
