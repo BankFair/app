@@ -1,17 +1,20 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useState } from 'react'
+import { FormEventHandler, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
+import TimeAgo from 'timeago-react'
 import {
     APP_NAME,
     CONTRACT_ADDRESS,
+    shortenAddress,
     timeout,
+    TOKEN_SYMBOL,
     useAccount,
     useProvider,
 } from '../app'
-import { Page } from '../components'
-import { contract } from '../features/web3/contract'
+import { Button, Page } from '../components'
+import { contract, Loan, LoanStatus } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
     selectManagerAddress,
@@ -39,6 +42,7 @@ const Manage: NextPage = () => {
                     <>
                         <Stake />
                         <Unstake />
+                        <ApproveLoans />
                     </>
                 ) : (
                     <h3>Login with manager wallet</h3>
@@ -58,6 +62,10 @@ const Manage: NextPage = () => {
 
                     > h4 {
                         margin: 0 0 10px;
+                    }
+
+                    > table {
+                        margin: 0 auto;
                     }
                 }
 
@@ -193,5 +201,98 @@ function Unstake() {
             />
             <button disabled={loading}>Unstake</button>
         </form>
+    )
+}
+
+function ApproveLoans() {
+    const [loading, setLoading] = useState(true)
+    const [requestedLoans, setRequestedLoans] = useState<Loan[]>(() => [])
+    const tokenContract = useSelector(selectTokenContract)
+    const tokenDecimals = useSelector(selectTokenDecimals)
+    const account = useAccount()
+    const provider = useProvider()
+
+    const ref = useRef(false)
+    useEffect(() => {
+        if (ref.current) return
+        ref.current = true
+
+        contract
+            .queryFilter(contract.filters.LoanRequested())
+            .then(async (results) => {
+                const loans = await Promise.all(
+                    results.map((loan) => contract.loans(loan.args.loanId)),
+                )
+                setRequestedLoans(
+                    loans.filter((loan) => loan.status === LoanStatus.APPLIED),
+                )
+                setLoading(false)
+            })
+    }, [])
+
+    if (
+        !tokenContract ||
+        !account ||
+        !provider ||
+        tokenDecimals === undefined
+    ) {
+        return null
+    }
+
+    return (
+        <div className="section">
+            <h4>Loans pending approval</h4>
+            {loading && <h3>Loading…</h3>}
+            {requestedLoans.map((loan) => (
+                <table key={loan.id.toNumber()}>
+                    <tbody>
+                        <tr>
+                            <td>Borrower</td>
+                            <td>{shortenAddress(loan.borrower)}</td>
+                        </tr>
+                        <tr>
+                            <td>Amount</td>
+                            <td>
+                                {formatUnits(loan.amount, tokenDecimals)}{' '}
+                                {TOKEN_SYMBOL}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Requested</td>
+                            <td>
+                                <TimeAgo
+                                    datetime={
+                                        loan.requestedTime.toNumber() * 1000
+                                    }
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan={2} style={{ paddingTop: 10 }}>
+                                <Button
+                                    onClick={() => {
+                                        const { id } = loan
+                                        contract
+                                            .connect(provider.getSigner())
+                                            .approveLoan(loan.id)
+                                            .then(() => {
+                                                setRequestedLoans(
+                                                    (requestedLoans) =>
+                                                        requestedLoans.filter(
+                                                            (loan) =>
+                                                                !loan.id.eq(id),
+                                                        ),
+                                                )
+                                            })
+                                    }}
+                                >
+                                    Approve
+                                </Button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            ))}
+        </div>
     )
 }

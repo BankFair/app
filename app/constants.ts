@@ -54,3 +54,5 @@ export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'
 export const CONTRACT_ADDRESS = utils.getAddress(
     process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
 )
+
+export const TOKEN_SYMBOL = 'USDC'

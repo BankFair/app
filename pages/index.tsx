@@ -14,6 +14,7 @@ import { Page } from '../components'
 import { contract } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
+    selectManagerAddress,
     selectTokenContract,
     selectTokenDecimals,
 } from '../features/web3/web3Slice'
@@ -61,13 +62,19 @@ export default Home
 function Deposit() {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = useState('100')
+    const managerAddress = useSelector(selectManagerAddress)
     const tokenContract = useSelector(selectTokenContract)
     const tokenDecimals = useSelector(selectTokenDecimals)
     const account = useAccount()
     const provider = useProvider()
 
+    const isManager = managerAddress === account
     const disabled =
-        !tokenContract || !account || !provider || tokenDecimals === undefined
+        !tokenContract ||
+        !account ||
+        !provider ||
+        tokenDecimals === undefined ||
+        isManager
 
     const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = disabled
         ? undefined
@@ -126,6 +133,9 @@ function Deposit() {
     return (
         <form className="section" onSubmit={handleSubmit}>
             <h4>Deposit</h4>
+
+            {isManager && <div>Manager can not deposit</div>}
+
             <input
                 type="number"
                 inputMode="decimal"

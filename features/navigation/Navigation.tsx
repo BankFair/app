@@ -1,5 +1,9 @@
 import { useCallback, useState } from 'react'
-import { SIDEBAR_ALWAYS_VISIBLE_WIDTH, useAccount } from '../../app'
+import {
+    shortenAddress,
+    SIDEBAR_ALWAYS_VISIBLE_WIDTH,
+    useAccount,
+} from '../../app'
 import { Button, FlexGrow } from '../../components'
 import { LOGO_SIZE, NAV_HEIGHT, NAV_PADDING } from './constants'
 import Sidebar from './Sidebar'
@@ -67,7 +71,7 @@ export default function Navigation() {
             <FlexGrow />
             {account ? (
                 <Button href="/account" blue ghost>
-                    {`${account.substring(0, 6)}…${account.substring(38, 42)}`}
+                    {shortenAddress(account)}
                 </Button>
             ) : (
                 pathname !== '/account' && (
