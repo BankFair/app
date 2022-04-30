@@ -65,7 +65,7 @@ const Manage: NextPage = () => {
                     }
 
                     > table {
-                        margin: 0 auto;
+                        margin: 15px auto 0;
                     }
                 }
 
@@ -287,6 +287,26 @@ function ApproveLoans() {
                                     }}
                                 >
                                     Approve
+                                </Button>
+                                <Button
+                                    red
+                                    onClick={() => {
+                                        const { id } = loan
+                                        contract
+                                            .connect(provider.getSigner())
+                                            .denyLoan(loan.id)
+                                            .then(() => {
+                                                setRequestedLoans(
+                                                    (requestedLoans) =>
+                                                        requestedLoans.filter(
+                                                            (loan) =>
+                                                                !loan.id.eq(id),
+                                                        ),
+                                                )
+                                            })
+                                    }}
+                                >
+                                    Reject
                                 </Button>
                             </td>
                         </tr>

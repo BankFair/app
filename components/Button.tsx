@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
-import { COLOR_BLUE, COLOR_GREEN } from '../app'
+import { COLOR_BLUE, COLOR_GREEN, COLOR_RED } from '../app'
 
 export function Button({
     href,
@@ -16,6 +16,7 @@ export function Button({
     disabled?: boolean
     ghost?: boolean
     blue?: boolean
+    red?: boolean
 }) {
     const { disabled } = classModifiers
 
@@ -33,6 +34,11 @@ export function Button({
                     padding: 8px 14px;
                     border-radius: 8px;
                     color: white;
+                }
+
+                a.red {
+                    background-color: ${COLOR_RED};
+                    border-color: ${COLOR_RED};
                 }
 
                 a.blue {
