@@ -1,7 +1,7 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useState } from 'react'
+import { FormEventHandler, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import {
     APP_NAME,
@@ -69,6 +69,22 @@ function Deposit() {
     const provider = useProvider()
 
     const isManager = managerAddress === account
+
+    const [deposited, setDeposited] = useState('0')
+    const ref = useRef<typeof account>(undefined)
+    useEffect(() => {
+        if (!tokenDecimals || isManager) return
+        if (ref.current === account) return
+        ref.current = account
+
+        if (!account) return
+
+        contract.balanceOf(account).then((amount) => {
+            console.log({ amount })
+            setDeposited(formatUnits(amount, tokenDecimals))
+        })
+    }, [account, tokenDecimals, isManager])
+
     const disabled =
         !tokenContract ||
         !account ||
@@ -122,7 +138,16 @@ function Deposit() {
                       await timeout(500)
                   }
 
-                  await contract.connect(signer).deposit(amount)
+                  const tx = await contract.connect(signer).deposit(amount)
+
+                  await tx.wait()
+
+                  setDeposited((deposited) =>
+                      formatUnits(
+                          parseUnits(deposited, tokenDecimals).add(amount),
+                          tokenDecimals,
+                      ),
+                  )
 
                   // TODO: In page notification
 
@@ -134,7 +159,13 @@ function Deposit() {
         <form className="section" onSubmit={handleSubmit}>
             <h4>Deposit</h4>
 
-            {isManager && <div>Manager can not deposit</div>}
+            {managerAddress &&
+                account &&
+                (isManager ? (
+                    <div>Manager can not deposit</div>
+                ) : (
+                    <div>You deposited {deposited}</div>
+                ))}
 
             <input
                 type="number"

@@ -31,6 +31,10 @@ export default function App({ Component, pageProps }: AppProps) {
                     * {
                         box-sizing: border-box;
                     }
+
+                    input {
+                        font-size: 16px;
+                    }
                 `}</style>
                 <SwitchNetworkModal />
                 <Navigation />

@@ -1,4 +1,4 @@
-import { BigNumber, Contract, Event } from 'ethers'
+import { BigNumber, Contract, ContractTransaction, Event } from 'ethers'
 import { useEffect, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { CONTRACT_ADDRESS, useProvider } from '../../app'
@@ -39,10 +39,12 @@ export interface CoreContract
 
     manager: ContractFunction<string>
     token: ContractFunction<string>
-    stake: ContractFunction<void, [amount: BigNumber]>
-    unstake: ContractFunction<void, [amount: BigNumber]>
-    deposit: ContractFunction<void, [amount: BigNumber]>
-    withdraw: ContractFunction<void, [amount: BigNumber]>
+    balanceStaked: ContractFunction<BigNumber>
+    balanceOf: ContractFunction<BigNumber, [wallet: string]>
+    stake: ContractFunction<ContractTransaction, [amount: BigNumber]>
+    unstake: ContractFunction<ContractTransaction, [amount: BigNumber]>
+    deposit: ContractFunction<ContractTransaction, [amount: BigNumber]>
+    withdraw: ContractFunction<ContractTransaction, [amount: BigNumber]>
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakeable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber>
@@ -50,15 +52,18 @@ export interface CoreContract
     minAmount: ContractFunction<BigNumber>
     minDuration: ContractFunction<BigNumber>
     requestLoan: ContractFunction<
-        void,
+        ContractTransaction,
         [amount: BigNumber, loanDuration: BigNumber]
     >
-    cancelLoan: ContractFunction<void, [loanId: BigNumber]>
-    borrow: ContractFunction<void, [loanId: BigNumber]>
-    repay: ContractFunction<void, [loanId: BigNumber, amount: BigNumber]>
-    approveLoan: ContractFunction<void, [loanId: BigNumber]>
-    denyLoan: ContractFunction<void, [loandId: BigNumber]>
-    defaultLoan: ContractFunction<void, [loanId: BigNumber]>
+    cancelLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
+    borrow: ContractFunction<ContractTransaction, [loanId: BigNumber]>
+    repay: ContractFunction<
+        ContractTransaction,
+        [loanId: BigNumber, amount: BigNumber]
+    >
+    approveLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
+    denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumber]>
+    defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
 
     loans: ContractFunction<Loan, [loanId: BigNumber]>
 
