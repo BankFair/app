@@ -19,6 +19,7 @@ import { contract, CoreContract, useSigner } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
     Loan,
+    selectApprovedLoans,
     selectLoansTimestamp,
     selectManagerAddress,
     selectRejectedLoans,
@@ -48,6 +49,7 @@ const Manage: NextPage = () => {
                         <Stake />
                         <Unstake />
                         <ApproveLoans />
+                        <ApprovedLoans />
                         <RejectedLoans />
                     </>
                 ) : (
@@ -233,6 +235,29 @@ function ApproveLoans() {
     return (
         <div className="section">
             <h4>Loans pending approval</h4>
+            {items}
+        </div>
+    )
+}
+
+function ApprovedLoans() {
+    const loans = useSelector(selectApprovedLoans)
+    const loansTimestamp = useSelector(selectLoansTimestamp)
+    const tokenDecimals = useSelector(selectTokenDecimals)
+
+    const loading = !loansTimestamp || tokenDecimals === undefined
+
+    const items = loading ? (
+        <h3>Loading…</h3>
+    ) : (
+        loans.map((loan) => (
+            <LoanView key={loan.id} loan={loan} tokenDecimals={tokenDecimals} />
+        ))
+    )
+
+    return (
+        <div className="section">
+            <h4>Approved loans</h4>
             {items}
         </div>
     )

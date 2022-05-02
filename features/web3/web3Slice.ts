@@ -157,6 +157,9 @@ export const selectLoans = createSelector(
 export const selectRequestedLoans = createSelector(selectLoans, (loans) =>
     loans.filter((loan) => loan.status === LoanStatus.APPLIED),
 )
+export const selectApprovedLoans = createSelector(selectLoans, (loans) =>
+    loans.filter((loan) => loan.status === LoanStatus.APPROVED).reverse(),
+)
 export const selectRejectedLoans = createSelector(selectLoans, (loans) =>
     loans.filter((loan) => loan.status === LoanStatus.DENIED).reverse(),
 )
