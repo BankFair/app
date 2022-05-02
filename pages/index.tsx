@@ -3,13 +3,7 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import {
-    APP_NAME,
-    CONTRACT_ADDRESS,
-    timeout,
-    useAccount,
-    useProvider,
-} from '../app'
+import { APP_NAME, CONTRACT_ADDRESS, useAccount, useProvider } from '../app'
 import { Page } from '../components'
 import { contract } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
@@ -130,12 +124,12 @@ function Deposit() {
                   }
 
                   if (amount.gt(allowance)) {
-                      await tokenContractWithSigner.approve(
+                      const tx = await tokenContractWithSigner.approve(
                           CONTRACT_ADDRESS,
                           infiniteAllowance,
                       )
 
-                      await timeout(500)
+                      await tx.wait()
                   }
 
                   const tx = await contract.connect(signer).deposit(amount)

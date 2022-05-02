@@ -1,4 +1,10 @@
-import { BaseContract, BigNumber, Contract, EventFilter } from 'ethers'
+import {
+    BaseContract,
+    BigNumber,
+    Contract,
+    ContractTransaction,
+    EventFilter,
+} from 'ethers'
 import erc20Abi from './erc20-abi.json'
 import provider from './provider'
 
@@ -38,7 +44,7 @@ export interface CustomBaseContract extends BaseContract {
 interface ERC20Contract extends CustomBaseContract {
     allowance: ContractFunction<BigNumber, [string, string]>
     decimals: ContractFunction<number>
-    approve: ContractFunction<boolean, [string, BigNumber]>
+    approve: ContractFunction<ContractTransaction, [string, BigNumber]>
     balanceOf: ContractFunction<BigNumber, [string]>
 }
 

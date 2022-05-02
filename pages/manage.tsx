@@ -8,7 +8,6 @@ import TimeAgo from 'timeago-react'
 import {
     APP_NAME,
     CONTRACT_ADDRESS,
-    timeout,
     TOKEN_SYMBOL,
     useAccount,
     useProvider,
@@ -124,12 +123,12 @@ function Stake() {
                 }
 
                 if (amount.gt(allowance)) {
-                    await tokenContractWithSigner.approve(
+                    const tx = await tokenContractWithSigner.approve(
                         CONTRACT_ADDRESS,
                         infiniteAllowance,
                     )
 
-                    await timeout(500)
+                    await tx.wait()
                 }
 
                 await contract.connect(signer).stake(amount)
