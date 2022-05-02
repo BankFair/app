@@ -1,4 +1,4 @@
-import { ComponentProps, useState } from 'react'
+import { ComponentProps, ReactNode, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { AnyAction } from 'redux'
 import { Button } from './Button'
@@ -11,6 +11,7 @@ export function ActionButton<T>({
 }: Omit<ComponentProps<Button>, 'onClick' | 'disabled'> & {
     action: () => Promise<T>
     onSuccess?: (response: T) => AnyAction | Promise<AnyAction>
+    children: ReactNode
 }) {
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
@@ -18,7 +19,6 @@ export function ActionButton<T>({
         <Button
             {...props}
             disabled={loading}
-            children={loading ? 'Loading…' : children}
             onClick={() => {
                 setLoading(true)
                 if (onSuccess) {
@@ -30,6 +30,8 @@ export function ActionButton<T>({
                     action()
                 }
             }}
-        />
+        >
+            {loading ? 'Loading…' : children}
+        </Button>
     )
 }

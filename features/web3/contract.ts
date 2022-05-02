@@ -1,7 +1,7 @@
 import { BigNumber, Contract, ContractTransaction, Event } from 'ethers'
 import { useEffect, useRef } from 'react'
-import { useDispatch } from 'react-redux'
-import { CONTRACT_ADDRESS, useProvider } from '../../app'
+import { useDispatch, useSelector } from 'react-redux'
+import { CONTRACT_ADDRESS, useAccount, useProvider } from '../../app'
 import abi from './abi.json'
 import provider from './provider'
 import {
@@ -11,6 +11,8 @@ import {
     setTokenDecimals,
     updateLoan,
     Loan as StateLoan,
+    selectManagerAddress,
+    updateLoans,
 } from './web3Slice'
 import {
     ContractFunction,
@@ -23,7 +25,6 @@ import {
     LoanStatus,
     getCurrentBlockTimestamp,
 } from './utils'
-import { Dispatch } from 'redux'
 
 type TypedEvent<
     T extends readonly unknown[],
@@ -66,7 +67,7 @@ export interface CoreContract
     denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumber]>
     defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
 
-    loans: ContractFunction<Loan, [loanId: BigNumber]>
+    loans: ContractFunction<EVMLoan, [loanId: BigNumber]>
 
     filters: {
         /**
@@ -160,20 +161,34 @@ export function useFetchContractPropertiesOnce() {
                 dispatch(setTokenDecimals(decimals))
             })
         })
+    }, [dispatch])
+}
 
-        // TODO: Replace with `loansCount`
-        contract.loansCount().then(async (count) => {
-                const [loans, timestamp] = await Promise.all([
+const accounts: string[] = []
+export function useLoadAccountLoans() {
+    const account = useAccount()
+    const managerAddress = useSelector(selectManagerAddress)
+    const dispatch = useDispatch()
+
+    useEffect(() => {
+        if (!managerAddress || !account) return
+        if (managerAddress === account) return
+        if (accounts.includes(account)) return
+        accounts.push(account)
+
+        contract
+            .queryFilter(contract.filters.LoanRequested(null, account))
+            .then((loans) =>
+                Promise.all([
                     Promise.all(
-                    Array.from(
-                        { length: count.toNumber() },
-                        (_, i) => i + 1,
-                    ).map((id) => contract.loans(BigNumber.from(id))),
+                        loans.map((loan) => contract.loans(loan.args.loanId)),
                     ),
                     getCurrentBlockTimestamp(),
-                ])
+                ]),
+            )
+            .then(([loans, timestamp]) => {
                 dispatch(
-                    setLoans({
+                    updateLoans({
                         loans: transformToStateLoans(loans),
                         timestamp,
                     }),
@@ -186,12 +201,54 @@ export function useFetchContractPropertiesOnce() {
         contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
         contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            fetchAndUpdateLoan(loanId).then(dispatch)
+            fetchAndUpdateLoan(loanId).then((action) => {
+                if (action.payload.loan.borrower !== account) return
+                dispatch(action)
+            })
         }
-    }, [dispatch])
+    }, [account, managerAddress, dispatch])
 }
 
-export interface Loan {
+const ref = { current: false }
+export function useLoadManagerState() {
+    const dispatch = useDispatch()
+    useEffect(() => {
+        if (typeof window !== 'object' || ref.current) return
+        // https://github.com/reactwg/react-18/discussions/18
+        // Read "Effects that should only run once can use a ref"
+        ref.current = true
+
+        // TODO: Replace with `loansCount`
+        contract.loansCount().then(async (count) => {
+            const [loans, timestamp] = await Promise.all([
+                Promise.all(
+                    Array.from(
+                        { length: count.toNumber() },
+                        (_, i) => i + 1,
+                    ).map((id) => contract.loans(BigNumber.from(id))),
+                ),
+                getCurrentBlockTimestamp(),
+            ])
+            dispatch(
+                setLoans({
+                    loans: transformToStateLoans(loans),
+                    timestamp,
+                }),
+            )
+        })
+
+        contract.on(contract.filters.LoanRequested(), handleLoanEvent)
+        contract.on(contract.filters.LoanApproved(), handleLoanEvent)
+        contract.on(contract.filters.LoanDenied(), handleLoanEvent)
+        contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
+        contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
+        function handleLoanEvent<_T>(loanId: BigNumber) {
+            fetchAndUpdateLoan(loanId).then(dispatch)
+        }
+    }, [])
+}
+
+interface EVMLoan {
     id: BigNumber
     status: LoanStatus
     borrower: string
@@ -202,10 +259,10 @@ export interface Loan {
     apr: number
 }
 
-function transformToStateLoans(loans: Loan[]): StateLoan[] {
+export function transformToStateLoans(loans: EVMLoan[]): StateLoan[] {
     return loans.map(transformToStateLoan)
 }
-function transformToStateLoan(loan: Loan): StateLoan {
+export function transformToStateLoan(loan: EVMLoan): StateLoan {
     return {
         id: loan.id.toNumber(),
         status: loan.status,

@@ -2,19 +2,17 @@ import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from 'ethers'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useState } from 'react'
+import { FormEventHandler, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
+import { APP_NAME, useAccount, useProvider } from '../app'
+import { LoanView, Page } from '../components'
 import {
-    APP_NAME,
-    CONTRACT_ADDRESS,
-    timeout,
-    useAccount,
-    useProvider,
-} from '../app'
-import { Page } from '../components'
-import { contract } from '../features/web3/contract'
-import { infiniteAllowance } from '../features/web3/utils'
+    contract,
+    useLoadAccountLoans,
+    useSigner,
+} from '../features/web3/contract'
 import {
+    selectLoans,
     selectManagerAddress,
     selectTokenContract,
     selectTokenDecimals,
@@ -48,7 +46,7 @@ const Borrow: NextPage = () => {
                     }
 
                     > table {
-                        margin: 0 auto;
+                        margin: 15px auto 0;
                     }
                 }
 
@@ -58,6 +56,7 @@ const Borrow: NextPage = () => {
             `}</style>
 
             <RequestLoan />
+            <Loans />
         </Page>
     )
 }
@@ -183,5 +182,39 @@ function RequestLoan() {
             </table>
             <button disabled={disabled || loading}>Request loan</button>
         </form>
+    )
+}
+
+function Loans() {
+    const tokenDecimals = useSelector(selectTokenDecimals)
+    const getContract = useSigner()
+    const account = useAccount()
+    const allLoans = useSelector(selectLoans)
+    const loans = useMemo(
+        () =>
+            allLoans
+                .filter((loan) => loan.borrower === account)
+                .sort((a, b) => b.requestedTime - a.requestedTime),
+        [account, allLoans],
+    )
+
+    useLoadAccountLoans()
+
+    if (!tokenDecimals) return null
+
+    return (
+        <div className="section">
+            <h4>Your loans</h4>
+
+            {loans.map((loan) => (
+                <LoanView
+                    key={loan.id}
+                    loan={loan}
+                    tokenDecimals={tokenDecimals}
+                    getContract={getContract}
+                    borrow
+                />
+            ))}
+        </div>
     )
 }

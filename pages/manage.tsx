@@ -1,23 +1,17 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
-import { BigNumber } from 'ethers'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useState } from 'react'
 import { useSelector } from 'react-redux'
-import TimeAgo from 'timeago-react'
+import { APP_NAME, CONTRACT_ADDRESS, useAccount, useProvider } from '../app'
+import { LoanView, Page } from '../components'
 import {
-    APP_NAME,
-    CONTRACT_ADDRESS,
-    TOKEN_SYMBOL,
-    useAccount,
-    useProvider,
-} from '../app'
-import { EtherscanLink, Page } from '../components'
-import { ActionButton } from '../components/ActionButton'
-import { contract, CoreContract, useSigner } from '../features/web3/contract'
+    contract,
+    useLoadManagerState,
+    useSigner,
+} from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
-    Loan,
     selectApprovedLoans,
     selectLoansTimestamp,
     selectManagerAddress,
@@ -27,14 +21,18 @@ import {
     selectTokenDecimals,
 } from '../features/web3/web3Slice'
 
+const title = `Earn - ${APP_NAME}`
+
 const Manage: NextPage = () => {
     const account = useAccount()
     const managerAddress = useSelector(selectManagerAddress)
 
+    useLoadManagerState()
+
     return (
         <Page>
             <Head>
-                <title>Earn - {APP_NAME}</title>
+                <title>{title}</title>
                 <meta
                     name="description"
                     content="" // TODO: Fix
@@ -131,7 +129,9 @@ function Stake() {
                     await tx.wait()
                 }
 
-                await contract.connect(signer).stake(amount)
+                const tx = await contract.connect(signer).stake(amount)
+
+                await tx.wait()
 
                 // TODO: In page notification
 
@@ -183,7 +183,9 @@ function Unstake() {
                 return
             }
 
-            await contract.connect(signer).unstake(amount)
+            const tx = await contract.connect(signer).unstake(amount)
+
+            await tx.wait()
 
             // TODO: In page notification
 
@@ -227,6 +229,7 @@ function ApproveLoans() {
                 loan={loan}
                 tokenDecimals={tokenDecimals}
                 getContract={getContract}
+                approve
             />
         ))
     )
@@ -282,63 +285,5 @@ function RejectedLoans() {
             <h4>Rejected loans</h4>
             {items}
         </div>
-    )
-}
-
-function LoanView({
-    loan: { borrower, amount, requestedTime, id },
-    tokenDecimals,
-    getContract,
-}: {
-    loan: Loan
-    tokenDecimals: number
-    getContract?: () => CoreContract
-}) {
-    return (
-        <table>
-            <tbody>
-                <tr>
-                    <td>Borrower</td>
-                    <td>
-                        <EtherscanLink address={borrower} />
-                    </td>
-                </tr>
-                <tr>
-                    <td>Amount</td>
-                    <td>
-                        {formatUnits(amount, tokenDecimals)} {TOKEN_SYMBOL}
-                    </td>
-                </tr>
-                <tr>
-                    <td>Requested</td>
-                    <td>
-                        <TimeAgo datetime={requestedTime} />
-                    </td>
-                </tr>
-                {getContract && (
-                    <tr>
-                        <td colSpan={2} style={{ paddingTop: 10 }}>
-                            <ActionButton
-                                action={() =>
-                                    getContract().approveLoan(
-                                        BigNumber.from(id),
-                                    )
-                                }
-                            >
-                                Approve
-                            </ActionButton>
-                            <ActionButton
-                                red
-                                action={() =>
-                                    getContract().denyLoan(BigNumber.from(id))
-                                }
-                            >
-                                Reject
-                            </ActionButton>
-                        </td>
-                    </tr>
-                )}
-            </tbody>
-        </table>
     )
 }

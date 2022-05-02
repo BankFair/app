@@ -7,6 +7,7 @@ import {
     LOCAL_STORAGE_LAST_CONNECTOR_KEY,
 } from '../../app'
 import { getERC20Contract, LoanStatus } from './utils'
+import { WritableDraft } from 'immer/dist/internal'
 
 export interface Loan {
     id: number
@@ -89,25 +90,42 @@ export const navigationSlice = createSlice({
             state,
             { payload }: Action<{ loan: Loan; timestamp: number }>,
         ) {
-            const { timestamp } = payload
-            if (timestamp > state.loansTimestamp) {
-                const updates = [...state.loanUpdates, payload].sort(
-                    sortByTimestampDescending,
-                )
-
-                const ids = new Set<number>()
-                state.loanUpdates = updates
-                    .filter(({ loan: { id } }) => {
-                        if (ids.has(id)) return false
-
-                        ids.add(id)
-                        return true
-                    })
-                    .reverse()
+            updateSingleLoan(state, payload)
+        },
+        updateLoans(
+            state,
+            {
+                payload: { loans, timestamp },
+            }: Action<{ loans: Loan[]; timestamp: number }>,
+        ) {
+            for (const loan of loans) {
+                updateSingleLoan(state, { loan, timestamp })
             }
         },
     },
 })
+
+function updateSingleLoan(
+    state: WritableDraft<Web3State>,
+    payload: { loan: Loan; timestamp: number },
+) {
+    const { timestamp } = payload
+    if (timestamp > state.loansTimestamp) {
+        const updates = [...state.loanUpdates, payload].sort(
+            sortByTimestampDescending,
+        )
+
+        const ids = new Set<number>()
+        state.loanUpdates = updates
+            .filter(({ loan: { id } }) => {
+                if (ids.has(id)) return false
+
+                ids.add(id)
+                return true
+            })
+            .reverse()
+    }
+}
 
 export const {
     setLastConnectorName,
@@ -117,6 +135,7 @@ export const {
     setTokenDecimals,
     setLoans,
     updateLoan,
+    updateLoans,
 } = navigationSlice.actions
 
 export const selectLastConnector = (state: AppState): Connector | undefined =>
