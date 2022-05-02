@@ -39,6 +39,7 @@ export interface CoreContract
 
     manager: ContractFunction<string>
     token: ContractFunction<string>
+    loansCount: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [wallet: string]>
     stake: ContractFunction<ContractTransaction, [amount: BigNumber]>
@@ -161,20 +162,13 @@ export function useFetchContractPropertiesOnce() {
         })
 
         // TODO: Replace with `loansCount`
-        contract
-            .queryFilter(contract.filters.LoanRequested())
-            .then(async (events) => {
-                const loanIds = events
-                    .map((loan) => loan.args.loanId.toNumber())
-                    .sort()
-                if (!loanIds.length) return
-
-                const lastLoanId = loanIds[loanIds.length - 1]
+        contract.loansCount().then(async (count) => {
                 const [loans, timestamp] = await Promise.all([
                     Promise.all(
-                        Array.from({ length: lastLoanId }, (_, i) => i + 1).map(
-                            (id) => contract.loans(BigNumber.from(id)),
-                        ),
+                    Array.from(
+                        { length: count.toNumber() },
+                        (_, i) => i + 1,
+                    ).map((id) => contract.loans(BigNumber.from(id))),
                     ),
                     getCurrentBlockTimestamp(),
                 ])

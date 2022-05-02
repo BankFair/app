@@ -101,7 +101,7 @@
                 "type": "uint256"
             },
             {
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address",
                 "name": "borrower",
                 "type": "address"
@@ -195,7 +195,7 @@
     },
     {
         "inputs": [],
-        "name": "amountUnstakeable",
+        "name": "amountUnstakable",
         "outputs": [
             { "internalType": "uint256", "name": "", "type": "uint256" }
         ],
@@ -422,6 +422,15 @@
     },
     {
         "inputs": [],
+        "name": "loansCount",
+        "outputs": [
+            { "internalType": "uint256", "name": "", "type": "uint256" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "manager",
         "outputs": [
             { "internalType": "address", "name": "", "type": "address" }
@@ -465,6 +474,13 @@
     },
     {
         "inputs": [],
+        "name": "poolCanLend",
+        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "poolFunds",
         "outputs": [
             { "internalType": "uint256", "name": "", "type": "uint256" }
@@ -483,7 +499,7 @@
     },
     {
         "inputs": [],
-        "name": "poolLiqudity",
+        "name": "poolLiquidity",
         "outputs": [
             { "internalType": "uint256", "name": "", "type": "uint256" }
         ],
@@ -615,21 +631,21 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "sharesStaked",
-        "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
         "inputs": [
             { "internalType": "uint256", "name": "amount", "type": "uint256" }
         ],
         "name": "stake",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "stakedShares",
+        "outputs": [
+            { "internalType": "uint256", "name": "", "type": "uint256" }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
