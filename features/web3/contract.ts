@@ -30,7 +30,7 @@ type TypedEvent<
     K extends Record<keyof TupleToObject<T>, PropertyKey>,
 > = Omit<Event, 'args'> & { args: TupleToObjectWithPropNames<T, K> }
 
-interface CoreContract
+export interface CoreContract
     extends Omit<
         CustomBaseContract,
         'filters' | 'connect' | 'queryFilter' | 'on'

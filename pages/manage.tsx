@@ -15,11 +15,13 @@ import {
 } from '../app'
 import { EtherscanLink, Page } from '../components'
 import { ActionButton } from '../components/ActionButton'
-import { contract, useSigner } from '../features/web3/contract'
+import { contract, CoreContract, useSigner } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
+    Loan,
     selectLoansTimestamp,
     selectManagerAddress,
+    selectRejectedLoans,
     selectRequestedLoans,
     selectTokenContract,
     selectTokenDecimals,
@@ -46,6 +48,7 @@ const Manage: NextPage = () => {
                         <Stake />
                         <Unstake />
                         <ApproveLoans />
+                        <RejectedLoans />
                     </>
                 ) : (
                     <h3>Login with manager wallet</h3>
@@ -154,15 +157,9 @@ function Unstake() {
     const [value, setValue] = useState('100')
     const tokenContract = useSelector(selectTokenContract)
     const tokenDecimals = useSelector(selectTokenDecimals)
-    const account = useAccount()
     const provider = useProvider()
 
-    if (
-        !tokenContract ||
-        !account ||
-        !provider ||
-        tokenDecimals === undefined
-    ) {
+    if (!tokenContract || !provider || tokenDecimals === undefined) {
         return null
     }
 
@@ -208,14 +205,11 @@ function Unstake() {
 }
 
 function ApproveLoans() {
-    const requestedLoans = useSelector(selectRequestedLoans)
+    const loans = useSelector(selectRequestedLoans)
     const loansTimestamp = useSelector(selectLoansTimestamp)
     const tokenContract = useSelector(selectTokenContract)
     const tokenDecimals = useSelector(selectTokenDecimals)
-    const account = useAccount()
     const getContract = useSigner()
-
-    if (!account) return null
 
     const loading =
         !loansTimestamp ||
@@ -226,27 +220,78 @@ function ApproveLoans() {
     const items = loading ? (
         <h3>Loading…</h3>
     ) : (
-        requestedLoans.map(({ borrower, amount, requestedTime, id }) => (
-            <table key={id}>
-                <tbody>
-                    <tr>
-                        <td>Borrower</td>
-                        <td>
-                            <EtherscanLink address={borrower} />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Amount</td>
-                        <td>
-                            {formatUnits(amount, tokenDecimals)} {TOKEN_SYMBOL}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Requested</td>
-                        <td>
-                            <TimeAgo datetime={requestedTime} />
-                        </td>
-                    </tr>
+        loans.map((loan) => (
+            <LoanView
+                key={loan.id}
+                loan={loan}
+                tokenDecimals={tokenDecimals}
+                getContract={getContract}
+            />
+        ))
+    )
+
+    return (
+        <div className="section">
+            <h4>Loans pending approval</h4>
+            {items}
+        </div>
+    )
+}
+
+function RejectedLoans() {
+    const loans = useSelector(selectRejectedLoans)
+    const loansTimestamp = useSelector(selectLoansTimestamp)
+    const tokenDecimals = useSelector(selectTokenDecimals)
+
+    const loading = !loansTimestamp || tokenDecimals === undefined
+
+    const items = loading ? (
+        <h3>Loading…</h3>
+    ) : (
+        loans.map((loan) => (
+            <LoanView key={loan.id} loan={loan} tokenDecimals={tokenDecimals} />
+        ))
+    )
+
+    return (
+        <div className="section">
+            <h4>Rejected loans</h4>
+            {items}
+        </div>
+    )
+}
+
+function LoanView({
+    loan: { borrower, amount, requestedTime, id },
+    tokenDecimals,
+    getContract,
+}: {
+    loan: Loan
+    tokenDecimals: number
+    getContract?: () => CoreContract
+}) {
+    return (
+        <table>
+            <tbody>
+                <tr>
+                    <td>Borrower</td>
+                    <td>
+                        <EtherscanLink address={borrower} />
+                    </td>
+                </tr>
+                <tr>
+                    <td>Amount</td>
+                    <td>
+                        {formatUnits(amount, tokenDecimals)} {TOKEN_SYMBOL}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Requested</td>
+                    <td>
+                        <TimeAgo datetime={requestedTime} />
+                    </td>
+                </tr>
+                {getContract && (
                     <tr>
                         <td colSpan={2} style={{ paddingTop: 10 }}>
                             <ActionButton
@@ -268,15 +313,8 @@ function ApproveLoans() {
                             </ActionButton>
                         </td>
                     </tr>
-                </tbody>
-            </table>
-        ))
-    )
-
-    return (
-        <div className="section">
-            <h4>Loans pending approval</h4>
-            {items}
-        </div>
+                )}
+            </tbody>
+        </table>
     )
 }

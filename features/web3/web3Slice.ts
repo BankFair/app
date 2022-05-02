@@ -157,6 +157,9 @@ export const selectLoans = createSelector(
 export const selectRequestedLoans = createSelector(selectLoans, (loans) =>
     loans.filter((loan) => loan.status === LoanStatus.APPLIED),
 )
+export const selectRejectedLoans = createSelector(selectLoans, (loans) =>
+    loans.filter((loan) => loan.status === LoanStatus.DENIED).reverse(),
+)
 export const selectLoansTimestamp = (state: AppState) =>
     state.web3.loansTimestamp
 
