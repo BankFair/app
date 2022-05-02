@@ -64,6 +64,7 @@ export default function Sidebar({
                     padding: 8px 10px;
                     cursor: default;
                     border-radius: 8px;
+                    color: black;
 
                     > :global(svg) {
                         margin-right: 10px;

@@ -7,13 +7,12 @@ import TimeAgo from 'timeago-react'
 import {
     APP_NAME,
     CONTRACT_ADDRESS,
-    shortenAddress,
     timeout,
     TOKEN_SYMBOL,
     useAccount,
     useProvider,
 } from '../app'
-import { Button, Page } from '../components'
+import { Button, EtherscanLink, Page } from '../components'
 import { contract, Loan, LoanStatus } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
@@ -248,7 +247,9 @@ function ApproveLoans() {
                     <tbody>
                         <tr>
                             <td>Borrower</td>
-                            <td>{shortenAddress(loan.borrower)}</td>
+                            <td>
+                                <EtherscanLink address={loan.borrower} />
+                            </td>
                         </tr>
                         <tr>
                             <td>Amount</td>
