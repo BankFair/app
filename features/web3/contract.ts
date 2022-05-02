@@ -1,13 +1,16 @@
-import { BigNumber, Contract, Event, EventFilter } from 'ethers'
+import { BigNumber, Contract, Event } from 'ethers'
 import { useEffect, useRef } from 'react'
 import { useDispatch } from 'react-redux'
-import { CONTRACT_ADDRESS } from '../../app'
+import { CONTRACT_ADDRESS, useProvider } from '../../app'
 import abi from './abi.json'
 import provider from './provider'
 import {
+    setLoans,
     setManagerAddress,
     setTokenAddress,
     setTokenDecimals,
+    updateLoan,
+    Loan as StateLoan,
 } from './web3Slice'
 import {
     ContractFunction,
@@ -17,10 +20,21 @@ import {
     EventFilterWithType,
     TupleToObject,
     TupleToObjectWithPropNames,
+    LoanStatus,
+    getCurrentBlockTimestamp,
 } from './utils'
+import { Dispatch } from 'redux'
+
+type TypedEvent<
+    T extends readonly unknown[],
+    K extends Record<keyof TupleToObject<T>, PropertyKey>,
+> = Omit<Event, 'args'> & { args: TupleToObjectWithPropNames<T, K> }
 
 interface CoreContract
-    extends Omit<CustomBaseContract, 'filters' | 'connect' | 'queryFilter'> {
+    extends Omit<
+        CustomBaseContract,
+        'filters' | 'connect' | 'queryFilter' | 'on'
+    > {
     connect(...args: Parameters<CustomBaseContract['connect']>): this
 
     manager: ContractFunction<string>
@@ -49,20 +63,69 @@ interface CoreContract
     loans: ContractFunction<Loan, [loanId: BigNumber]>
 
     filters: {
+        /**
+         * ```solidity
+         * event LoanRequested(uint256 loanId, address borrower)
+         * ```
+         */
         LoanRequested: EventFilterFactory<
             [loanId: BigNumber, borrower: string],
             ['loanId', 'borrower']
         >
+
+        /**
+         * ```solidity
+         * event LoanApproved(uint256 loanId)
+         * ```
+         */
+        LoanApproved: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+
+        /**
+         * ```solidity
+         * event LoanDenied(uint256 loanId)
+         * ```
+         */
+        LoanDenied: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+
+        /**
+         * ```solidity
+         * event LoanCancelled(uint256 loanId)
+         * ```
+         */
+        LoanCancelled: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+
+        /**
+         * ```solidity
+         * event LoanRepaid(uint256 loanId)
+         * ```
+         */
+        LoanRepaid: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+
+        /**
+         * ```solidity
+         * event LoanDefaulted(uint256 loanId, uint256 amountLost)
+         * ```
+         */
+        LoanDefaulted: EventFilterFactory<
+            [loanId: BigNumber, amountLost: BigNumber],
+            ['loanId', 'amountLost']
+        >
     }
+
+    on<
+        T extends readonly unknown[],
+        K extends Record<keyof TupleToObject<T>, PropertyKey>,
+    >(
+        filter: EventFilterWithType<T, K>,
+        callback: (...args: [...T, TypedEvent<T, K>]) => void,
+    ): true
 
     queryFilter<
         T extends readonly unknown[],
         K extends Record<keyof TupleToObject<T>, PropertyKey>,
     >(
         filter: EventFilterWithType<T, K>,
-    ): Promise<
-        (Omit<Event, 'args'> & { args: TupleToObjectWithPropNames<T, K> })[]
-    >
+    ): Promise<TypedEvent<T, K>[]>
 }
 
 export const contract = new Contract(
@@ -91,6 +154,41 @@ export function useFetchContractPropertiesOnce() {
                 dispatch(setTokenDecimals(decimals))
             })
         })
+
+        // TODO: Replace with `loansCount`
+        contract
+            .queryFilter(contract.filters.LoanRequested())
+            .then(async (events) => {
+                const loanIds = events
+                    .map((loan) => loan.args.loanId.toNumber())
+                    .sort()
+                if (!loanIds.length) return
+
+                const lastLoanId = loanIds[loanIds.length - 1]
+                const [loans, timestamp] = await Promise.all([
+                    Promise.all(
+                        Array.from({ length: lastLoanId }, (_, i) => i + 1).map(
+                            (id) => contract.loans(BigNumber.from(id)),
+                        ),
+                    ),
+                    getCurrentBlockTimestamp(),
+                ])
+                dispatch(
+                    setLoans({
+                        loans: transformToStateLoans(loans),
+                        timestamp,
+                    }),
+                )
+            })
+
+        contract.on(contract.filters.LoanRequested(), handleLoanEvent)
+        contract.on(contract.filters.LoanApproved(), handleLoanEvent)
+        contract.on(contract.filters.LoanDenied(), handleLoanEvent)
+        contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
+        contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
+        function handleLoanEvent<_T>(loanId: BigNumber) {
+            fetchAndUpdateLoan(loanId).then(dispatch)
+        }
     }, [dispatch])
 }
 
@@ -105,12 +203,31 @@ export interface Loan {
     apr: number
 }
 
-export enum LoanStatus {
-    APPLIED,
-    DENIED,
-    APPROVED,
-    CANCELLED,
-    FUNDS_WITHDRAWN,
-    REPAID,
-    DEFAULTED,
+function transformToStateLoans(loans: Loan[]): StateLoan[] {
+    return loans.map(transformToStateLoan)
+}
+function transformToStateLoan(loan: Loan): StateLoan {
+    return {
+        id: loan.id.toNumber(),
+        status: loan.status,
+        borrower: loan.borrower,
+        amount: loan.amount.toHexString(),
+        requestedTime: loan.requestedTime.toNumber() * 1000,
+    }
+}
+
+export function fetchAndUpdateLoan(loanId: number | BigNumber) {
+    return Promise.all([
+        contract.loans(
+            typeof loanId === 'number' ? BigNumber.from(loanId) : loanId,
+        ),
+        getCurrentBlockTimestamp(),
+    ]).then(([loan, timestamp]) =>
+        updateLoan({ loan: transformToStateLoan(loan), timestamp }),
+    )
+}
+
+export function useSigner(): (() => CoreContract) | undefined {
+    const provider = useProvider()
+    return provider && (() => contract.connect(provider.getSigner()))
 }

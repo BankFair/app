@@ -74,3 +74,5 @@ function className(props: Record<string, boolean>) {
         .filter((key) => props[key])
         .join(' ')
 }
+
+export type Button = typeof Button

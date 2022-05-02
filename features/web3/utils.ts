@@ -24,7 +24,7 @@ export type TupleToObjectWithPropNames<
 
 export interface EventFilterWithType<
     T extends readonly unknown[],
-    N extends Record<keyof TupleToObject<T>, PropertyKey>,
+    _N extends Record<keyof TupleToObject<T>, PropertyKey>,
 > extends EventFilter {}
 export type EventFilterFactory<
     T extends readonly unknown[],
@@ -44,4 +44,20 @@ interface ERC20Contract extends CustomBaseContract {
 
 export function getERC20Contract(address: string) {
     return new Contract(address, erc20Abi, provider) as ERC20Contract
+}
+
+export enum LoanStatus {
+    APPLIED,
+    DENIED,
+    APPROVED,
+    CANCELLED,
+    FUNDS_WITHDRAWN,
+    REPAID,
+    DEFAULTED,
+}
+
+export function getCurrentBlockTimestamp() {
+    return provider.getBlockNumber().then(async (blockNumber) => {
+        return (await provider.getBlock(blockNumber)).timestamp
+    })
 }

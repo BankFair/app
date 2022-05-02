@@ -1,7 +1,8 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
+import { BigNumber } from 'ethers'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useEffect, useRef, useState } from 'react'
+import { FormEventHandler, useState } from 'react'
 import { useSelector } from 'react-redux'
 import TimeAgo from 'timeago-react'
 import {
@@ -12,11 +13,14 @@ import {
     useAccount,
     useProvider,
 } from '../app'
-import { Button, EtherscanLink, Page } from '../components'
-import { contract, Loan, LoanStatus } from '../features/web3/contract'
+import { EtherscanLink, Page } from '../components'
+import { ActionButton } from '../components/ActionButton'
+import { contract, useSigner } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
+    selectLoansTimestamp,
     selectManagerAddress,
+    selectRequestedLoans,
     selectTokenContract,
     selectTokenDecimals,
 } from '../features/web3/web3Slice'
@@ -204,116 +208,75 @@ function Unstake() {
 }
 
 function ApproveLoans() {
-    const [loading, setLoading] = useState(true)
-    const [requestedLoans, setRequestedLoans] = useState<Loan[]>(() => [])
+    const requestedLoans = useSelector(selectRequestedLoans)
+    const loansTimestamp = useSelector(selectLoansTimestamp)
     const tokenContract = useSelector(selectTokenContract)
     const tokenDecimals = useSelector(selectTokenDecimals)
     const account = useAccount()
-    const provider = useProvider()
+    const getContract = useSigner()
 
-    const ref = useRef(false)
-    useEffect(() => {
-        if (ref.current) return
-        ref.current = true
+    if (!account) return null
 
-        contract
-            .queryFilter(contract.filters.LoanRequested())
-            .then(async (results) => {
-                const loans = await Promise.all(
-                    results.map((loan) => contract.loans(loan.args.loanId)),
-                )
-                setRequestedLoans(
-                    loans.filter((loan) => loan.status === LoanStatus.APPLIED),
-                )
-                setLoading(false)
-            })
-    }, [])
-
-    if (
+    const loading =
+        !loansTimestamp ||
         !tokenContract ||
-        !account ||
-        !provider ||
+        !getContract ||
         tokenDecimals === undefined
-    ) {
-        return null
-    }
+
+    const items = loading ? (
+        <h3>Loading…</h3>
+    ) : (
+        requestedLoans.map(({ borrower, amount, requestedTime, id }) => (
+            <table key={id}>
+                <tbody>
+                    <tr>
+                        <td>Borrower</td>
+                        <td>
+                            <EtherscanLink address={borrower} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Amount</td>
+                        <td>
+                            {formatUnits(amount, tokenDecimals)} {TOKEN_SYMBOL}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Requested</td>
+                        <td>
+                            <TimeAgo datetime={requestedTime} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colSpan={2} style={{ paddingTop: 10 }}>
+                            <ActionButton
+                                action={() =>
+                                    getContract().approveLoan(
+                                        BigNumber.from(id),
+                                    )
+                                }
+                            >
+                                Approve
+                            </ActionButton>
+                            <ActionButton
+                                red
+                                action={() =>
+                                    getContract().denyLoan(BigNumber.from(id))
+                                }
+                            >
+                                Reject
+                            </ActionButton>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        ))
+    )
 
     return (
         <div className="section">
             <h4>Loans pending approval</h4>
-            {loading && <h3>Loading…</h3>}
-            {requestedLoans.map((loan) => (
-                <table key={loan.id.toNumber()}>
-                    <tbody>
-                        <tr>
-                            <td>Borrower</td>
-                            <td>
-                                <EtherscanLink address={loan.borrower} />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Amount</td>
-                            <td>
-                                {formatUnits(loan.amount, tokenDecimals)}{' '}
-                                {TOKEN_SYMBOL}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Requested</td>
-                            <td>
-                                <TimeAgo
-                                    datetime={
-                                        loan.requestedTime.toNumber() * 1000
-                                    }
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colSpan={2} style={{ paddingTop: 10 }}>
-                                <Button
-                                    onClick={() => {
-                                        const { id } = loan
-                                        contract
-                                            .connect(provider.getSigner())
-                                            .approveLoan(loan.id)
-                                            .then(() => {
-                                                setRequestedLoans(
-                                                    (requestedLoans) =>
-                                                        requestedLoans.filter(
-                                                            (loan) =>
-                                                                !loan.id.eq(id),
-                                                        ),
-                                                )
-                                            })
-                                    }}
-                                >
-                                    Approve
-                                </Button>
-                                <Button
-                                    red
-                                    onClick={() => {
-                                        const { id } = loan
-                                        contract
-                                            .connect(provider.getSigner())
-                                            .denyLoan(loan.id)
-                                            .then(() => {
-                                                setRequestedLoans(
-                                                    (requestedLoans) =>
-                                                        requestedLoans.filter(
-                                                            (loan) =>
-                                                                !loan.id.eq(id),
-                                                        ),
-                                                )
-                                            })
-                                    }}
-                                >
-                                    Reject
-                                </Button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            ))}
+            {items}
         </div>
     )
 }
