@@ -1084,6 +1084,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@web3-react/eip1193@patch:@web3-react/eip1193@npm:8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::locator=bankfair%40workspace%3A.":
+  version: 8.0.18-beta.0
+  resolution: "@web3-react/eip1193@patch:@web3-react/eip1193@npm%3A8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::version=8.0.18-beta.0&hash=ee7a78&locator=bankfair%40workspace%3A."
+  dependencies:
+    "@web3-react/types": ^8.0.12-beta.0
+  checksum: 0301ed32dab8486e43dbbae6b7af33d91a697dfc54d5e77fe73779bdcaa446a21d0d429c9b6abd695766e576f29a8c74e9911e52d7542a42b0d248cfbaf34097
+  languageName: node
+  linkType: hard
+
 "@web3-react/network@npm:8.0.18-beta.0":
   version: 8.0.18-beta.0
   resolution: "@web3-react/network@npm:8.0.18-beta.0"
@@ -1094,7 +1103,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@web3-react/store@npm:^8.0.17-beta.0":
+"@web3-react/store@npm:8.0.17-beta.0":
   version: 8.0.17-beta.0
   resolution: "@web3-react/store@npm:8.0.17-beta.0"
   dependencies:
@@ -1102,6 +1111,17 @@ __metadata:
     "@web3-react/types": ^8.0.12-beta.0
     zustand: ^4.0.0-beta.3
   checksum: 3b5f45ab47080fd41cf2d867d5288721ba95611a960cd05e133510a1d02880235ef96c68fed200c8265b4ec6077602adcd8a2668639f31f096168db8a1e16e56
+  languageName: node
+  linkType: hard
+
+"@web3-react/store@patch:@web3-react/store@npm:8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::locator=bankfair%40workspace%3A.":
+  version: 8.0.17-beta.0
+  resolution: "@web3-react/store@patch:@web3-react/store@npm%3A8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::version=8.0.17-beta.0&hash=f4975b&locator=bankfair%40workspace%3A."
+  dependencies:
+    "@ethersproject/address": ^5
+    "@web3-react/types": ^8.0.12-beta.0
+    zustand: ^4.0.0-beta.3
+  checksum: 9bec671484ac72f384160beed04ee46bb8316f7a9902d6bba47bd8f6f341a1bc5c20208913d425510b4fef698e42c2260386c0c6ce98e3198e41e1c2fcd2a131
   languageName: node
   linkType: hard
 

@@ -19,7 +19,9 @@
 .DS_Store
 *.pem
 .direnv/
-.yarn/
+.yarn/cache/
+.yarn/releases/
+.yarn/install-state.gz
 
 # debug
 npm-debug.log*

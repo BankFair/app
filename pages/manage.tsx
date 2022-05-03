@@ -171,7 +171,7 @@ function Unstake() {
         const amount = parseUnits(value, tokenDecimals)
         const signer = provider.getSigner()
 
-        contract.amountUnstakeable().then(async (unstakableAmount) => {
+        contract.amountUnstakable().then(async (unstakableAmount) => {
             if (amount.gt(unstakableAmount)) {
                 alert(
                     `Maximum unstakable amount is ${formatUnits(

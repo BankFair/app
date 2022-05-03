@@ -1,5 +1,5 @@
+import { useState } from 'react'
 import { FaWallet } from 'react-icons/fa'
-import { Button } from '.'
 import { walletConnect } from '../app/connectors/walletconnect'
 import { eip1193 } from '../app/connectors/eip1193'
 import { useWeb3React } from '@web3-react/core'
@@ -8,15 +8,20 @@ import {
     LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
     LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
     RPC_NETWORK_ID,
+    useError,
 } from '../app'
 import { useDispatch } from 'react-redux'
 import { setLastConnectorName } from '../features/web3/web3Slice'
+
+import { Button } from './Button'
+import { Modal } from './Modal'
 
 const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
 
 export function Connect() {
     const { isActivating } = useWeb3React()
     const dispatch = useDispatch()
+    const { eip1193Error } = useError()
 
     return (
         <>
@@ -104,6 +109,23 @@ export function Connect() {
                     Use WalletConnect
                 </Button>
             </div>
+
+            {typeof eip1193Error === 'object' &&
+                (eip1193Error as unknown as { code: number }).code === -32002 &&
+                eip1193Error.message ===
+                    'Already processing eth_requestAccounts. Please wait.' && (
+                    <OpenBrowserWalletModal />
+                )}
         </>
+    )
+}
+
+export function OpenBrowserWalletModal() {
+    const [isClosed, setIsClosed] = useState(false)
+
+    return isClosed ? null : (
+        <Modal onClose={() => setIsClosed(true)}>
+            Open your browser wallet to continue
+        </Modal>
     )
 }

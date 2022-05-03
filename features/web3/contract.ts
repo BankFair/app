@@ -48,7 +48,7 @@ export interface CoreContract
     deposit: ContractFunction<ContractTransaction, [amount: BigNumber]>
     withdraw: ContractFunction<ContractTransaction, [amount: BigNumber]>
     amountDepositable: ContractFunction<BigNumber>
-    amountUnstakeable: ContractFunction<BigNumber>
+    amountUnstakable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber>
     maxDuration: ContractFunction<BigNumber>
     minAmount: ContractFunction<BigNumber>

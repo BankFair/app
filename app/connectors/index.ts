@@ -46,6 +46,13 @@ export function useProvider() {
     }
 }
 
+export function useError() {
+    const walletConnectError = walletConnectHooks.useError()
+    const eip1193Error = eip1193Hooks.useError()
+
+    return { eip1193Error, walletConnectError }
+}
+
 export function useAccount() {
     const isWalletConnectActive = walletConnectHooks.useIsActive()
     const isEip1193Active = eip1193Hooks.useIsActive()

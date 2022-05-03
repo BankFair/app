@@ -1,0 +1,12 @@
+diff --git a/dist/index.js b/dist/index.js
+index 43da4367db89e9a074db556b1eccd3b0bb2f1034..5a143d17d22b7bc81eda4234417cfddc5fe1aa95 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -36,7 +36,6 @@ function validateAccount(account) {
+     return (0, address_1.getAddress)(account);
+ }
+ const DEFAULT_STATE = {
+-    chainId: undefined,
+     accounts: undefined,
+     activating: false,
+     error: undefined,

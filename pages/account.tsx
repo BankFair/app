@@ -1,14 +1,12 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { useActiveConnector, APP_NAME } from '../app'
+import { APP_NAME, useAccount } from '../app'
 import { Connect, Account, Page } from '../components'
 
 const AccountPage: NextPage = () => {
-    const activeConnector = useActiveConnector()
+    const account = useAccount()
 
-    const title = `${
-        activeConnector ? 'Connect wallet' : 'Account'
-    } - ${APP_NAME}`
+    const title = `${account ? 'Connect wallet' : 'Account'} - ${APP_NAME}`
 
     return (
         <Page>
@@ -21,7 +19,7 @@ const AccountPage: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            {activeConnector ? <Account /> : <Connect />}
+            {account ? <Account /> : <Connect />}
         </Page>
     )
 }

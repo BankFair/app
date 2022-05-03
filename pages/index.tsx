@@ -74,7 +74,6 @@ function Deposit() {
         if (!account) return
 
         contract.balanceOf(account).then((amount) => {
-            console.log({ amount })
             setDeposited(formatUnits(amount, tokenDecimals))
         })
     }, [account, tokenDecimals, isManager])
