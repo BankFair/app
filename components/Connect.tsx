@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FaWallet } from 'react-icons/fa'
 import { walletConnect } from '../app/connectors/walletconnect'
 import { eip1193 } from '../app/connectors/eip1193'
@@ -22,6 +22,18 @@ export function Connect() {
     const { isActivating } = useWeb3React()
     const dispatch = useDispatch()
     const { eip1193Error } = useError()
+
+    const [isMetaMask, setIsMetaMask] = useState(true)
+    useEffect(() => {
+        if (
+            !Boolean(
+                typeof window === 'object' &&
+                    (window as any).ethereum?.isMetaMask,
+            )
+        ) {
+            setIsMetaMask(false)
+        }
+    }, [])
 
     return (
         <>
@@ -51,7 +63,6 @@ export function Connect() {
             `}</style>
 
             <header>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={`${prefix}/optimism.svg`}
                     width={32}
@@ -62,11 +73,27 @@ export function Connect() {
             </header>
 
             <div className="wallet">
-                <FaWallet size={32} />
-                <h4>Connect to your browser wallet</h4>
+                {isMetaMask ? (
+                    <img
+                        src={`${prefix}/metamask.svg`}
+                        width={32}
+                        height={32}
+                        alt="MetaMask logo"
+                    />
+                ) : (
+                    <FaWallet size={32} />
+                )}
+                <h4>
+                    Connect to your {isMetaMask ? 'MetaMask' : 'browser'} wallet
+                </h4>
                 <Button
                     disabled={isActivating}
                     onClick={() => {
+                        if (!(window as any).ethereum) {
+                            alert('No browser wallet detected')
+                            return
+                        }
+
                         eip1193.activate().then(() => {
                             dispatch(
                                 setLastConnectorName(
@@ -76,12 +103,11 @@ export function Connect() {
                         })
                     }}
                 >
-                    Connect browser wallet
+                    Connect {isMetaMask ? 'MetaMask' : 'browser wallet'}
                 </Button>
             </div>
 
             <div className="wallet">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={`${prefix}/walletconnect.svg`}
                     width={32}
