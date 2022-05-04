@@ -41,7 +41,7 @@ export interface CustomBaseContract extends BaseContract {
     connect(...args: Parameters<BaseContract['connect']>): this
 }
 
-interface ERC20Contract extends CustomBaseContract {
+export interface ERC20Contract extends CustomBaseContract {
     allowance: ContractFunction<BigNumber, [string, string]>
     decimals: ContractFunction<number>
     approve: ContractFunction<ContractTransaction, [string, BigNumber]>

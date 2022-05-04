@@ -2,7 +2,7 @@ import { parseUnits, formatUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { APP_NAME, CONTRACT_ADDRESS, useAccount, useProvider } from '../app'
 import { LoanView, Page } from '../components'
 import {
@@ -12,11 +12,9 @@ import {
 } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
-    selectApprovedLoans,
+    selectLoans,
     selectLoansTimestamp,
     selectManagerAddress,
-    selectRejectedLoans,
-    selectRequestedLoans,
     selectTokenContract,
     selectTokenDecimals,
 } from '../features/web3/web3Slice'
@@ -45,9 +43,7 @@ const Manage: NextPage = () => {
                     <>
                         <Stake />
                         <Unstake />
-                        <ApproveLoans />
-                        <ApprovedLoans />
-                        <RejectedLoans />
+                        <Loans />
                     </>
                 ) : (
                     <h3>Login with manager wallet</h3>
@@ -207,82 +203,41 @@ function Unstake() {
     )
 }
 
-function ApproveLoans() {
-    const loans = useSelector(selectRequestedLoans)
+function Loans() {
+    const loans = useSelector(selectLoans)
     const loansTimestamp = useSelector(selectLoansTimestamp)
-    const tokenContract = useSelector(selectTokenContract)
     const tokenDecimals = useSelector(selectTokenDecimals)
+    const account = useAccount()
     const getContract = useSigner()
+    const dispatch = useDispatch()
 
     const loading =
         !loansTimestamp ||
-        !tokenContract ||
         !getContract ||
+        !account ||
         tokenDecimals === undefined
 
     const items = loading ? (
         <h3>Loading…</h3>
     ) : (
-        loans.map((loan) => (
-            <LoanView
-                key={loan.id}
-                loan={loan}
-                tokenDecimals={tokenDecimals}
-                getContract={getContract}
-                approve
-            />
-        ))
+        loans
+            .sort((a, b) => b.id - a.id)
+            .map((loan) => (
+                <LoanView
+                    key={loan.id}
+                    loan={loan}
+                    account={account}
+                    tokenDecimals={tokenDecimals}
+                    dispatch={dispatch}
+                    getContract={getContract}
+                    approve
+                />
+            ))
     )
 
     return (
         <div className="section">
-            <h4>Loans pending approval</h4>
-            {items}
-        </div>
-    )
-}
-
-function ApprovedLoans() {
-    const loans = useSelector(selectApprovedLoans)
-    const loansTimestamp = useSelector(selectLoansTimestamp)
-    const tokenDecimals = useSelector(selectTokenDecimals)
-
-    const loading = !loansTimestamp || tokenDecimals === undefined
-
-    const items = loading ? (
-        <h3>Loading…</h3>
-    ) : (
-        loans.map((loan) => (
-            <LoanView key={loan.id} loan={loan} tokenDecimals={tokenDecimals} />
-        ))
-    )
-
-    return (
-        <div className="section">
-            <h4>Approved loans</h4>
-            {items}
-        </div>
-    )
-}
-
-function RejectedLoans() {
-    const loans = useSelector(selectRejectedLoans)
-    const loansTimestamp = useSelector(selectLoansTimestamp)
-    const tokenDecimals = useSelector(selectTokenDecimals)
-
-    const loading = !loansTimestamp || tokenDecimals === undefined
-
-    const items = loading ? (
-        <h3>Loading…</h3>
-    ) : (
-        loans.map((loan) => (
-            <LoanView key={loan.id} loan={loan} tokenDecimals={tokenDecimals} />
-        ))
-    )
-
-    return (
-        <div className="section">
-            <h4>Rejected loans</h4>
+            <h4>Loans</h4>
             {items}
         </div>
     )

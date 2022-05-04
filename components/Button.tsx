@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ButtonHTMLAttributes } from 'react'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
 import { COLOR_BLUE, COLOR_GREEN, COLOR_RED } from '../app'
 
@@ -7,11 +8,13 @@ export function Button({
     onClick,
     children,
     style,
+    type,
     ...classModifiers
 }: {
     href?: string
-    onClick?: MouseEventHandler<HTMLAnchorElement>
+    onClick?: MouseEventHandler<HTMLAnchorElement | HTMLButtonElement>
     children?: ReactNode
+    type?: ButtonHTMLAttributes<HTMLButtonElement>['type']
     style?: CSSProperties
     disabled?: boolean
     ghost?: boolean
@@ -20,50 +23,59 @@ export function Button({
 }) {
     const { disabled } = classModifiers
 
+    const Element = type ? 'button' : 'a'
+
     const anchor = (
-        <a
+        <Element
             onClick={disabled ? undefined : onClick}
             className={className(classModifiers as Record<string, boolean>)}
             style={style}
+            type={type}
         >
             <style jsx>{`
-                a {
+                a,
+                button {
                     cursor: default;
                     background-color: ${COLOR_GREEN};
                     border-color: ${COLOR_GREEN};
                     padding: 8px 14px;
                     border-radius: 8px;
                     color: white;
-                }
+                    border: 0 none;
+                    font-weight: 300;
+                    font-size: 16px;
+                    font-family: inherit;
+                    display: inline-block;
 
-                a.red {
-                    background-color: ${COLOR_RED};
-                    border-color: ${COLOR_RED};
-                }
-
-                a.blue {
-                    background-color: ${COLOR_BLUE};
-                    border-color: ${COLOR_BLUE};
-                }
-
-                a.disabled {
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                }
-
-                a.ghost {
-                    border-width: 1px;
-                    border-style: solid;
-                    background-color: transparent;
-                    color: ${COLOR_GREEN};
+                    &.red {
+                        background-color: ${COLOR_RED};
+                        border-color: ${COLOR_RED};
+                    }
 
                     &.blue {
-                        color: ${COLOR_BLUE};
+                        background-color: ${COLOR_BLUE};
+                        border-color: ${COLOR_BLUE};
+                    }
+
+                    &.disabled {
+                        opacity: 0.7;
+                        cursor: not-allowed;
+                    }
+
+                    &.ghost {
+                        border-width: 1px;
+                        border-style: solid;
+                        background-color: transparent;
+                        color: ${COLOR_GREEN};
+
+                        &.blue {
+                            color: ${COLOR_BLUE};
+                        }
                     }
                 }
             `}</style>
             {children}
-        </a>
+        </Element>
     )
 
     return href ? <Link href={href}>{anchor}</Link> : anchor

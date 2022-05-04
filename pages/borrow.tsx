@@ -3,13 +3,14 @@ import { BigNumber } from 'ethers'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useMemo, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { APP_NAME, useAccount, useProvider } from '../app'
 import { LoanView, Page } from '../components'
 import {
     contract,
     useLoadAccountLoans,
     useSigner,
+    useTokenContractSigner,
 } from '../features/web3/contract'
 import {
     selectLoans,
@@ -188,19 +189,21 @@ function RequestLoan() {
 function Loans() {
     const tokenDecimals = useSelector(selectTokenDecimals)
     const getContract = useSigner()
+    const getTokenContractSigner = useTokenContractSigner()
     const account = useAccount()
     const allLoans = useSelector(selectLoans)
     const loans = useMemo(
         () =>
             allLoans
                 .filter((loan) => loan.borrower === account)
-                .sort((a, b) => b.requestedTime - a.requestedTime),
+                .sort((a, b) => b.id - a.id),
         [account, allLoans],
     )
+    const dispatch = useDispatch()
 
     useLoadAccountLoans()
 
-    if (!tokenDecimals) return null
+    if (!tokenDecimals || !account || !getTokenContractSigner) return null
 
     return (
         <div className="section">
@@ -210,9 +213,11 @@ function Loans() {
                 <LoanView
                     key={loan.id}
                     loan={loan}
+                    account={account}
                     tokenDecimals={tokenDecimals}
+                    dispatch={dispatch}
                     getContract={getContract}
-                    borrow
+                    borrow={getTokenContractSigner}
                 />
             ))}
         </div>

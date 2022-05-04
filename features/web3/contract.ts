@@ -13,6 +13,7 @@ import {
     Loan as StateLoan,
     selectManagerAddress,
     updateLoans,
+    selectTokenContract,
 } from './web3Slice'
 import {
     ContractFunction,
@@ -24,6 +25,7 @@ import {
     TupleToObjectWithPropNames,
     LoanStatus,
     getCurrentBlockTimestamp,
+    ERC20Contract,
 } from './utils'
 
 type TypedEvent<
@@ -245,7 +247,7 @@ export function useLoadManagerState() {
         function handleLoanEvent<_T>(loanId: BigNumber) {
             fetchAndUpdateLoan(loanId).then(dispatch)
         }
-    }, [])
+    }, [dispatch])
 }
 
 interface EVMLoan {
@@ -286,4 +288,12 @@ export function fetchAndUpdateLoan(loanId: number | BigNumber) {
 export function useSigner(): (() => CoreContract) | undefined {
     const provider = useProvider()
     return provider && (() => contract.connect(provider.getSigner()))
+}
+
+export function useTokenContractSigner(): (() => ERC20Contract) | undefined {
+    const provider = useProvider()
+    const tokenContract = useSelector(selectTokenContract)
+    return provider && tokenContract
+        ? () => tokenContract.connect(provider.getSigner())
+        : undefined
 }

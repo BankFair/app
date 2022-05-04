@@ -1,16 +1,41 @@
-import { ReactNode } from 'react'
+import { useRef } from 'react'
+import { FormEventHandler, ReactNode, useCallback } from 'react'
 import { GrClose } from 'react-icons/gr'
 import { stopPropagation } from '../app'
 
 export function Modal({
     children,
     onClose,
+    element: Element = 'div',
+    onSubmit,
 }: {
     children: ReactNode
     onClose?(): void
+    element?: 'div' | 'form'
+    onSubmit?: FormEventHandler<HTMLDivElement | HTMLFormElement>
 }) {
+    const shouldCloseRef = useRef(false)
+    const backgroundRef = useRef<HTMLDivElement>(null)
+    const handleMouseUp = useCallback(
+        (event: { target: EventTarget }) => {
+            if (event.target !== backgroundRef.current) return
+            if (onClose && shouldCloseRef.current) onClose()
+            shouldCloseRef.current = false
+        },
+        [onClose],
+    )
+    const handleMouseDown = useCallback(
+        () => (shouldCloseRef.current = true),
+        [],
+    )
+
     return (
-        <div className="background" onClick={onClose}>
+        <div
+            ref={backgroundRef}
+            className="background"
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+        >
             <style jsx>{`
                 .background {
                     background-color: rgba(1, 1, 1, 0.7);
@@ -38,14 +63,18 @@ export function Modal({
                 }
             `}</style>
 
-            <div className="content" onClick={stopPropagation}>
+            <Element
+                className="content"
+                onMouseDown={stopPropagation}
+                onSubmit={onSubmit}
+            >
                 {onClose && (
                     <div className="close">
                         <GrClose onClick={onClose} />
                     </div>
                 )}
                 {children}
-            </div>
+            </Element>
         </div>
     )
 }
