@@ -1,7 +1,7 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useState } from 'react'
+import { FormEventHandler, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { APP_NAME, CONTRACT_ADDRESS, useAccount, useProvider } from '../app'
 import { LoanView, Page } from '../components'
@@ -88,6 +88,15 @@ function Stake() {
     const account = useAccount()
     const provider = useProvider()
 
+    const [staked, setStaked] = useState('0')
+    useEffect(() => {
+        if (!tokenDecimals) return
+
+        contract.balanceStaked().then((amount) => {
+            setStaked(formatUnits(amount, tokenDecimals))
+        })
+    }, [account, tokenDecimals])
+
     if (
         !tokenContract ||
         !account ||
@@ -129,6 +138,13 @@ function Stake() {
 
                 await tx.wait()
 
+                setStaked((staked) =>
+                    formatUnits(
+                        parseUnits(staked, tokenDecimals).add(amount),
+                        tokenDecimals,
+                    ),
+                )
+
                 // TODO: In page notification
 
                 setLoading(false)
@@ -138,6 +154,7 @@ function Stake() {
     return (
         <form className="section" onSubmit={handleSubmit}>
             <h4>Stake</h4>
+            <div>Staked: {staked}</div>
             <input
                 type="number"
                 inputMode="decimal"
