@@ -12,6 +12,7 @@ import {
     useSigner,
     useTokenContractSigner,
 } from '../features/web3/contract'
+import { LoanStatus } from '../features/web3/utils'
 import {
     selectLoans,
     selectManagerAddress,
@@ -73,6 +74,7 @@ function RequestLoan() {
     const tokenDecimals = useSelector(selectTokenDecimals)
     const account = useAccount()
     const provider = useProvider()
+    const loans = useSelector(selectLoans)
 
     const isManager = managerAddress === account
     const disabled =
@@ -86,6 +88,19 @@ function RequestLoan() {
         ? undefined
         : (event) => {
               event.preventDefault()
+
+              if (
+                  loans.filter(
+                      (loan) =>
+                          loan.borrower === account &&
+                          loan.status === LoanStatus.APPLIED,
+                  ).length
+              ) {
+                  // TODO: Display in component
+                  alert(`A loan you requested is already pending approval`)
+                  return
+              }
+
               setLoading(true)
 
               const parsedAmount = parseUnits(amount, tokenDecimals)
