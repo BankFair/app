@@ -1,4 +1,4 @@
-import { createSelector, createSlice } from '@reduxjs/toolkit'
+import { createSelector, createSlice, Draft } from '@reduxjs/toolkit'
 import { Connector } from '@web3-react/types'
 import type { AppState } from '../../app/store'
 import {
@@ -7,7 +7,6 @@ import {
     LOCAL_STORAGE_LAST_CONNECTOR_KEY,
 } from '../../app'
 import { getERC20Contract, LoanStatus } from './utils'
-import { WritableDraft } from 'immer/dist/internal'
 
 export interface Loan {
     id: number
@@ -15,6 +14,15 @@ export interface Loan {
     borrower: string
     amount: string
     requestedTime: number
+    details: LoanDetails
+}
+
+export interface LoanDetails {
+    id: number
+    totalAmountRepaid: string
+    baseAmountRepaid: string
+    interestPaid: string
+    approvedTime: number
 }
 
 export interface Web3State {
@@ -90,7 +98,13 @@ export const navigationSlice = createSlice({
             state,
             { payload }: Action<{ loan: Loan; timestamp: number }>,
         ) {
-            updateSingleLoan(state, payload)
+            const { timestamp } = payload
+            if (timestamp > state.loansTimestamp) {
+                const updates = [...state.loanUpdates, payload].sort(
+                    sortByTimestampDescending,
+                )
+                state.loanUpdates = filterUniqueIds(updates, 'loan').reverse()
+            }
         },
         updateLoans(
             state,
@@ -98,34 +112,20 @@ export const navigationSlice = createSlice({
                 payload: { loans, timestamp },
             }: Action<{ loans: Loan[]; timestamp: number }>,
         ) {
+            if (timestamp <= state.loansTimestamp) return
+
+            const updates = [...state.loanUpdates]
             for (const loan of loans) {
-                updateSingleLoan(state, { loan, timestamp })
+                updates.push({ loan, timestamp })
             }
+
+            state.loanUpdates = filterUniqueIds(
+                updates.sort(sortByTimestampDescending),
+                'loan',
+            ).reverse()
         },
     },
 })
-
-function updateSingleLoan(
-    state: WritableDraft<Web3State>,
-    payload: { loan: Loan; timestamp: number },
-) {
-    const { timestamp } = payload
-    if (timestamp > state.loansTimestamp) {
-        const updates = [...state.loanUpdates, payload].sort(
-            sortByTimestampDescending,
-        )
-
-        const ids = new Set<number>()
-        state.loanUpdates = updates
-            .filter(({ loan: { id } }) => {
-                if (ids.has(id)) return false
-
-                ids.add(id)
-                return true
-            })
-            .reverse()
-    }
-}
 
 export const {
     setLastConnectorName,
@@ -197,4 +197,17 @@ function sortByTimestampAscending(a: WithTimestamp, b: WithTimestamp) {
 }
 function sortByTimestampDescending(a: WithTimestamp, b: WithTimestamp) {
     return b.timestamp - a.timestamp
+}
+
+function filterUniqueIds<
+    T extends string,
+    R extends { [key in T]: { id: number } },
+>(array: R[], key: T): R[] {
+    const ids = new Set<number>()
+    return array.filter(({ [key]: { id } }) => {
+        if (ids.has(id)) return false
+
+        ids.add(id)
+        return true
+    })
 }

@@ -61,9 +61,3 @@ export enum LoanStatus {
     REPAID,
     DEFAULTED,
 }
-
-export function getCurrentBlockTimestamp() {
-    return provider.getBlockNumber().then(async (blockNumber) => {
-        return (await provider.getBlock(blockNumber)).timestamp
-    })
-}

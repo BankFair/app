@@ -1,7 +1,6 @@
 import { formatUnits, parseUnits } from '@ethersproject/units'
 import { BigNumber } from 'ethers'
 import { useCallback, useState } from 'react'
-import { useDispatch } from 'react-redux'
 import TimeAgo from 'timeago-react'
 
 import { CONTRACT_ADDRESS, TOKEN_SYMBOL } from '../app'
@@ -21,13 +20,14 @@ import { Button } from './Button'
 import { Dispatch } from 'redux'
 
 export function LoanView({
-    loan: { borrower, amount, requestedTime, id, status },
+    loan: { borrower, amount, requestedTime, id, status, details },
     tokenDecimals,
     account,
     dispatch,
     getContract,
     approve,
     borrow,
+    hideBorrower,
 }: {
     loan: Loan
     tokenDecimals: number
@@ -36,6 +36,7 @@ export function LoanView({
     getContract?: () => CoreContract
     approve?: boolean
     borrow?: () => ERC20Contract
+    hideBorrower?: boolean
 }) {
     if (process.env.NODE_ENV === 'development') {
         if (approve && borrow) {
@@ -48,12 +49,14 @@ export function LoanView({
     return (
         <table>
             <tbody>
-                <tr>
-                    <td>Borrower</td>
-                    <td>
-                        <EtherscanLink address={borrower} />
-                    </td>
-                </tr>
+                {!hideBorrower && (
+                    <tr>
+                        <td>Borrower</td>
+                        <td>
+                            <EtherscanLink address={borrower} />
+                        </td>
+                    </tr>
+                )}
                 <tr>
                     <td>Amount</td>
                     <td>
@@ -92,6 +95,37 @@ export function LoanView({
                             </ActionButton>
                         </td>
                     </tr>
+                )}
+                {status !== LoanStatus.APPLIED && status !== LoanStatus.DENIED && (
+                    <>
+                        <tr>
+                            <td>Approved</td>
+                            <td>
+                                <TimeAgo datetime={details.approvedTime} />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Repaid</td>
+                            <td>
+                                {formatUnits(
+                                    details.totalAmountRepaid,
+                                    tokenDecimals,
+                                )}{' '}
+                                {TOKEN_SYMBOL}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Interest paid</td>
+                            <td>
+                                {formatUnits(
+                                    details.interestPaid,
+                                    tokenDecimals,
+                                )}{' '}
+                                {TOKEN_SYMBOL}
+                            </td>
+                        </tr>
+                    </>
                 )}
                 {borrow &&
                     getContract &&

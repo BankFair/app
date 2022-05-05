@@ -201,7 +201,7 @@ function Loans() {
     )
     const dispatch = useDispatch()
 
-    useLoadAccountLoans()
+    useLoadAccountLoans(account, dispatch)
 
     if (!tokenDecimals || !account || !getTokenContractSigner) return null
 
@@ -218,6 +218,7 @@ function Loans() {
                     dispatch={dispatch}
                     getContract={getContract}
                     borrow={getTokenContractSigner}
+                    hideBorrower
                 />
             ))}
         </div>

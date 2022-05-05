@@ -1,9 +1,9 @@
 import { BigNumber, Contract, ContractTransaction, Event } from 'ethers'
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { CONTRACT_ADDRESS, useAccount, useProvider } from '../../app'
+import { CONTRACT_ADDRESS, RPC_URL, useProvider } from '../../app'
 import abi from './abi.json'
-import provider from './provider'
+import provider, { CustomBatchProvider } from './provider'
 import {
     setLoans,
     setManagerAddress,
@@ -11,6 +11,7 @@ import {
     setTokenDecimals,
     updateLoan,
     Loan as StateLoan,
+    LoanDetails as StateLoanDetails,
     selectManagerAddress,
     updateLoans,
     selectTokenContract,
@@ -24,9 +25,9 @@ import {
     TupleToObject,
     TupleToObjectWithPropNames,
     LoanStatus,
-    getCurrentBlockTimestamp,
     ERC20Contract,
 } from './utils'
+import { Dispatch } from 'redux'
 
 type TypedEvent<
     T extends readonly unknown[],
@@ -69,7 +70,8 @@ export interface CoreContract
     denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumber]>
     defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
 
-    loans: ContractFunction<EVMLoan, [loanId: BigNumber]>
+    loans: ContractFunction<EVMLoan, [loanId: BigNumber | number]>
+    loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumber | number]>
 
     filters: {
         /**
@@ -167,10 +169,12 @@ export function useFetchContractPropertiesOnce() {
 }
 
 const accounts: string[] = []
-export function useLoadAccountLoans() {
-    const account = useAccount()
+const onceRef = { current: false }
+export function useLoadAccountLoans(
+    account: string | undefined,
+    dispatch: Dispatch,
+) {
     const managerAddress = useSelector(selectManagerAddress)
-    const dispatch = useDispatch()
 
     useEffect(() => {
         if (!managerAddress || !account) return
@@ -180,28 +184,29 @@ export function useLoadAccountLoans() {
 
         contract
             .queryFilter(contract.filters.LoanRequested(null, account))
-            .then((loans) =>
-                Promise.all([
-                    Promise.all(
-                        loans.map((loan) => contract.loans(loan.args.loanId)),
-                    ),
-                    getCurrentBlockTimestamp(),
-                ]),
-            )
-            .then(([loans, timestamp]) => {
+            .then((loans) => fetchLoans(loans.map((loan) => loan.args.loanId)))
+            .then(([loans, details, timestamp]) => {
                 dispatch(
                     updateLoans({
-                        loans: transformToStateLoans(loans),
+                        loans: transformToStateLoans(loans, details),
                         timestamp,
                     }),
                 )
             })
 
-        contract.on(contract.filters.LoanRequested(), handleLoanEvent)
+        contract.on(
+            contract.filters.LoanRequested(null, account),
+            handleLoanEvent,
+        )
+
+        if (onceRef.current) return
+        onceRef.current = true
+
         contract.on(contract.filters.LoanApproved(), handleLoanEvent)
         contract.on(contract.filters.LoanDenied(), handleLoanEvent)
         contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
         contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
+
         function handleLoanEvent<_T>(loanId: BigNumber) {
             fetchAndUpdateLoan(loanId).then((action) => {
                 if (action.payload.loan.borrower !== account) return
@@ -222,18 +227,15 @@ export function useLoadManagerState() {
 
         // TODO: Replace with `loansCount`
         contract.loansCount().then(async (count) => {
-            const [loans, timestamp] = await Promise.all([
-                Promise.all(
-                    Array.from(
-                        { length: count.toNumber() },
-                        (_, i) => i + 1,
-                    ).map((id) => contract.loans(BigNumber.from(id))),
-                ),
-                getCurrentBlockTimestamp(),
-            ])
+            const length = count.toNumber()
+
+            const [loans, details, timestamp] = await fetchLoans(
+                Array.from({ length }, (_, i) => i + 1),
+            )
+
             dispatch(
                 setLoans({
-                    loans: transformToStateLoans(loans),
+                    loans: transformToStateLoans(loans, details),
                     timestamp,
                 }),
             )
@@ -261,27 +263,83 @@ interface EVMLoan {
     apr: number
 }
 
-export function transformToStateLoans(loans: EVMLoan[]): StateLoan[] {
-    return loans.map(transformToStateLoan)
+interface EVMLoanDetails {
+    loanId: BigNumber
+    totalAmountRepaid: BigNumber
+    baseAmountRepaid: BigNumber
+    interestPaid: BigNumber
+    approvedTime: BigNumber
+    lastPaymentTime: BigNumber
 }
-export function transformToStateLoan(loan: EVMLoan): StateLoan {
+
+export function transformToStateLoansDetails(
+    loans: EVMLoanDetails[],
+): StateLoanDetails[] {
+    return loans.map(transformToStateLoanDetails)
+}
+export function transformToStateLoanDetails(
+    details: EVMLoanDetails,
+): StateLoanDetails {
+    return {
+        id: details.loanId.toNumber(),
+        approvedTime: Number(details.approvedTime.toString()) * 1000,
+        baseAmountRepaid: details.baseAmountRepaid.toString(),
+        interestPaid: details.interestPaid.toString(),
+        totalAmountRepaid: details.totalAmountRepaid.toString(),
+    }
+}
+
+export function transformToStateLoans(
+    loans: EVMLoan[],
+    details: EVMLoanDetails[],
+): StateLoan[] {
+    return loans.map((loan, index) =>
+        transformToStateLoan(loan, details[index]),
+    )
+}
+export function transformToStateLoan(
+    loan: EVMLoan,
+    details: EVMLoanDetails,
+): StateLoan {
     return {
         id: loan.id.toNumber(),
         status: loan.status,
         borrower: loan.borrower,
         amount: loan.amount.toHexString(),
         requestedTime: loan.requestedTime.toNumber() * 1000,
+        details: transformToStateLoanDetails(details),
     }
 }
 
-export function fetchAndUpdateLoan(loanId: number | BigNumber) {
+export function fetchLoans(
+    ids: (number | BigNumber)[],
+): Promise<[EVMLoan[], EVMLoanDetails[], number]> {
+    const { provider, contract } = getBatchProviderAndContract(
+        ids.length * 2 + 1,
+    )
+
+    return Promise.all([
+        Promise.all(ids.map((id) => contract.loans(id))),
+        Promise.all(ids.map((id) => contract.loanDetails(id))),
+        provider.getCurrentBlockTimestamp(),
+    ])
+}
+
+export function fetchAndUpdateLoan(
+    loanId: number | BigNumber,
+): Promise<ReturnType<typeof updateLoan>> {
+    const { provider, contract } = getBatchProviderAndContract(3)
+
     return Promise.all([
         contract.loans(
             typeof loanId === 'number' ? BigNumber.from(loanId) : loanId,
         ),
-        getCurrentBlockTimestamp(),
-    ]).then(([loan, timestamp]) =>
-        updateLoan({ loan: transformToStateLoan(loan), timestamp }),
+        contract.loanDetails(
+            typeof loanId === 'number' ? BigNumber.from(loanId) : loanId,
+        ),
+        provider.getCurrentBlockTimestamp(),
+    ]).then(([loan, details, timestamp]) =>
+        updateLoan({ loan: transformToStateLoan(loan, details), timestamp }),
     )
 }
 
@@ -296,4 +354,12 @@ export function useTokenContractSigner(): (() => ERC20Contract) | undefined {
     return provider && tokenContract
         ? () => tokenContract.connect(provider.getSigner())
         : undefined
+}
+
+export function getBatchProviderAndContract(count: number) {
+    const provider = new CustomBatchProvider(count)
+    return {
+        provider,
+        contract: contract.connect(provider),
+    }
 }
