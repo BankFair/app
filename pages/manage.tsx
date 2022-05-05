@@ -13,7 +13,7 @@ import {
 import { infiniteAllowance } from '../features/web3/utils'
 import {
     selectLoans,
-    selectLoansTimestamp,
+    selectLoansBlockNumber,
     selectManagerAddress,
     selectTokenContract,
     selectTokenDecimals,
@@ -205,14 +205,14 @@ function Unstake() {
 
 function Loans() {
     const loans = useSelector(selectLoans)
-    const loansTimestamp = useSelector(selectLoansTimestamp)
+    const loansBlockNumber = useSelector(selectLoansBlockNumber)
     const tokenDecimals = useSelector(selectTokenDecimals)
     const account = useAccount()
     const getContract = useSigner()
     const dispatch = useDispatch()
 
     const loading =
-        !loansTimestamp ||
+        !loansBlockNumber ||
         !getContract ||
         !account ||
         tokenDecimals === undefined

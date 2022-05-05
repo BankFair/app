@@ -185,11 +185,11 @@ export function useLoadAccountLoans(
         contract
             .queryFilter(contract.filters.LoanRequested(null, account))
             .then((loans) => fetchLoans(loans.map((loan) => loan.args.loanId)))
-            .then(([loans, details, timestamp]) => {
+            .then(([loans, details, blockNumber]) => {
                 dispatch(
                     updateLoans({
                         loans: transformToStateLoans(loans, details),
-                        timestamp,
+                        blockNumber,
                     }),
                 )
             })
@@ -229,14 +229,14 @@ export function useLoadManagerState() {
         contract.loansCount().then(async (count) => {
             const length = count.toNumber()
 
-            const [loans, details, timestamp] = await fetchLoans(
+            const [loans, details, blockNumber] = await fetchLoans(
                 Array.from({ length }, (_, i) => i + 1),
             )
 
             dispatch(
                 setLoans({
                     loans: transformToStateLoans(loans, details),
-                    timestamp,
+                    blockNumber,
                 }),
             )
         })
@@ -321,7 +321,7 @@ export function fetchLoans(
     return Promise.all([
         Promise.all(ids.map((id) => contract.loans(id))),
         Promise.all(ids.map((id) => contract.loanDetails(id))),
-        provider.getCurrentBlockTimestamp(),
+        provider.getCurrentBlockNumber(),
     ])
 }
 
@@ -337,9 +337,9 @@ export function fetchAndUpdateLoan(
         contract.loanDetails(
             typeof loanId === 'number' ? BigNumber.from(loanId) : loanId,
         ),
-        provider.getCurrentBlockTimestamp(),
-    ]).then(([loan, details, timestamp]) =>
-        updateLoan({ loan: transformToStateLoan(loan, details), timestamp }),
+        provider.getCurrentBlockNumber(),
+    ]).then(([loan, details, blockNumber]) =>
+        updateLoan({ loan: transformToStateLoan(loan, details), blockNumber }),
     )
 }
 

@@ -110,8 +110,10 @@ export class CustomBatchProvider extends JsonRpcProvider {
         return promise
     }
 
-    async getCurrentBlockTimestamp(): Promise<number> {
-        return (await provider.getBlock(this.send('eth_blockNumber', [])))
-            .timestamp
+    async getCurrentBlockNumber(): Promise<number> {
+        return parseInt(
+            ((await this.send('eth_blockNumber', [])) as string).substring(2),
+            16,
+        )
     }
 }

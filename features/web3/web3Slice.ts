@@ -31,8 +31,8 @@ export interface Web3State {
     tokenAddress: string | undefined
     tokenDecimals: number | undefined
     loans: Loan[]
-    loansTimestamp: number
-    loanUpdates: { loan: Loan; timestamp: number }[]
+    loansBlockNumber: number
+    loanUpdates: { loan: Loan; blockNumber: number }[]
 }
 
 const initialState: Web3State = {
@@ -42,7 +42,7 @@ const initialState: Web3State = {
     tokenAddress: undefined, // TODO: Cache on build time
     tokenDecimals: undefined, // TODO: Cache on build time
     loans: [],
-    loansTimestamp: 0,
+    loansBlockNumber: 0,
     loanUpdates: [],
 }
 
@@ -83,25 +83,25 @@ export const navigationSlice = createSlice({
 
         setLoans(
             state,
-            { payload }: Action<{ loans: Loan[]; timestamp: number }>,
+            { payload }: Action<{ loans: Loan[]; blockNumber: number }>,
         ) {
-            const { timestamp } = payload
-            if (state.loansTimestamp > timestamp) return
+            const { blockNumber } = payload
+            if (state.loansBlockNumber > blockNumber) return
 
             state.loans = payload.loans
-            state.loansTimestamp = timestamp
+            state.loansBlockNumber = blockNumber
             state.loanUpdates = state.loanUpdates.filter(
-                (loan) => loan.timestamp > timestamp,
+                (loan) => loan.blockNumber > blockNumber,
             )
         },
         updateLoan(
             state,
-            { payload }: Action<{ loan: Loan; timestamp: number }>,
+            { payload }: Action<{ loan: Loan; blockNumber: number }>,
         ) {
-            const { timestamp } = payload
-            if (timestamp > state.loansTimestamp) {
+            const { blockNumber } = payload
+            if (blockNumber > state.loansBlockNumber) {
                 const updates = [...state.loanUpdates, payload].sort(
-                    sortByTimestampDescending,
+                    sortByBlockNumberDescending,
                 )
                 state.loanUpdates = filterUniqueIds(updates, 'loan').reverse()
             }
@@ -109,18 +109,18 @@ export const navigationSlice = createSlice({
         updateLoans(
             state,
             {
-                payload: { loans, timestamp },
-            }: Action<{ loans: Loan[]; timestamp: number }>,
+                payload: { loans, blockNumber },
+            }: Action<{ loans: Loan[]; blockNumber: number }>,
         ) {
-            if (timestamp <= state.loansTimestamp) return
+            if (blockNumber <= state.loansBlockNumber) return
 
             const updates = [...state.loanUpdates]
             for (const loan of loans) {
-                updates.push({ loan, timestamp })
+                updates.push({ loan, blockNumber })
             }
 
             state.loanUpdates = filterUniqueIds(
-                updates.sort(sortByTimestampDescending),
+                updates.sort(sortByBlockNumberDescending),
                 'loan',
             ).reverse()
         },
@@ -182,8 +182,8 @@ export const selectApprovedLoans = createSelector(selectLoans, (loans) =>
 export const selectRejectedLoans = createSelector(selectLoans, (loans) =>
     loans.filter((loan) => loan.status === LoanStatus.DENIED).reverse(),
 )
-export const selectLoansTimestamp = (state: AppState) =>
-    state.web3.loansTimestamp
+export const selectLoansBlockNumber = (state: AppState) =>
+    state.web3.loansBlockNumber
 
 export default navigationSlice.reducer
 
@@ -197,6 +197,14 @@ function sortByTimestampAscending(a: WithTimestamp, b: WithTimestamp) {
 }
 function sortByTimestampDescending(a: WithTimestamp, b: WithTimestamp) {
     return b.timestamp - a.timestamp
+}
+
+type WithBlockNumber = { blockNumber: number }
+function sortByBlockNumberAscending(a: WithBlockNumber, b: WithBlockNumber) {
+    return a.blockNumber - b.blockNumber
+}
+function sortByBlockNumberDescending(a: WithBlockNumber, b: WithBlockNumber) {
+    return b.blockNumber - a.blockNumber
 }
 
 function filterUniqueIds<
