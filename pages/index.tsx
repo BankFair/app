@@ -8,6 +8,7 @@ import { Page } from '../components'
 import { contract } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
+    selectLoans,
     selectManagerAddress,
     selectTokenContract,
     selectTokenDecimals,
@@ -47,6 +48,7 @@ const Home: NextPage = () => {
             `}</style>
 
             <Deposit />
+            <Withdraw />
         </Page>
     )
 }
@@ -167,6 +169,112 @@ function Deposit() {
                 value={value}
             />
             <button disabled={disabled || loading}>Deposit</button>
+        </form>
+    )
+}
+
+function Withdraw() {
+    const [loading, setLoading] = useState(false)
+    const [value, setValue] = useState('100')
+    const managerAddress = useSelector(selectManagerAddress)
+    const tokenContract = useSelector(selectTokenContract)
+    const tokenDecimals = useSelector(selectTokenDecimals)
+    const loans = useSelector(selectLoans)
+    const account = useAccount()
+    const provider = useProvider()
+
+    const isManager = managerAddress === account
+
+    const [withdrawable, setWithdrawable] = useState('0')
+    useEffect(() => {
+        if (!tokenDecimals || !provider) return
+
+        contract
+            .connect(provider.getSigner())
+            .amountWithdrawable()
+            .then((value) => {
+                setWithdrawable(formatUnits(value, tokenDecimals))
+            })
+    }, [setWithdrawable, provider, tokenDecimals, loans, withdrawable])
+
+    const disabled =
+        !tokenContract ||
+        !account ||
+        !provider ||
+        tokenDecimals === undefined ||
+        isManager
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = disabled
+        ? undefined
+        : (event) => {
+              event.preventDefault()
+              setLoading(true)
+
+              const amount = parseUnits(value, tokenDecimals)
+              const signer = provider.getSigner()
+
+              const connectedContract = contract.connect(signer)
+
+              // TODO: Handle user cancelation
+              connectedContract
+                  .amountWithdrawable()
+                  .then(async (withdrawableAmount) => {
+                      if (amount.gt(withdrawableAmount)) {
+                          alert(
+                              `Maximum withdrawable amount is ${formatUnits(
+                                  withdrawableAmount,
+                                  tokenDecimals,
+                              )}`,
+                          ) // TODO: Display in component
+                          setLoading(false)
+                          return
+                      }
+
+                      const tx = await connectedContract.withdraw(amount)
+
+                      await tx.wait()
+
+                      // TODO: In page notification
+
+                      setLoading(false)
+
+                      // TODO: Refresh staked
+
+                      setWithdrawable(
+                          formatUnits(
+                              parseUnits(withdrawable, tokenDecimals).sub(
+                                  amount,
+                              ),
+                              tokenDecimals,
+                          ),
+                      )
+                  })
+          }
+
+    return (
+        <form className="section" onSubmit={handleSubmit}>
+            <h4>Withdraw</h4>
+
+            {managerAddress &&
+                account &&
+                (isManager ? (
+                    <div>Manager can not withdraw</div>
+                ) : (
+                    <div>
+                        Maximum withdrawable:{' '}
+                        <a onClick={() => setValue(withdrawable)}>
+                            {withdrawable}
+                        </a>
+                    </div>
+                ))}
+
+            <input
+                type="number"
+                inputMode="decimal"
+                onChange={(event) => void setValue(event.target.value)}
+                value={value}
+            />
+            <button disabled={disabled || loading}>Withdraw</button>
         </form>
     )
 }
