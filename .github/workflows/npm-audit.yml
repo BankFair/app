@@ -1,0 +1,26 @@
+name: 'npm audit'
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    schedule:
+        - cron: '19 17 * * 5'
+
+jobs:
+    audit:
+        name: Audit
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Download Yarn
+              run: '${GITHUB_WORKSPACE}/download-yarn.sh'
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: '16'
+                  cache: 'yarn'
+            - name: Install packages
+              run: yarn install
+            - name: Audit
+              run: yarn npm audit --all --recursive --severity info
