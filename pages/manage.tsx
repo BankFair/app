@@ -171,7 +171,16 @@ function Unstake() {
     const [value, setValue] = useState('100')
     const tokenContract = useSelector(selectTokenContract)
     const tokenDecimals = useSelector(selectTokenDecimals)
+    const loans = useSelector(selectLoans)
     const provider = useProvider()
+
+    const [unstakable, setUnstakable] = useState('')
+    useEffect(() => {
+        if (!tokenDecimals) return
+        contract
+            .amountUnstakable()
+            .then((value) => setUnstakable(formatUnits(value, tokenDecimals)))
+    }, [setUnstakable, tokenDecimals, loans, unstakable])
 
     if (!tokenContract || !provider || tokenDecimals === undefined) {
         return null
@@ -201,14 +210,27 @@ function Unstake() {
             await tx.wait()
 
             // TODO: In page notification
+            // TODO: Refresh staked amount
 
             setLoading(false)
+            setUnstakable(
+                formatUnits(
+                    parseUnits(unstakable, tokenDecimals).sub(amount),
+                    tokenDecimals,
+                ),
+            )
         })
     }
 
     return (
         <form className="section" onSubmit={handleSubmit}>
             <h4>Unstake</h4>
+            {unstakable && (
+                <div>
+                    Maximum unstakable:{' '}
+                    <a onClick={() => setValue(unstakable)}>{unstakable}</a>
+                </div>
+            )}
             <input
                 type="number"
                 inputMode="decimal"
