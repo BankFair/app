@@ -73,6 +73,39 @@ export function LoanView({
                     <td>Status</td>
                     <td>{formatStatus(status)}</td>
                 </tr>
+                {status !== LoanStatus.APPLIED &&
+                    status !== LoanStatus.DENIED &&
+                    status !== LoanStatus.CANCELLED && (
+                        <>
+                            <tr>
+                                <td>Approved</td>
+                                <td>
+                                    <TimeAgo datetime={details.approvedTime} />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Repaid</td>
+                                <td>
+                                    {formatUnits(
+                                        details.totalAmountRepaid,
+                                        tokenDecimals,
+                                    )}{' '}
+                                    {TOKEN_SYMBOL}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Interest paid</td>
+                                <td>
+                                    {formatUnits(
+                                        details.interestPaid,
+                                        tokenDecimals,
+                                    )}{' '}
+                                    {TOKEN_SYMBOL}
+                                </td>
+                            </tr>
+                        </>
+                    )}
                 {approve && status === LoanStatus.APPLIED && getContract && (
                     <tr>
                         <td colSpan={2} style={{ paddingTop: 10 }}>
@@ -96,36 +129,19 @@ export function LoanView({
                         </td>
                     </tr>
                 )}
-                {status !== LoanStatus.APPLIED && status !== LoanStatus.DENIED && (
-                    <>
-                        <tr>
-                            <td>Approved</td>
-                            <td>
-                                <TimeAgo datetime={details.approvedTime} />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Repaid</td>
-                            <td>
-                                {formatUnits(
-                                    details.totalAmountRepaid,
-                                    tokenDecimals,
-                                )}{' '}
-                                {TOKEN_SYMBOL}
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Interest paid</td>
-                            <td>
-                                {formatUnits(
-                                    details.interestPaid,
-                                    tokenDecimals,
-                                )}{' '}
-                                {TOKEN_SYMBOL}
-                            </td>
-                        </tr>
-                    </>
+                {approve && status === LoanStatus.APPROVED && getContract && (
+                    <tr>
+                        <td colSpan={2} style={{ paddingTop: 10 }}>
+                            <ActionButton
+                                red
+                                action={() =>
+                                    getContract().cancelLoan(BigNumber.from(id))
+                                }
+                            >
+                                Cancel
+                            </ActionButton>
+                        </td>
+                    </tr>
                 )}
                 {borrow &&
                     getContract &&

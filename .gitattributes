@@ -1,0 +1,7 @@
+.env linguist-vendored
+download-yarn.sh linguist-vendored
+next.config.js linguist-vendored
+*.nix linguist-vendored
+*.svg linguist-vendored
+*.md linguist-vendored
+*.json linguist-vendored

@@ -204,6 +204,7 @@ export function useLoadAccountLoans(
 
         contract.on(contract.filters.LoanApproved(), handleLoanEvent)
         contract.on(contract.filters.LoanDenied(), handleLoanEvent)
+        contract.on(contract.filters.LoanCancelled(), handleLoanEvent)
         contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
         contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
 
@@ -244,6 +245,7 @@ export function useLoadManagerState() {
         contract.on(contract.filters.LoanRequested(), handleLoanEvent)
         contract.on(contract.filters.LoanApproved(), handleLoanEvent)
         contract.on(contract.filters.LoanDenied(), handleLoanEvent)
+        contract.on(contract.filters.LoanCancelled(), handleLoanEvent)
         contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
         contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
         function handleLoanEvent<_T>(loanId: BigNumber) {
