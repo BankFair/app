@@ -1,4 +1,5 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
+import { BigNumber } from 'ethers'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useEffect, useRef, useState } from 'react'
@@ -54,6 +55,7 @@ const Home: NextPage = () => {
             <PoolStats />
             <Deposit />
             <Withdraw />
+            <Earnings />
         </Page>
     )
 }
@@ -61,7 +63,7 @@ const Home: NextPage = () => {
 export default Home
 
 function Deposit() {
-    const [loading, setLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
     const [value, setValue] = useState('100')
     const managerAddress = useSelector(selectManagerAddress)
     const tokenContract = useSelector(selectTokenContract)
@@ -92,11 +94,13 @@ function Deposit() {
         tokenDecimals === undefined ||
         isManager
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = disabled
+    const noSubmit = disabled || isLoading
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = noSubmit
         ? undefined
         : (event) => {
               event.preventDefault()
-              setLoading(true)
+              setIsLoading(true)
 
               const amount = parseUnits(value, tokenDecimals)
               const signer = provider.getSigner()
@@ -110,7 +114,7 @@ function Deposit() {
                               tokenDecimals,
                           )}`,
                       ) // TODO: Display in component
-                      setLoading(false)
+                      setIsLoading(false)
                       return
                   }
 
@@ -125,7 +129,7 @@ function Deposit() {
 
                   if (balance.lt(amount)) {
                       alert('USDC balance too low') // TODO: Display in component
-                      setLoading(false)
+                      setIsLoading(false)
                       return
                   }
 
@@ -151,7 +155,7 @@ function Deposit() {
 
                   // TODO: In page notification
 
-                  setLoading(false)
+                  setIsLoading(false)
               })
           }
 
@@ -173,13 +177,13 @@ function Deposit() {
                 onChange={(event) => void setValue(event.target.value)}
                 value={value}
             />
-            <button disabled={disabled || loading}>Deposit</button>
+            <button disabled={noSubmit}>Deposit</button>
         </form>
     )
 }
 
 function Withdraw() {
-    const [loading, setLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
     const [value, setValue] = useState('100')
     const managerAddress = useSelector(selectManagerAddress)
     const tokenContract = useSelector(selectTokenContract)
@@ -209,11 +213,13 @@ function Withdraw() {
         tokenDecimals === undefined ||
         isManager
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = disabled
+    const noSubmit = disabled || isLoading
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = noSubmit
         ? undefined
         : (event) => {
               event.preventDefault()
-              setLoading(true)
+              setIsLoading(true)
 
               const amount = parseUnits(value, tokenDecimals)
               const signer = provider.getSigner()
@@ -231,7 +237,7 @@ function Withdraw() {
                                   tokenDecimals,
                               )}`,
                           ) // TODO: Display in component
-                          setLoading(false)
+                          setIsLoading(false)
                           return
                       }
 
@@ -241,7 +247,7 @@ function Withdraw() {
 
                       // TODO: In page notification
 
-                      setLoading(false)
+                      setIsLoading(false)
 
                       // TODO: Refresh staked
 
@@ -279,7 +285,71 @@ function Withdraw() {
                 onChange={(event) => void setValue(event.target.value)}
                 value={value}
             />
-            <button disabled={disabled || loading}>Withdraw</button>
+            <button disabled={noSubmit}>Withdraw</button>
+        </form>
+    )
+}
+
+function Earnings() {
+    const [isLoading, setIsLoading] = useState(false)
+    const [earnings, setEarnings] = useState<{
+        amount: BigNumber
+        account: string
+    } | null>(null)
+    const account = useAccount()
+    const tokenDecimals = useSelector(selectTokenDecimals)
+    const provider = useProvider()
+
+    useEffect(() => {
+        if (!account || !tokenDecimals) return
+        contract.protocolEarningsOf(account).then((earnings) => {
+            if (!earnings.gt(BigNumber.from(0))) return
+            setEarnings({
+                amount: earnings,
+                account,
+            })
+        })
+    }, [account, setEarnings, tokenDecimals])
+
+    if (!earnings || !provider) return null
+
+    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined =
+        isLoading
+            ? undefined
+            : (event) => {
+                  event.preventDefault()
+
+                  setIsLoading(true)
+                  contract
+                      .connect(provider.getSigner())
+                      .withdrawProtocolEarnings()
+                      .then((tx) => {
+                          return tx.wait()
+                      })
+                      .then(() => {
+                          setIsLoading(false)
+                          setEarnings({
+                              account: account!,
+                              amount: BigNumber.from(0),
+                          })
+                      })
+              }
+
+    return (
+        <form className="section" onSubmit={handleSubmit}>
+            <h4>Earnings</h4>
+
+            <div>
+                Your earnings:{' '}
+                {earnings &&
+                    earnings.account === account &&
+                    formatUnits(earnings.amount, tokenDecimals)}
+            </div>
+            <button
+                disabled={isLoading || earnings?.amount.lte(BigNumber.from(0))}
+            >
+                Withdraw
+            </button>
         </form>
     )
 }

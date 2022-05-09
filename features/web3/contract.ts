@@ -45,7 +45,7 @@ export interface CoreContract
     token: ContractFunction<string>
     loansCount: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
-    balanceOf: ContractFunction<BigNumber, [wallet: string]>
+    balanceOf: ContractFunction<BigNumber, [account: string]>
     stake: ContractFunction<ContractTransaction, [amount: BigNumber]>
     unstake: ContractFunction<ContractTransaction, [amount: BigNumber]>
     deposit: ContractFunction<ContractTransaction, [amount: BigNumber]>
@@ -75,6 +75,9 @@ export interface CoreContract
 
     poolFunds: ContractFunction<BigNumber>
     poolLiquidity: ContractFunction<BigNumber>
+
+    protocolEarningsOf: ContractFunction<BigNumber, [account: string]>
+    withdrawProtocolEarnings: ContractFunction<ContractTransaction>
 
     filters: {
         /**

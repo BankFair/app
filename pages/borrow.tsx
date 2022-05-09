@@ -66,7 +66,7 @@ const Borrow: NextPage = () => {
 export default Borrow
 
 function RequestLoan() {
-    const [loading, setLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
     const [amount, setAmount] = useState('100')
     const [duration, setDuration] = useState('86400')
     const managerAddress = useSelector(selectManagerAddress)
@@ -84,81 +84,84 @@ function RequestLoan() {
         tokenDecimals === undefined ||
         isManager
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = disabled
-        ? undefined
-        : (event) => {
-              event.preventDefault()
+    const noSubmit = disabled || isLoading
 
-              if (
-                  loans.filter(
-                      (loan) =>
-                          loan.borrower === account &&
-                          loan.status === LoanStatus.APPLIED,
-                  ).length
-              ) {
-                  // TODO: Display in component
-                  alert(`A loan you requested is already pending approval`)
-                  return
+    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined =
+        disabled || isLoading
+            ? undefined
+            : (event) => {
+                  event.preventDefault()
+
+                  if (
+                      loans.filter(
+                          (loan) =>
+                              loan.borrower === account &&
+                              loan.status === LoanStatus.APPLIED,
+                      ).length
+                  ) {
+                      // TODO: Display in component
+                      alert(`A loan you requested is already pending approval`)
+                      return
+                  }
+
+                  setIsLoading(true)
+
+                  const parsedAmount = parseUnits(amount, tokenDecimals)
+                  const parsedDuration = BigNumber.from(duration)
+                  const signer = provider.getSigner()
+
+                  Promise.all([
+                      contract.minAmount(),
+                      contract.minDuration(),
+                      contract.maxDuration(),
+                  ]).then(async ([minAmount, minDuration, maxDuration]) => {
+                      if (parsedAmount.lt(minAmount)) {
+                          // TODO: Display in component
+                          alert(
+                              `Amount must be higher than ${formatUnits(
+                                  minAmount,
+                                  tokenDecimals,
+                              )}`,
+                          )
+                          setIsLoading(false)
+                          return
+                      }
+
+                      if (parsedDuration.lt(minDuration)) {
+                          // TODO: Display in component
+                          alert(
+                              `Amount must be higher than ${formatUnits(
+                                  minDuration,
+                                  tokenDecimals,
+                              )}`,
+                          )
+                          setIsLoading(false)
+                          return
+                      }
+
+                      if (parsedDuration.gt(maxDuration)) {
+                          // TODO: Display in component
+                          alert(
+                              `Amount must be lower than ${formatUnits(
+                                  maxDuration,
+                                  tokenDecimals,
+                              )}`,
+                          )
+                          setIsLoading(false)
+                          return
+                      }
+
+                      // TODO: Handle errors
+                      // TODO: Handle user cancelation
+                      await contract
+                          .connect(signer)
+                          .requestLoan(parsedAmount, parsedDuration)
+
+                      // TODO: In page notification
+
+                      setIsLoading(false)
+                  })
               }
-
-              setLoading(true)
-
-              const parsedAmount = parseUnits(amount, tokenDecimals)
-              const parsedDuration = BigNumber.from(duration)
-              const signer = provider.getSigner()
-
-              Promise.all([
-                  contract.minAmount(),
-                  contract.minDuration(),
-                  contract.maxDuration(),
-              ]).then(async ([minAmount, minDuration, maxDuration]) => {
-                  if (parsedAmount.lt(minAmount)) {
-                      // TODO: Display in component
-                      alert(
-                          `Amount must be higher than ${formatUnits(
-                              minAmount,
-                              tokenDecimals,
-                          )}`,
-                      )
-                      setLoading(false)
-                      return
-                  }
-
-                  if (parsedDuration.lt(minDuration)) {
-                      // TODO: Display in component
-                      alert(
-                          `Amount must be higher than ${formatUnits(
-                              minDuration,
-                              tokenDecimals,
-                          )}`,
-                      )
-                      setLoading(false)
-                      return
-                  }
-
-                  if (parsedDuration.gt(maxDuration)) {
-                      // TODO: Display in component
-                      alert(
-                          `Amount must be lower than ${formatUnits(
-                              maxDuration,
-                              tokenDecimals,
-                          )}`,
-                      )
-                      setLoading(false)
-                      return
-                  }
-
-                  // TODO: Handle errors
-                  // TODO: Handle user cancelation
-                  await contract
-                      .connect(signer)
-                      .requestLoan(parsedAmount, parsedDuration)
-
-                  // TODO: In page notification
-
-                  setLoading(false)
-              })
-          }
 
     return (
         <form className="section" onSubmit={handleSubmit}>
@@ -196,7 +199,7 @@ function RequestLoan() {
                     </tr>
                 </tbody>
             </table>
-            <button disabled={disabled || loading}>Request loan</button>
+            <button disabled={noSubmit}>Request loan</button>
         </form>
     )
 }

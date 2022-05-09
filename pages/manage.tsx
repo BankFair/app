@@ -152,7 +152,7 @@ function Stake() {
     }
 
     return (
-        <form className="section" onSubmit={handleSubmit}>
+        <form className="section" onSubmit={loading ? undefined : handleSubmit}>
             <h4>Stake</h4>
             <div>Staked: {staked}</div>
             <input
@@ -223,7 +223,7 @@ function Unstake() {
     }
 
     return (
-        <form className="section" onSubmit={handleSubmit}>
+        <form className="section" onSubmit={loading ? undefined : handleSubmit}>
             <h4>Unstake</h4>
             {unstakable && (
                 <div>
