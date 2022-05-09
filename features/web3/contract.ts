@@ -73,6 +73,9 @@ export interface CoreContract
     loans: ContractFunction<EVMLoan, [loanId: BigNumber | number]>
     loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumber | number]>
 
+    poolFunds: ContractFunction<BigNumber>
+    poolLiquidity: ContractFunction<BigNumber>
+
     filters: {
         /**
          * ```solidity

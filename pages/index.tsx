@@ -4,7 +4,7 @@ import Head from 'next/head'
 import { FormEventHandler, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { APP_NAME, CONTRACT_ADDRESS, useAccount, useProvider } from '../app'
-import { Page } from '../components'
+import { Page, PoolStats } from '../components'
 import { contract } from '../features/web3/contract'
 import { infiniteAllowance } from '../features/web3/utils'
 import {
@@ -40,6 +40,10 @@ const Home: NextPage = () => {
                     > h4 {
                         margin: 0 0 10px;
                     }
+
+                    table {
+                        margin: 0 auto;
+                    }
                 }
 
                 h3 {
@@ -47,6 +51,7 @@ const Home: NextPage = () => {
                 }
             `}</style>
 
+            <PoolStats />
             <Deposit />
             <Withdraw />
         </Page>
