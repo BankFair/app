@@ -25,7 +25,7 @@ export function LoanView({
     account,
     dispatch,
     getContract,
-    approve,
+    manage,
     borrow,
     hideBorrower,
 }: {
@@ -34,14 +34,14 @@ export function LoanView({
     account: string
     dispatch: Dispatch
     getContract?: () => CoreContract
-    approve?: boolean
+    manage?: boolean
     borrow?: () => ERC20Contract
     hideBorrower?: boolean
 }) {
     if (process.env.NODE_ENV === 'development') {
-        if (approve && borrow) {
+        if (manage && borrow) {
             throw new Error(
-                '`approve` and `borrow` can not be enabled at the same time',
+                '`manage` and `borrow` can not be enabled at the same time',
             )
         }
     }
@@ -106,7 +106,7 @@ export function LoanView({
                             </tr>
                         </>
                     )}
-                {approve && status === LoanStatus.APPLIED && getContract && (
+                {manage && status === LoanStatus.APPLIED && getContract && (
                     <tr>
                         <td colSpan={2} style={{ paddingTop: 10 }}>
                             <ActionButton
@@ -129,7 +129,7 @@ export function LoanView({
                         </td>
                     </tr>
                 )}
-                {approve && status === LoanStatus.APPROVED && getContract && (
+                {manage && status === LoanStatus.APPROVED && getContract && (
                     <tr>
                         <td colSpan={2} style={{ paddingTop: 10 }}>
                             <ActionButton
@@ -143,6 +143,24 @@ export function LoanView({
                         </td>
                     </tr>
                 )}
+                {manage &&
+                    status === LoanStatus.FUNDS_WITHDRAWN &&
+                    getContract && (
+                        <tr>
+                            <td colSpan={2} style={{ paddingTop: 10 }}>
+                                <ActionButton
+                                    red
+                                    action={() =>
+                                        getContract().defaultLoan(
+                                            BigNumber.from(id),
+                                        )
+                                    }
+                                >
+                                    Default
+                                </ActionButton>
+                            </td>
+                        </tr>
+                    )}
                 {borrow &&
                     getContract &&
                     (status === LoanStatus.APPROVED ? (

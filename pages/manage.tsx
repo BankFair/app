@@ -269,7 +269,7 @@ function Loans() {
                     tokenDecimals={tokenDecimals}
                     dispatch={dispatch}
                     getContract={getContract}
-                    approve
+                    manage
                 />
             ))
     )
