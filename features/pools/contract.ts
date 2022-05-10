@@ -1,9 +1,22 @@
 import { BigNumber, Contract, ContractTransaction, Event } from 'ethers'
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { CONTRACT_ADDRESS, useProvider } from '../../app'
+import {
+    AppDispatch,
+    CONTRACT_ADDRESS,
+    useProvider,
+    provider,
+    CustomBatchProvider,
+    ContractFunction,
+    CustomBaseContract,
+    getERC20Contract,
+    EventFilterFactory,
+    EventFilterWithType,
+    TupleToObject,
+    TupleToObjectWithPropNames,
+    ERC20Contract,
+} from '../../app'
 import abi from './abi.json'
-import provider, { CustomBatchProvider } from './provider'
 import {
     setLoans,
     setManagerAddress,
@@ -14,20 +27,9 @@ import {
     LoanDetails as StateLoanDetails,
     selectManagerAddress,
     updateLoans,
-    selectTokenContract,
-} from './web3Slice'
-import {
-    ContractFunction,
-    CustomBaseContract,
-    getERC20Contract,
-    EventFilterFactory,
-    EventFilterWithType,
-    TupleToObject,
-    TupleToObjectWithPropNames,
     LoanStatus,
-    ERC20Contract,
-} from './utils'
-import { Dispatch } from 'redux'
+    selectTokenContract,
+} from './poolsSlice'
 
 type TypedEvent<
     T extends readonly unknown[],
@@ -178,7 +180,7 @@ const accounts: string[] = []
 const onceRef = { current: false }
 export function useLoadAccountLoans(
     account: string | undefined,
-    dispatch: Dispatch,
+    dispatch: AppDispatch,
 ) {
     const managerAddress = useSelector(selectManagerAddress)
 

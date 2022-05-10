@@ -4,8 +4,7 @@ import type { AppProps } from 'next/app'
 import { store, connectors, COLOR_BLUE } from '../app'
 import Navigation from '../features/navigation/Navigation'
 import { SwitchNetworkModal } from '../components'
-import { useFetchContractPropertiesOnce } from '../features/web3/contract'
-import { useConnectEagerly } from '../features/web3/hooks'
+import { useFetchContractPropertiesOnce, useConnectEagerly } from '../features'
 
 export default function App({ Component, pageProps }: AppProps) {
     return (

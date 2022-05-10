@@ -15,11 +15,10 @@ import { TiChartAreaOutline } from 'react-icons/ti'
 import { AiFillBank } from 'react-icons/ai'
 import { RiAccountCircleFill } from 'react-icons/ri'
 import { MdOutlineAdminPanelSettings } from 'react-icons/md'
-import { BiTestTube } from 'react-icons/bi'
 import { FaFaucet } from 'react-icons/fa'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
-import { selectManagerAddress } from '../web3/web3Slice'
+import { selectManagerAddress } from '../pools'
 
 export default function Sidebar({
     isVisible,

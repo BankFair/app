@@ -2,12 +2,12 @@ import { formatUnits } from '@ethersproject/units'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { EtherscanLink } from './EtherscanLink'
-import { contract } from '../features/web3/contract'
 import {
     selectLoans,
     selectManagerAddress,
     selectTokenDecimals,
-} from '../features/web3/web3Slice'
+    contract,
+} from '../features'
 
 export function PoolStats() {
     const stats = useStats()

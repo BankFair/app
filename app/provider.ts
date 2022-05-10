@@ -1,12 +1,12 @@
 import { deepCopy } from '@ethersproject/properties'
 import { fetchJson } from '@ethersproject/web'
 import { JsonRpcBatchProvider, JsonRpcProvider } from '@ethersproject/providers'
+import { Contract } from '@ethersproject/contracts'
 
-import { RPC_URL } from '../../app'
+import { RPC_URL } from './constants'
+import { erc20Abi, ERC20Contract } from './utils'
 
-const provider = new JsonRpcBatchProvider(RPC_URL)
-
-export default provider
+export const provider = new JsonRpcBatchProvider(RPC_URL)
 
 export class CustomBatchProvider extends JsonRpcProvider {
     private batch: Array<{
@@ -116,4 +116,8 @@ export class CustomBatchProvider extends JsonRpcProvider {
             16,
         )
     }
+}
+
+export function getERC20Contract(address: string) {
+    return new Contract(address, erc20Abi, provider) as ERC20Contract
 }

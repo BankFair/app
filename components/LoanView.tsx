@@ -3,21 +3,20 @@ import { BigNumber } from 'ethers'
 import { useCallback, useState } from 'react'
 import TimeAgo from 'timeago-react'
 
-import { CONTRACT_ADDRESS, TOKEN_SYMBOL } from '../app'
-
-import { CoreContract, fetchAndUpdateLoan } from '../features/web3/contract'
 import {
+    AppDispatch,
     ERC20Contract,
     infiniteAllowance,
-    LoanStatus,
-} from '../features/web3/utils'
-import { Loan } from '../features/web3/web3Slice'
+    CONTRACT_ADDRESS,
+    TOKEN_SYMBOL,
+} from '../app'
+
+import { LoanStatus, Loan, CoreContract, fetchAndUpdateLoan } from '../features'
 
 import { ActionButton } from './ActionButton'
 import { EtherscanLink } from './EtherscanLink'
 import { Modal } from './Modal'
 import { Button } from './Button'
-import { Dispatch } from 'redux'
 
 export function LoanView({
     loan: { borrower, amount, requestedTime, id, status, details },
@@ -32,7 +31,7 @@ export function LoanView({
     loan: Loan
     tokenDecimals: number
     account: string
-    dispatch: Dispatch
+    dispatch: AppDispatch
     getContract?: () => CoreContract
     manage?: boolean
     borrow?: () => ERC20Contract
@@ -211,7 +210,7 @@ function RepayModal({
     getTokenContract(): ERC20Contract
     account: string
     id: number
-    dispatch: Dispatch
+    dispatch: AppDispatch
     tokenDecimals: number
 }) {
     const [isVisible, setIsVisible] = useState(false)

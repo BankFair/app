@@ -4,16 +4,21 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { APP_NAME, CONTRACT_ADDRESS, useAccount, useProvider } from '../app'
-import { Page, PoolStats } from '../components'
-import { contract } from '../features/web3/contract'
-import { infiniteAllowance } from '../features/web3/utils'
 import {
+    APP_NAME,
+    CONTRACT_ADDRESS,
+    useAccount,
+    useProvider,
+    infiniteAllowance,
+} from '../app'
+import { Page, PoolStats } from '../components'
+import {
+    contract,
     selectLoans,
     selectManagerAddress,
     selectTokenContract,
     selectTokenDecimals,
-} from '../features/web3/web3Slice'
+} from '../features'
 
 const title = `Earn - ${APP_NAME}`
 

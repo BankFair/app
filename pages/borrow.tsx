@@ -11,14 +11,12 @@ import {
     useLoadAccountLoans,
     useSigner,
     useTokenContractSigner,
-} from '../features/web3/contract'
-import { LoanStatus } from '../features/web3/utils'
-import {
+    LoanStatus,
     selectLoans,
     selectManagerAddress,
     selectTokenContract,
     selectTokenDecimals,
-} from '../features/web3/web3Slice'
+} from '../features'
 
 const title = `Borrow - ${APP_NAME}`
 
