@@ -3,6 +3,7 @@ import {
     ThunkAction,
     Action as ReduxAction,
 } from '@reduxjs/toolkit'
+import { EqualityFn, useSelector as useReduxSelector } from 'react-redux'
 
 // Do not use `../features`
 import { web3Reducer } from '../features/web3/web3Slice'
@@ -34,3 +35,8 @@ export type Action<T> = {
     payload: T
     type: string
 }
+
+export const useSelector: <Selected = unknown>(
+    selector: (state: AppState) => Selected,
+    equalityFn?: EqualityFn<Selected> | undefined,
+) => Selected = useReduxSelector

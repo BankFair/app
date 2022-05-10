@@ -1,9 +1,8 @@
 import { BigNumber, Contract, ContractTransaction, Event } from 'ethers'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
     AppDispatch,
-    CONTRACT_ADDRESS,
     useProvider,
     provider,
     CustomBatchProvider,
@@ -15,20 +14,19 @@ import {
     TupleToObject,
     TupleToObjectWithPropNames,
     ERC20Contract,
+    POOLS,
+    nullAddress,
 } from '../../app'
 import abi from './abi.json'
 import {
     setLoans,
-    setManagerAddress,
-    setTokenAddress,
-    setTokenDecimals,
     updateLoan,
     Loan as StateLoan,
     LoanDetails as StateLoanDetails,
-    selectManagerAddress,
     updateLoans,
     LoanStatus,
-    selectTokenContract,
+    Pool,
+    setPoolInfo,
 } from './poolsSlice'
 
 type TypedEvent<
@@ -39,9 +37,10 @@ type TypedEvent<
 export interface CoreContract
     extends Omit<
         CustomBaseContract,
-        'filters' | 'connect' | 'queryFilter' | 'on'
+        'filters' | 'connect' | 'attach' | 'queryFilter' | 'on'
     > {
     connect(...args: Parameters<CustomBaseContract['connect']>): this
+    attach(...args: Parameters<CustomBaseContract['attach']>): this
 
     manager: ContractFunction<string>
     token: ContractFunction<string>
@@ -54,7 +53,7 @@ export interface CoreContract
     withdraw: ContractFunction<ContractTransaction, [amount: BigNumber]>
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakable: ContractFunction<BigNumber>
-    amountWithdrawable: ContractFunction<BigNumber>
+    amountWithdrawable: ContractFunction<BigNumber, [account: string]>
     maxDuration: ContractFunction<BigNumber>
     minAmount: ContractFunction<BigNumber>
     minDuration: ContractFunction<BigNumber>
@@ -148,118 +147,133 @@ export interface CoreContract
 }
 
 export const contract = new Contract(
-    CONTRACT_ADDRESS,
+    nullAddress,
     abi,
     provider,
 ) as unknown as CoreContract
 
-export function useFetchContractPropertiesOnce() {
+const ref = { current: false }
+export function useFetchPoolsPropertiesOnce() {
     const dispatch = useDispatch()
-    const ref = useRef(false)
     useEffect(() => {
         if (typeof window !== 'object' || ref.current) return
-        // https://github.com/reactwg/react-18/discussions/18
-        // Read "Effects that should only run once can use a ref"
         ref.current = true
 
-        contract.manager().then((manager) => {
-            dispatch(setManagerAddress(manager))
-        })
-        contract.token().then((token) => {
-            dispatch(setTokenAddress(token))
+        for (const pool of POOLS) {
+            const attachedContract = contract.attach(pool.address)
 
-            const tokenContract = getERC20Contract(token)
-            tokenContract.decimals().then((decimals) => {
-                dispatch(setTokenDecimals(decimals))
+            Promise.all([
+                attachedContract.manager(),
+                attachedContract.token(),
+            ]).then(async ([managerAddress, tokenAddress]) => {
+                const tokenContract = getERC20Contract(tokenAddress)
+                const tokenDecimals = await tokenContract.decimals()
+
+                dispatch(
+                    setPoolInfo({
+                        name: pool.name,
+                        address: pool.address,
+                        managerAddress,
+                        tokenAddress,
+                        tokenDecimals,
+                    }),
+                )
             })
-        })
+        }
     }, [dispatch])
 }
 
-const accounts: string[] = []
-const onceRef = { current: false }
+const map: Record<string, string[]> = {}
 export function useLoadAccountLoans(
+    poolAddress: string,
     account: string | undefined,
     dispatch: AppDispatch,
+    pool?: Pool,
 ) {
-    const managerAddress = useSelector(selectManagerAddress)
-
     useEffect(() => {
-        if (!managerAddress || !account) return
-        if (managerAddress === account) return
+        if (!account || !pool) return
+        if (pool.managerAddress === account) return
+        const subscribed: string[] | undefined = map[poolAddress]
+        const accounts = subscribed || (map[poolAddress] = [])
         if (accounts.includes(account)) return
         accounts.push(account)
 
-        contract
-            .queryFilter(contract.filters.LoanRequested(null, account))
-            .then((loans) => fetchLoans(loans.map((loan) => loan.args.loanId)))
+        const attached = contract.attach(poolAddress)
+        attached
+            .queryFilter(attached.filters.LoanRequested(null, account))
+            .then((loans) =>
+                fetchLoans(
+                    attached,
+                    loans.map((loan) => loan.args.loanId),
+                ),
+            )
             .then(([loans, details, blockNumber]) => {
                 dispatch(
                     updateLoans({
                         loans: transformToStateLoans(loans, details),
                         blockNumber,
+                        poolAddress,
                     }),
                 )
             })
 
-        contract.on(
-            contract.filters.LoanRequested(null, account),
+        attached.on(
+            attached.filters.LoanRequested(null, account),
             handleLoanEvent,
         )
 
-        if (onceRef.current) return
-        onceRef.current = true
+        if (subscribed) return
 
-        contract.on(contract.filters.LoanApproved(), handleLoanEvent)
-        contract.on(contract.filters.LoanDenied(), handleLoanEvent)
-        contract.on(contract.filters.LoanCancelled(), handleLoanEvent)
-        contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
-        contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
+        attached.on(attached.filters.LoanApproved(), handleLoanEvent)
+        attached.on(attached.filters.LoanDenied(), handleLoanEvent)
+        attached.on(attached.filters.LoanCancelled(), handleLoanEvent)
+        attached.on(attached.filters.LoanRepaid(), handleLoanEvent)
+        attached.on(attached.filters.LoanDefaulted(), handleLoanEvent)
 
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            fetchAndUpdateLoan(loanId).then((action) => {
-                if (action.payload.loan.borrower !== account) return
+            fetchAndUpdateLoan(poolAddress, attached, loanId).then((action) => {
+                if (!accounts.includes(action.payload.loan.borrower)) return
                 dispatch(action)
             })
         }
-    }, [account, managerAddress, dispatch])
+    }, [account, pool, dispatch, poolAddress])
 }
 
-const ref = { current: false }
-export function useLoadManagerState() {
+const loaded: Record<string, boolean> = {}
+export function useLoadManagerState(address: string, pool: Pool | undefined) {
     const dispatch = useDispatch()
     useEffect(() => {
-        if (typeof window !== 'object' || ref.current) return
-        // https://github.com/reactwg/react-18/discussions/18
-        // Read "Effects that should only run once can use a ref"
-        ref.current = true
+        if (typeof window !== 'object' || loaded[address] || !pool) return
+        loaded[address] = true
 
-        // TODO: Replace with `loansCount`
-        contract.loansCount().then(async (count) => {
+        const attached = contract.attach(address)
+        attached.loansCount().then(async (count) => {
             const length = count.toNumber()
 
             const [loans, details, blockNumber] = await fetchLoans(
+                attached,
                 Array.from({ length }, (_, i) => i + 1),
             )
 
             dispatch(
                 setLoans({
+                    poolAddress: address,
                     loans: transformToStateLoans(loans, details),
                     blockNumber,
                 }),
             )
         })
 
-        contract.on(contract.filters.LoanRequested(), handleLoanEvent)
-        contract.on(contract.filters.LoanApproved(), handleLoanEvent)
-        contract.on(contract.filters.LoanDenied(), handleLoanEvent)
-        contract.on(contract.filters.LoanCancelled(), handleLoanEvent)
-        contract.on(contract.filters.LoanRepaid(), handleLoanEvent)
-        contract.on(contract.filters.LoanDefaulted(), handleLoanEvent)
+        attached.on(attached.filters.LoanRequested(), handleLoanEvent)
+        attached.on(attached.filters.LoanApproved(), handleLoanEvent)
+        attached.on(attached.filters.LoanDenied(), handleLoanEvent)
+        attached.on(attached.filters.LoanCancelled(), handleLoanEvent)
+        attached.on(attached.filters.LoanRepaid(), handleLoanEvent)
+        attached.on(attached.filters.LoanDefaulted(), handleLoanEvent)
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            fetchAndUpdateLoan(loanId).then(dispatch)
+            fetchAndUpdateLoan(address, attached, loanId).then(dispatch)
         }
-    }, [dispatch])
+    }, [address, dispatch, pool])
 }
 
 interface EVMLoan {
@@ -322,10 +336,12 @@ export function transformToStateLoan(
 }
 
 export function fetchLoans(
+    attachedContract: CoreContract,
     ids: (number | BigNumber)[],
 ): Promise<[EVMLoan[], EVMLoanDetails[], number]> {
     const { provider, contract } = getBatchProviderAndContract(
         ids.length * 2 + 1,
+        attachedContract,
     )
 
     return Promise.all([
@@ -336,9 +352,14 @@ export function fetchLoans(
 }
 
 export function fetchAndUpdateLoan(
+    poolAddress: string,
+    attachedContract: CoreContract,
     loanId: number | BigNumber,
 ): Promise<ReturnType<typeof updateLoan>> {
-    const { provider, contract } = getBatchProviderAndContract(3)
+    const { provider, contract } = getBatchProviderAndContract(
+        3,
+        attachedContract,
+    )
 
     return Promise.all([
         contract.loans(
@@ -349,24 +370,37 @@ export function fetchAndUpdateLoan(
         ),
         provider.getCurrentBlockNumber(),
     ]).then(([loan, details, blockNumber]) =>
-        updateLoan({ loan: transformToStateLoan(loan, details), blockNumber }),
+        updateLoan({
+            poolAddress,
+            loan: transformToStateLoan(loan, details),
+            blockNumber,
+        }),
     )
 }
 
-export function useSigner(): (() => CoreContract) | undefined {
+export function useSigner(
+    poolAddress: string,
+): (() => CoreContract) | undefined {
     const provider = useProvider()
-    return provider && (() => contract.connect(provider.getSigner()))
+    return (
+        provider &&
+        (() => contract.attach(poolAddress).connect(provider.getSigner()))
+    )
 }
 
-export function useTokenContractSigner(): (() => ERC20Contract) | undefined {
+export function useTokenContractSigner(
+    tokenAddress: string,
+): (() => ERC20Contract) | undefined {
     const provider = useProvider()
-    const tokenContract = useSelector(selectTokenContract)
-    return provider && tokenContract
-        ? () => tokenContract.connect(provider.getSigner())
+    return provider
+        ? () => getERC20Contract(tokenAddress).connect(provider.getSigner())
         : undefined
 }
 
-export function getBatchProviderAndContract(count: number) {
+export function getBatchProviderAndContract(
+    count: number,
+    contract: CoreContract,
+) {
     const provider = new CustomBatchProvider(count)
     return {
         provider,

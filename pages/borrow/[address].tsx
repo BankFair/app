@@ -1,26 +1,34 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
-import { BigNumber } from 'ethers'
-import { NextPage } from 'next'
+import { BigNumber } from '@ethersproject/bignumber'
+import { GetStaticPaths, GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useMemo, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { APP_NAME, useAccount, useProvider } from '../app'
-import { LoanView, Page } from '../components'
+import { useDispatch } from 'react-redux'
+import {
+    APP_NAME,
+    getAddress,
+    POOLS,
+    useAccount,
+    useAddress,
+    useProvider,
+    useSelector,
+} from '../../app'
+import { LoanView, Page } from '../../components'
 import {
     contract,
     useLoadAccountLoans,
     useSigner,
     useTokenContractSigner,
     LoanStatus,
-    selectLoans,
-    selectManagerAddress,
-    selectTokenContract,
-    selectTokenDecimals,
-} from '../features'
+    Pool,
+    useLoans,
+} from '../../features'
 
 const title = `Borrow - ${APP_NAME}`
 
-const Borrow: NextPage = () => {
+const Borrow: NextPage<{ address: string }> = ({ address }) => {
+    const pool = useSelector((s) => s.pools[address])
+
     return (
         <Page>
             <Head>
@@ -54,33 +62,38 @@ const Borrow: NextPage = () => {
                     text-align: center;
                 }
             `}</style>
-
-            <RequestLoan />
-            <Loans />
+            {pool ? (
+                <>
+                    <RequestLoan pool={pool} poolAddress={address} />
+                    <Loans pool={pool} poolAddress={address} />
+                </>
+            ) : (
+                <h3>Loading…</h3>
+            )}
         </Page>
     )
 }
 
 export default Borrow
 
-function RequestLoan() {
+export { getStaticPaths, getStaticProps } from '../../app'
+
+function RequestLoan({
+    pool: { managerAddress, tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
     const [isLoading, setIsLoading] = useState(false)
     const [amount, setAmount] = useState('100')
     const [duration, setDuration] = useState('86400')
-    const managerAddress = useSelector(selectManagerAddress)
-    const tokenContract = useSelector(selectTokenContract)
-    const tokenDecimals = useSelector(selectTokenDecimals)
     const account = useAccount()
     const provider = useProvider()
-    const loans = useSelector(selectLoans)
+    const loans = useLoans(poolAddress)
 
     const isManager = managerAddress === account
-    const disabled =
-        !tokenContract ||
-        !account ||
-        !provider ||
-        tokenDecimals === undefined ||
-        isManager
+    const disabled = !account || !provider || isManager
 
     const noSubmit = disabled || isLoading
 
@@ -106,12 +119,13 @@ function RequestLoan() {
 
                   const parsedAmount = parseUnits(amount, tokenDecimals)
                   const parsedDuration = BigNumber.from(duration)
-                  const signer = provider.getSigner()
+
+                  const attached = contract.attach(poolAddress)
 
                   Promise.all([
-                      contract.minAmount(),
-                      contract.minDuration(),
-                      contract.maxDuration(),
+                      attached.minAmount(),
+                      attached.minDuration(),
+                      attached.maxDuration(),
                   ]).then(async ([minAmount, minDuration, maxDuration]) => {
                       if (parsedAmount.lt(minAmount)) {
                           // TODO: Display in component
@@ -151,8 +165,8 @@ function RequestLoan() {
 
                       // TODO: Handle errors
                       // TODO: Handle user cancelation
-                      await contract
-                          .connect(signer)
+                      await attached
+                          .connect(provider.getSigner())
                           .requestLoan(parsedAmount, parsedDuration)
 
                       // TODO: In page notification
@@ -202,12 +216,11 @@ function RequestLoan() {
     )
 }
 
-function Loans() {
-    const tokenDecimals = useSelector(selectTokenDecimals)
-    const getContract = useSigner()
-    const getTokenContractSigner = useTokenContractSigner()
+function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
+    const getContract = useSigner(poolAddress)
+    const getTokenContractSigner = useTokenContractSigner(pool.tokenAddress)
     const account = useAccount()
-    const allLoans = useSelector(selectLoans)
+    const allLoans = useLoans(poolAddress)
     const loans = useMemo(
         () =>
             allLoans
@@ -217,9 +230,11 @@ function Loans() {
     )
     const dispatch = useDispatch()
 
-    useLoadAccountLoans(account, dispatch)
+    useLoadAccountLoans(poolAddress, account, dispatch, pool)
 
-    if (!tokenDecimals || !account || !getTokenContractSigner) return null
+    if (!account || !getTokenContractSigner) return null
+
+    const { tokenDecimals } = pool
 
     return (
         <div className="section">
@@ -231,6 +246,7 @@ function Loans() {
                     loan={loan}
                     account={account}
                     tokenDecimals={tokenDecimals}
+                    poolAddress={poolAddress}
                     dispatch={dispatch}
                     getContract={getContract}
                     borrow={getTokenContractSigner}

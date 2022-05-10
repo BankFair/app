@@ -2,33 +2,33 @@ import { parseUnits, formatUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import {
     APP_NAME,
-    CONTRACT_ADDRESS,
     useAccount,
     useProvider,
     infiniteAllowance,
-} from '../app'
-import { LoanView, Page } from '../components'
+    useAddress,
+    useSelector,
+    getERC20Contract,
+    getAddress,
+} from '../../app'
+import { LoanView, Page } from '../../components'
 import {
     contract,
+    Pool,
     useLoadManagerState,
+    useLoans,
     useSigner,
-    selectLoans,
-    selectLoansBlockNumber,
-    selectManagerAddress,
-    selectTokenContract,
-    selectTokenDecimals,
-} from '../features'
+} from '../../features'
 
 const title = `Earn - ${APP_NAME}`
 
-const Manage: NextPage = () => {
+const Manage: NextPage<{ address: string }> = ({ address }) => {
+    const pool = useSelector((s) => s.pools[address])
     const account = useAccount()
-    const managerAddress = useSelector(selectManagerAddress)
 
-    useLoadManagerState()
+    useLoadManagerState(address, pool)
 
     return (
         <Page>
@@ -41,12 +41,12 @@ const Manage: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            {managerAddress ? (
-                managerAddress === account ? (
+            {pool ? (
+                pool.managerAddress === account ? (
                     <>
-                        <Stake />
-                        <Unstake />
-                        <Loans />
+                        <Stake pool={pool} poolAddress={address} />
+                        <Unstake pool={pool} poolAddress={address} />
+                        <Loans pool={pool} poolAddress={address} />
                     </>
                 ) : (
                     <h3>Login with manager wallet</h3>
@@ -83,29 +83,31 @@ const Manage: NextPage = () => {
 
 export default Manage
 
-function Stake() {
+export { getStaticPaths, getStaticProps } from '../../app'
+
+function Stake({
+    pool: { tokenAddress, tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = useState('100')
-    const tokenContract = useSelector(selectTokenContract)
-    const tokenDecimals = useSelector(selectTokenDecimals)
     const account = useAccount()
     const provider = useProvider()
 
     const [staked, setStaked] = useState('0')
     useEffect(() => {
-        if (!tokenDecimals) return
+        contract
+            .attach(poolAddress)
+            .balanceStaked()
+            .then((amount) => {
+                setStaked(formatUnits(amount, tokenDecimals))
+            })
+    }, [account, tokenDecimals, poolAddress])
 
-        contract.balanceStaked().then((amount) => {
-            setStaked(formatUnits(amount, tokenDecimals))
-        })
-    }, [account, tokenDecimals])
-
-    if (
-        !tokenContract ||
-        !account ||
-        !provider ||
-        tokenDecimals === undefined
-    ) {
+    if (!account || !provider || tokenDecimals === undefined) {
         return null
     }
 
@@ -115,9 +117,10 @@ function Stake() {
 
         const amount = parseUnits(value, tokenDecimals)
         const signer = provider.getSigner()
+        const tokenContract = getERC20Contract(tokenAddress)
 
         tokenContract
-            .allowance(account, CONTRACT_ADDRESS)
+            .allowance(account, poolAddress)
             .then(async (allowance) => {
                 const tokenContractWithSigner = tokenContract.connect(signer)
                 const balance = await tokenContractWithSigner.balanceOf(account)
@@ -130,14 +133,17 @@ function Stake() {
 
                 if (amount.gt(allowance)) {
                     const tx = await tokenContractWithSigner.approve(
-                        CONTRACT_ADDRESS,
+                        poolAddress,
                         infiniteAllowance,
                     )
 
                     await tx.wait()
                 }
 
-                const tx = await contract.connect(signer).stake(amount)
+                const tx = await contract
+                    .attach(poolAddress)
+                    .connect(signer)
+                    .stake(amount)
 
                 await tx.wait()
 
@@ -169,34 +175,37 @@ function Stake() {
     )
 }
 
-function Unstake() {
+function Unstake({
+    pool: { tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
     const [loading, setLoading] = useState(false)
     const [value, setValue] = useState('100')
-    const tokenContract = useSelector(selectTokenContract)
-    const tokenDecimals = useSelector(selectTokenDecimals)
-    const loans = useSelector(selectLoans)
+    const loans = useLoans(poolAddress)
     const provider = useProvider()
 
     const [unstakable, setUnstakable] = useState('')
     useEffect(() => {
         if (!tokenDecimals) return
         contract
+            .attach(poolAddress)
             .amountUnstakable()
             .then((value) => setUnstakable(formatUnits(value, tokenDecimals)))
-    }, [setUnstakable, tokenDecimals, loans, unstakable])
+    }, [setUnstakable, poolAddress, tokenDecimals, loans, unstakable])
 
-    if (!tokenContract || !provider || tokenDecimals === undefined) {
-        return null
-    }
+    if (!provider) return null
 
     const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault()
         setLoading(true)
 
         const amount = parseUnits(value, tokenDecimals)
-        const signer = provider.getSigner()
+        const attached = contract.attach(poolAddress)
 
-        contract.amountUnstakable().then(async (unstakableAmount) => {
+        attached.amountUnstakable().then(async (unstakableAmount) => {
             if (amount.gt(unstakableAmount)) {
                 alert(
                     `Maximum unstakable amount is ${formatUnits(
@@ -208,7 +217,9 @@ function Unstake() {
                 return
             }
 
-            const tx = await contract.connect(signer).unstake(amount)
+            const tx = await attached
+                .connect(provider.getSigner())
+                .unstake(amount)
 
             await tx.wait()
 
@@ -245,12 +256,19 @@ function Unstake() {
     )
 }
 
-function Loans() {
-    const loans = useSelector(selectLoans)
-    const loansBlockNumber = useSelector(selectLoansBlockNumber)
-    const tokenDecimals = useSelector(selectTokenDecimals)
+function Loans({
+    pool: { tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
+    const loans = useLoans(poolAddress)
+    const loansBlockNumber = useSelector(
+        (s) => s.pools[poolAddress].loansBlockNumber,
+    )
     const account = useAccount()
-    const getContract = useSigner()
+    const getContract = useSigner(poolAddress)
     const dispatch = useDispatch()
 
     const loading =
@@ -270,6 +288,7 @@ function Loans() {
                     loan={loan}
                     account={account}
                     tokenDecimals={tokenDecimals}
+                    poolAddress={poolAddress}
                     dispatch={dispatch}
                     getContract={getContract}
                     manage

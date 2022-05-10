@@ -1,5 +1,7 @@
 import { createSelector, createSlice } from '@reduxjs/toolkit'
-import { getERC20Contract, AppState, Action } from '../../app'
+import { useMemo } from 'react'
+import { CreateSelectorFunction, OutputSelectorFields } from 'reselect'
+import { AppState, Action, useSelector } from '../../app'
 
 export enum LoanStatus {
     APPLIED,
@@ -28,77 +30,111 @@ export interface LoanDetails {
     approvedTime: number
 }
 
-interface State {
-    managerAddress: string | undefined
-    tokenAddress: string | undefined
-    tokenDecimals: number | undefined
+export interface Pool {
+    name: string
+    managerAddress: string
+    tokenAddress: string
+    tokenDecimals: number
     loans: Loan[]
     loansBlockNumber: number
     loanUpdates: { loan: Loan; blockNumber: number }[]
 }
 
-const initialState: State = {
-    managerAddress: undefined, // TODO: Cache on build time
-    tokenAddress: undefined, // TODO: Cache on build time
-    tokenDecimals: undefined, // TODO: Cache on build time
-    loans: [],
-    loansBlockNumber: 0,
-    loanUpdates: [],
-}
+const initialState: Record<string, Pool> = {}
 
 export const poolsSlice = createSlice({
     name: 'pools',
     initialState,
     reducers: {
-        setManagerAddress(state, action: Action<string>) {
-            state.managerAddress = action.payload
-        },
-        setTokenAddress(state, action: Action<string>) {
-            state.tokenAddress = action.payload
-        },
-        setTokenDecimals(state, action: Action<number>) {
-            state.tokenDecimals = action.payload
+        // TODO: Cache on build time
+        setPoolInfo(
+            state,
+            {
+                payload: {
+                    name,
+                    address,
+                    managerAddress,
+                    tokenAddress,
+                    tokenDecimals,
+                },
+            }: Action<{
+                name: string
+                address: string
+                managerAddress: string
+                tokenAddress: string
+                tokenDecimals: number
+            }>,
+        ) {
+            state[address] = {
+                name,
+                managerAddress,
+                tokenAddress,
+                tokenDecimals,
+                loans: [],
+                loansBlockNumber: 0,
+                loanUpdates: [],
+            }
         },
 
         setLoans(
             state,
-            { payload }: Action<{ loans: Loan[]; blockNumber: number }>,
+            {
+                payload,
+            }: Action<{
+                poolAddress: string
+                loans: Loan[]
+                blockNumber: number
+            }>,
         ) {
-            const { blockNumber } = payload
-            if (state.loansBlockNumber > blockNumber) return
+            const { blockNumber, poolAddress } = payload
+            if (state[poolAddress].loansBlockNumber > blockNumber) return
 
-            state.loans = payload.loans
-            state.loansBlockNumber = blockNumber
-            state.loanUpdates = state.loanUpdates.filter(
-                (loan) => loan.blockNumber > blockNumber,
-            )
+            state[poolAddress].loans = payload.loans
+            state[poolAddress].loansBlockNumber = blockNumber
+            state[poolAddress].loanUpdates = state[
+                poolAddress
+            ].loanUpdates.filter((loan) => loan.blockNumber > blockNumber)
         },
         updateLoan(
             state,
-            { payload }: Action<{ loan: Loan; blockNumber: number }>,
+            {
+                payload,
+            }: Action<{
+                poolAddress: string
+                loan: Loan
+                blockNumber: number
+            }>,
         ) {
-            const { blockNumber } = payload
-            if (blockNumber > state.loansBlockNumber) {
-                const updates = [...state.loanUpdates, payload].sort(
-                    sortByBlockNumberDescending,
-                )
-                state.loanUpdates = filterUniqueIds(updates, 'loan').reverse()
+            const { blockNumber, poolAddress } = payload
+            if (blockNumber > state[poolAddress].loansBlockNumber) {
+                const updates = [
+                    ...state[poolAddress].loanUpdates,
+                    payload,
+                ].sort(sortByBlockNumberDescending)
+                state[poolAddress].loanUpdates = filterUniqueIds(
+                    updates,
+                    'loan',
+                ).reverse()
             }
         },
         updateLoans(
             state,
             {
-                payload: { loans, blockNumber },
-            }: Action<{ loans: Loan[]; blockNumber: number }>,
+                payload: { poolAddress, loans, blockNumber },
+            }: Action<{
+                poolAddress: string
+                loans: Loan[]
+                blockNumber: number
+            }>,
         ) {
-            if (blockNumber <= state.loansBlockNumber) return
+            if (blockNumber <= state[poolAddress].loansBlockNumber) return
 
-            const updates = [...state.loanUpdates]
+            const updates = [...state[poolAddress].loanUpdates]
             for (const loan of loans) {
                 updates.push({ loan, blockNumber })
             }
 
-            state.loanUpdates = filterUniqueIds(
+            state[poolAddress].loanUpdates = filterUniqueIds(
                 updates.sort(sortByBlockNumberDescending),
                 'loan',
             ).reverse()
@@ -106,67 +142,66 @@ export const poolsSlice = createSlice({
     },
 })
 
-export const {
-    setManagerAddress,
-    setTokenAddress,
-    setTokenDecimals,
-    setLoans,
-    updateLoan,
-    updateLoans,
-} = poolsSlice.actions
+export const { setPoolInfo, setLoans, updateLoan, updateLoans } =
+    poolsSlice.actions
 
-export const selectManagerAddress = (state: AppState) =>
-    state.pools.managerAddress
-export const selectTokenAddress = (state: AppState) => state.pools.tokenAddress
-export const selectTokenContract = (state: AppState) => {
-    const tokenAddress = state.pools.tokenAddress
-    if (tokenAddress) return getERC20Contract(tokenAddress)
-    return null
+export const selectPools = (state: AppState) => state.pools
+
+export function usePool(pool: string): Pool | undefined {
+    return useSelector((s) => s.pools[pool])
 }
-export const selectTokenDecimals = (state: AppState) =>
-    state.pools.tokenDecimals
-const selectLoansArray = (state: AppState) => state.pools.loans
-const selectLoanUpdates = (state: AppState) => state.pools.loanUpdates
-export const selectLoans = createSelector(
-    selectLoansArray,
-    selectLoanUpdates,
-    (loans, updates) => {
-        const result = [...loans]
 
-        for (const { loan } of updates) {
-            const { id } = loan
-            const updateIndex = result.findIndex((loan) => loan.id === id)
-            if (updateIndex === -1) {
-                result.push(loan)
-            } else {
-                result[updateIndex] = loan
-            }
-        }
+const selectors: Record<string, (state: AppState) => Loan[]> = {}
+export function useLoans(address: string) {
+    const selector =
+        selectors[address] ||
+        (selectors[address] = createSelector(
+            (state: AppState) => state.pools[address]?.loans || [],
+            (state: AppState) => state.pools[address]?.loanUpdates || [],
+            (loans, loanUpdates) => {
+                const result = [...loans]
 
-        return result
-    },
-)
-export const selectRequestedLoans = createSelector(selectLoans, (loans) =>
-    loans.filter((loan) => loan.status === LoanStatus.APPLIED),
-)
-export const selectApprovedLoans = createSelector(selectLoans, (loans) =>
-    loans.filter((loan) => loan.status === LoanStatus.APPROVED).reverse(),
-)
-export const selectRejectedLoans = createSelector(selectLoans, (loans) =>
-    loans.filter((loan) => loan.status === LoanStatus.DENIED).reverse(),
-)
-export const selectLoansBlockNumber = (state: AppState) =>
-    state.pools.loansBlockNumber
+                for (const { loan } of loanUpdates) {
+                    const { id } = loan
+                    const updateIndex = result.findIndex(
+                        (loan) => loan.id === id,
+                    )
+                    if (updateIndex === -1) {
+                        result.push(loan)
+                    } else {
+                        result[updateIndex] = loan
+                    }
+                }
+
+                return result
+            },
+        ))
+
+    return useSelector(selector)
+}
+export function useRequestedLoans(address: string) {
+    const loans = useLoans(address)
+    return useMemo(
+        () => loans.filter((loan) => loan.status === LoanStatus.APPLIED),
+        [loans],
+    )
+}
+export function useApprovedLoans(address: string) {
+    const loans = useLoans(address)
+    return useMemo(
+        () => loans.filter((loan) => loan.status === LoanStatus.APPROVED),
+        [loans],
+    )
+}
+export function useRejectedLoans(address: string) {
+    const loans = useLoans(address)
+    return useMemo(
+        () => loans.filter((loan) => loan.status === LoanStatus.DENIED),
+        [loans],
+    )
+}
 
 export const poolsReducer = poolsSlice.reducer
-
-type WithTimestamp = { timestamp: number }
-function sortByTimestampAscending(a: WithTimestamp, b: WithTimestamp) {
-    return a.timestamp - b.timestamp
-}
-function sortByTimestampDescending(a: WithTimestamp, b: WithTimestamp) {
-    return b.timestamp - a.timestamp
-}
 
 type WithBlockNumber = { blockNumber: number }
 function sortByBlockNumberAscending(a: WithBlockNumber, b: WithBlockNumber) {

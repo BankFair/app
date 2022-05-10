@@ -1,28 +1,25 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
-import { BigNumber } from 'ethers'
+import { BigNumber } from '@ethersproject/bignumber'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
 import {
     APP_NAME,
-    CONTRACT_ADDRESS,
     useAccount,
     useProvider,
     infiniteAllowance,
-} from '../app'
-import { Page, PoolStats } from '../components'
-import {
-    contract,
-    selectLoans,
-    selectManagerAddress,
-    selectTokenContract,
-    selectTokenDecimals,
-} from '../features'
+    getERC20Contract,
+    useSelector,
+    getAddress,
+} from '../../app'
+import { Page, PoolStats } from '../../components'
+import { contract, Pool, useLoans } from '../../features'
 
 const title = `Earn - ${APP_NAME}`
 
-const Home: NextPage = () => {
+const Earn: NextPage<{ address: string }> = ({ address }) => {
+    const pool = useSelector((s) => s.pools[address])
+
     return (
         <Page>
             <Head>
@@ -57,22 +54,34 @@ const Home: NextPage = () => {
                 }
             `}</style>
 
-            <PoolStats />
-            <Deposit />
-            <Withdraw />
-            <Earnings />
+            {pool ? (
+                <>
+                    <PoolStats pool={pool} poolAddress={address} />
+                    <Deposit pool={pool} poolAddress={address} />
+                    <Withdraw pool={pool} poolAddress={address} />
+                    <Earnings pool={pool} poolAddress={address} />
+                </>
+            ) : (
+                <h3>Loading…</h3>
+            )}
         </Page>
     )
 }
 
-export default Home
 
-function Deposit() {
+export default Earn
+
+export { getStaticPaths, getStaticProps } from '../../app'
+
+function Deposit({
+    pool: { managerAddress, tokenAddress, tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
     const [isLoading, setIsLoading] = useState(false)
     const [value, setValue] = useState('100')
-    const managerAddress = useSelector(selectManagerAddress)
-    const tokenContract = useSelector(selectTokenContract)
-    const tokenDecimals = useSelector(selectTokenDecimals)
     const account = useAccount()
     const provider = useProvider()
 
@@ -81,23 +90,21 @@ function Deposit() {
     const [deposited, setDeposited] = useState('0')
     const ref = useRef<typeof account>(undefined)
     useEffect(() => {
-        if (!tokenDecimals || isManager) return
+        if (isManager) return
         if (ref.current === account) return
         ref.current = account
 
         if (!account) return
 
-        contract.balanceOf(account).then((amount) => {
-            setDeposited(formatUnits(amount, tokenDecimals))
-        })
-    }, [account, tokenDecimals, isManager])
+        contract
+            .attach(poolAddress)
+            .balanceOf(account)
+            .then((amount) => {
+                setDeposited(formatUnits(amount, tokenDecimals))
+            })
+    }, [account, tokenDecimals, poolAddress, isManager])
 
-    const disabled =
-        !tokenContract ||
-        !account ||
-        !provider ||
-        tokenDecimals === undefined ||
-        isManager
+    const disabled = !account || !provider || isManager
 
     const noSubmit = disabled || isLoading
 
@@ -110,8 +117,11 @@ function Deposit() {
               const amount = parseUnits(value, tokenDecimals)
               const signer = provider.getSigner()
 
+              const attached = contract.attach(poolAddress)
+              const tokenContract = getERC20Contract(tokenAddress)
+
               // TODO: Handle user cancelation
-              contract.amountDepositable().then(async (depositableAmount) => {
+              attached.amountDepositable().then(async (depositableAmount) => {
                   if (amount.gt(depositableAmount)) {
                       alert(
                           `Maximum depositable amount is ${formatUnits(
@@ -125,7 +135,7 @@ function Deposit() {
 
                   const allowance = await tokenContract.allowance(
                       account,
-                      CONTRACT_ADDRESS,
+                      poolAddress,
                   )
                   const tokenContractWithSigner = tokenContract.connect(signer)
                   const balance = await tokenContractWithSigner.balanceOf(
@@ -140,14 +150,14 @@ function Deposit() {
 
                   if (amount.gt(allowance)) {
                       const tx = await tokenContractWithSigner.approve(
-                          CONTRACT_ADDRESS,
+                          poolAddress,
                           infiniteAllowance,
                       )
 
                       await tx.wait()
                   }
 
-                  const tx = await contract.connect(signer).deposit(amount)
+                  const tx = await attached.connect(signer).deposit(amount)
 
                   await tx.wait()
 
@@ -187,13 +197,16 @@ function Deposit() {
     )
 }
 
-function Withdraw() {
+function Withdraw({
+    pool: { managerAddress, tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
     const [isLoading, setIsLoading] = useState(false)
     const [value, setValue] = useState('100')
-    const managerAddress = useSelector(selectManagerAddress)
-    const tokenContract = useSelector(selectTokenContract)
-    const tokenDecimals = useSelector(selectTokenDecimals)
-    const loans = useSelector(selectLoans)
+    const loans = useLoans(poolAddress)
     const account = useAccount()
     const provider = useProvider()
 
@@ -201,22 +214,24 @@ function Withdraw() {
 
     const [withdrawable, setWithdrawable] = useState('0')
     useEffect(() => {
-        if (!tokenDecimals || !provider) return
+        if (!account) return
 
         contract
-            .connect(provider.getSigner())
-            .amountWithdrawable()
+            .attach(poolAddress)
+            .amountWithdrawable(account)
             .then((value) => {
                 setWithdrawable(formatUnits(value, tokenDecimals))
             })
-    }, [setWithdrawable, provider, tokenDecimals, loans, withdrawable])
+    }, [
+        setWithdrawable,
+        account,
+        tokenDecimals,
+        loans,
+        withdrawable,
+        poolAddress,
+    ])
 
-    const disabled =
-        !tokenContract ||
-        !account ||
-        !provider ||
-        tokenDecimals === undefined ||
-        isManager
+    const disabled = !account || !provider || isManager
 
     const noSubmit = disabled || isLoading
 
@@ -227,13 +242,12 @@ function Withdraw() {
               setIsLoading(true)
 
               const amount = parseUnits(value, tokenDecimals)
-              const signer = provider.getSigner()
 
-              const connectedContract = contract.connect(signer)
+              const attached = contract.attach(poolAddress)
 
               // TODO: Handle user cancelation
-              connectedContract
-                  .amountWithdrawable()
+              attached
+                  .amountWithdrawable(account)
                   .then(async (withdrawableAmount) => {
                       if (amount.gt(withdrawableAmount)) {
                           alert(
@@ -246,7 +260,9 @@ function Withdraw() {
                           return
                       }
 
-                      const tx = await connectedContract.withdraw(amount)
+                      const tx = await attached
+                          .connect(provider.getSigner())
+                          .withdraw(amount)
 
                       await tx.wait()
 
@@ -295,26 +311,34 @@ function Withdraw() {
     )
 }
 
-function Earnings() {
+function Earnings({
+    pool: { tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
     const [isLoading, setIsLoading] = useState(false)
     const [earnings, setEarnings] = useState<{
         amount: BigNumber
         account: string
     } | null>(null)
     const account = useAccount()
-    const tokenDecimals = useSelector(selectTokenDecimals)
     const provider = useProvider()
 
     useEffect(() => {
-        if (!account || !tokenDecimals) return
-        contract.protocolEarningsOf(account).then((earnings) => {
-            if (!earnings.gt(BigNumber.from(0))) return
-            setEarnings({
-                amount: earnings,
-                account,
+        if (!account) return
+        contract
+            .attach(poolAddress)
+            .protocolEarningsOf(account)
+            .then((earnings) => {
+                if (!earnings.gt(BigNumber.from(0))) return
+                setEarnings({
+                    amount: earnings,
+                    account,
+                })
             })
-        })
-    }, [account, setEarnings, tokenDecimals])
+    }, [account, setEarnings, poolAddress])
 
     if (!earnings || !provider) return null
 
@@ -326,6 +350,7 @@ function Earnings() {
 
                   setIsLoading(true)
                   contract
+                      .attach(poolAddress)
                       .connect(provider.getSigner())
                       .withdrawProtocolEarnings()
                       .then((tx) => {

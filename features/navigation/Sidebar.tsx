@@ -18,7 +18,8 @@ import { MdOutlineAdminPanelSettings } from 'react-icons/md'
 import { FaFaucet } from 'react-icons/fa'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
-import { selectManagerAddress } from '../pools'
+import { selectPools } from '../pools'
+import { useMemo } from 'react'
 
 export default function Sidebar({
     isVisible,
@@ -29,7 +30,14 @@ export default function Sidebar({
 }) {
     const { pathname } = useRouter()
     const account = useAccount()
-    const managerAddress = useSelector(selectManagerAddress)
+    const pools = useSelector(selectPools)
+    const isManager = useMemo(
+        () =>
+            Object.values(pools).filter(
+                (pool) => pool.managerAddress === account,
+            ).length > 0,
+        [pools, account],
+    )
 
     return (
         <div className="sidebar">
@@ -110,7 +118,11 @@ export default function Sidebar({
                 <li>
                     <Link href="/">
                         <a
-                            className={getSidebarItemClass('/', pathname)}
+                            className={getSidebarItemClass(
+                                '/earn',
+                                pathname,
+                                true,
+                            )}
                             onClick={hideSidebar}
                         >
                             <TiChartAreaOutline size={24} />
@@ -129,7 +141,7 @@ export default function Sidebar({
                         </a>
                     </Link>
                 </li>
-                {managerAddress && account && account === managerAddress && (
+                {isManager && (
                     <li>
                         <Link href="/manage">
                             <a
@@ -178,6 +190,14 @@ export default function Sidebar({
     )
 }
 
-function getSidebarItemClass(href: string, currentPath: string) {
-    return `sidebar-button${currentPath === href ? ' current' : ''}`
+function getSidebarItemClass(
+    href: string,
+    currentPath: string,
+    home?: boolean,
+) {
+    return `sidebar-button${
+        currentPath.startsWith(href) || (home && currentPath === '/')
+            ? ' current'
+            : ''
+    }`
 }

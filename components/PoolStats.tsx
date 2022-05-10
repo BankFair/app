@@ -1,17 +1,16 @@
 import { formatUnits } from '@ethersproject/units'
 import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
 import { EtherscanLink } from './EtherscanLink'
-import {
-    selectLoans,
-    selectManagerAddress,
-    selectTokenDecimals,
-    contract,
-} from '../features'
+import { contract, Pool, useLoans } from '../features'
 
-export function PoolStats() {
-    const stats = useStats()
-    const managerAddress = useSelector(selectManagerAddress)
+export function PoolStats({
+    pool: { managerAddress, tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
+    const stats = useStats(poolAddress, tokenDecimals)
 
     return (
         <div className="section">
@@ -55,9 +54,8 @@ export function PoolStats() {
     )
 }
 
-function useStats() {
-    const loans = useSelector(selectLoans)
-    const tokenDecimals = useSelector(selectTokenDecimals)
+function useStats(poolAddress: string, tokenDecimals: number) {
+    const loans = useLoans(poolAddress)
     const [state, setState] = useState<{
         loans: number
         managerFunds: string
@@ -68,15 +66,14 @@ function useStats() {
     } | null>(null)
 
     useEffect(() => {
-        if (!tokenDecimals) return
-
+        const attached = contract.attach(poolAddress)
         let canceled = false
         Promise.all([
-            contract.loansCount(),
-            contract.balanceStaked(),
-            contract.amountDepositable(),
-            contract.poolFunds(),
-            contract.poolLiquidity(),
+            attached.loansCount(),
+            attached.balanceStaked(),
+            attached.amountDepositable(),
+            attached.poolFunds(),
+            attached.poolLiquidity(),
         ]).then(
             ([
                 loansCount,
@@ -110,7 +107,7 @@ function useStats() {
         return () => {
             canceled = true
         }
-    }, [setState, loans, tokenDecimals])
+    }, [setState, loans, tokenDecimals, poolAddress])
 
     return state
 }

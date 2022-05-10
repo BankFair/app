@@ -7,7 +7,6 @@ import {
     AppDispatch,
     ERC20Contract,
     infiniteAllowance,
-    CONTRACT_ADDRESS,
     TOKEN_SYMBOL,
 } from '../app'
 
@@ -21,6 +20,7 @@ import { Button } from './Button'
 export function LoanView({
     loan: { borrower, amount, requestedTime, id, status, details },
     tokenDecimals,
+    poolAddress,
     account,
     dispatch,
     getContract,
@@ -30,6 +30,7 @@ export function LoanView({
 }: {
     loan: Loan
     tokenDecimals: number
+    poolAddress: string
     account: string
     dispatch: AppDispatch
     getContract?: () => CoreContract
@@ -166,13 +167,20 @@ export function LoanView({
                         <tr>
                             <td colSpan={2} style={{ paddingTop: 10 }}>
                                 <ActionButton
-                                    action={() =>
-                                        getContract()
+                                    action={() => {
+                                        const contract = getContract()
+                                        return contract
                                             .borrow(BigNumber.from(id))
                                             .then((tx) => tx.wait())
-                                            .then(() => fetchAndUpdateLoan(id))
+                                            .then(() =>
+                                                fetchAndUpdateLoan(
+                                                    poolAddress,
+                                                    contract,
+                                                    id,
+                                                ),
+                                            )
                                             .then(dispatch)
-                                    }
+                                    }}
                                 >
                                     Borrow
                                 </ActionButton>
@@ -184,6 +192,7 @@ export function LoanView({
                                 <RepayModal
                                     getContract={getContract}
                                     getTokenContract={borrow}
+                                    poolAddress={poolAddress}
                                     account={account}
                                     id={id}
                                     dispatch={dispatch}
@@ -201,6 +210,7 @@ const initialValue = '100'
 function RepayModal({
     getContract,
     getTokenContract,
+    poolAddress,
     account,
     id,
     dispatch,
@@ -208,6 +218,7 @@ function RepayModal({
 }: {
     getContract(): CoreContract
     getTokenContract(): ERC20Contract
+    poolAddress: string
     account: string
     id: number
     dispatch: AppDispatch
@@ -255,26 +266,26 @@ function RepayModal({
 
                     const allowance = await tokenContract.allowance(
                         account,
-                        CONTRACT_ADDRESS,
+                        poolAddress,
                     )
 
                     if (amount.gt(allowance)) {
                         const tx = await tokenContract.approve(
-                            CONTRACT_ADDRESS,
+                            poolAddress,
                             infiniteAllowance,
                         )
 
                         await tx.wait()
                     }
 
-                    const tx = await getContract().repay(
-                        BigNumber.from(id),
-                        amount,
-                    )
+                    const contract = getContract()
+                    const tx = await contract.repay(BigNumber.from(id), amount)
 
                     await tx.wait()
 
-                    await fetchAndUpdateLoan(id).then(dispatch)
+                    await fetchAndUpdateLoan(poolAddress, contract, id).then(
+                        dispatch,
+                    )
 
                     setIsVisible(false)
                     setIsLoading(false)

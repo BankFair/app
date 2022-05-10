@@ -27,4 +27,7 @@ export type EventFilterFactory<
 
 export interface CustomBaseContract extends BaseContract {
     connect(...args: Parameters<BaseContract['connect']>): this
+    attach(...args: Parameters<BaseContract['attach']>): this
 }
+
+export const nullAddress = '0x0000000000000000000000000000000000000000'
