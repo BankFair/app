@@ -1,7 +1,7 @@
 import { BigNumber, Contract, ContractTransaction, Event } from 'ethers'
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { CONTRACT_ADDRESS, RPC_URL, useProvider } from '../../app'
+import { CONTRACT_ADDRESS, useProvider } from '../../app'
 import abi from './abi.json'
 import provider, { CustomBatchProvider } from './provider'
 import {

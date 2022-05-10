@@ -15,6 +15,8 @@ import { TiChartAreaOutline } from 'react-icons/ti'
 import { AiFillBank } from 'react-icons/ai'
 import { RiAccountCircleFill } from 'react-icons/ri'
 import { MdOutlineAdminPanelSettings } from 'react-icons/md'
+import { BiTestTube } from 'react-icons/bi'
+import { FaFaucet } from 'react-icons/fa'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
 import { selectManagerAddress } from '../web3/web3Slice'
@@ -144,6 +146,20 @@ export default function Sidebar({
                         </Link>
                     </li>
                 )}
+                {process.env.NODE_ENV === 'development' ? (
+                    <li>
+                        <a
+                            className={getSidebarItemClass('/faucet', pathname)}
+                            onClick={hideSidebar}
+                            href="https://kovan.optifaucet.com"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                        >
+                            <FaFaucet size={24} style={{ padding: 4 }} />
+                            Faucet
+                        </a>
+                    </li>
+                ) : null}
                 <li>
                     <Link href="/account">
                         <a
