@@ -6,7 +6,7 @@ export const networks = {
     optimismKovan: 69,
 }
 
-export const APP_NAME = 'Bankfair'
+export const APP_NAME = 'Sapling'
 export const SIDEBAR_ALWAYS_VISIBLE_WIDTH = '700'
 
 export const RPC_NETWORK_ID = networks.optimismKovan
@@ -48,7 +48,7 @@ export const COLOR_GREEN = '#15ab54'
 export const COLOR_BLUE = '#3790ff'
 export const COLOR_RED = '#FF4842'
 
-export const LOCAL_STORAGE_LAST_CONNECTOR_KEY = 'bankfair_lastConnector'
+export const LOCAL_STORAGE_LAST_CONNECTOR_KEY = 'sapling_lastConnector'
 export const LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT = 'WalletConnect'
 export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'
 

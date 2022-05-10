@@ -1084,9 +1084,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@web3-react/eip1193@patch:@web3-react/eip1193@npm:8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::locator=bankfair%40workspace%3A.":
+"@web3-react/eip1193@patch:@web3-react/eip1193@npm:8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::locator=sapling%40workspace%3A.":
   version: 8.0.18-beta.0
-  resolution: "@web3-react/eip1193@patch:@web3-react/eip1193@npm%3A8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::version=8.0.18-beta.0&hash=ee7a78&locator=bankfair%40workspace%3A."
+  resolution: "@web3-react/eip1193@patch:@web3-react/eip1193@npm%3A8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::version=8.0.18-beta.0&hash=ee7a78&locator=sapling%40workspace%3A."
   dependencies:
     "@web3-react/types": ^8.0.12-beta.0
   checksum: 0301ed32dab8486e43dbbae6b7af33d91a697dfc54d5e77fe73779bdcaa446a21d0d429c9b6abd695766e576f29a8c74e9911e52d7542a42b0d248cfbaf34097
@@ -1114,9 +1114,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@web3-react/store@patch:@web3-react/store@npm:8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::locator=bankfair%40workspace%3A.":
+"@web3-react/store@patch:@web3-react/store@npm:8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::locator=sapling%40workspace%3A.":
   version: 8.0.17-beta.0
-  resolution: "@web3-react/store@patch:@web3-react/store@npm%3A8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::version=8.0.17-beta.0&hash=f4975b&locator=bankfair%40workspace%3A."
+  resolution: "@web3-react/store@patch:@web3-react/store@npm%3A8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::version=8.0.17-beta.0&hash=f4975b&locator=sapling%40workspace%3A."
   dependencies:
     "@ethersproject/address": ^5
     "@web3-react/types": ^8.0.12-beta.0
@@ -1383,36 +1383,6 @@ __metadata:
   checksum: 9706c088a283058a8a99e0bf91b0a2f75497f185980d9ffa8b304de1d9e58ebda7c72c07ebf01dadedaac5b2907b2c6f566f660d62bd336c3468e960403b9d65
   languageName: node
   linkType: hard
-
-"bankfair@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "bankfair@workspace:."
-  dependencies:
-    "@reduxjs/toolkit": 1.8.1
-    "@styled-jsx/plugin-sass": ^4.0.2
-    "@types/node": ^17.0.25
-    "@types/react": ^18.0.6
-    "@types/react-dom": ^18.0.2
-    "@walletconnect/ethereum-provider": 1.7.7
-    "@web3-react/core": 8.0.23-beta.0
-    "@web3-react/eip1193": 8.0.18-beta.0
-    "@web3-react/network": 8.0.18-beta.0
-    "@web3-react/walletconnect": 8.0.26-beta.0
-    eslint: ^8.13.0
-    eslint-config-next: ^12.1.5
-    ethers: 5.6.4
-    next: 12.1.5
-    prettier: ^2.6.2
-    react: 18.0.0
-    react-dom: 18.0.0
-    react-icons: 4.3.1
-    react-redux: 8.0.1
-    redux: 4.2.0
-    sass: ^1.50.1
-    timeago-react: 3.0.4
-    typescript: ~4.6.3
-  languageName: unknown
-  linkType: soft
 
 "base64-js@npm:^1.3.1":
   version: 1.5.1
@@ -4085,6 +4055,36 @@ __metadata:
   checksum: cab8f25ae6f1434abee8d80023d7e72b598cf1327164ddab31003c51215526801e40b66c5e65d658a0af1e9d6478cadcb4c745f4bd6751f97d8644786c0978b0
   languageName: node
   linkType: hard
+
+"sapling@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "sapling@workspace:."
+  dependencies:
+    "@reduxjs/toolkit": 1.8.1
+    "@styled-jsx/plugin-sass": ^4.0.2
+    "@types/node": ^17.0.25
+    "@types/react": ^18.0.6
+    "@types/react-dom": ^18.0.2
+    "@walletconnect/ethereum-provider": 1.7.7
+    "@web3-react/core": 8.0.23-beta.0
+    "@web3-react/eip1193": 8.0.18-beta.0
+    "@web3-react/network": 8.0.18-beta.0
+    "@web3-react/walletconnect": 8.0.26-beta.0
+    eslint: ^8.13.0
+    eslint-config-next: ^12.1.5
+    ethers: 5.6.4
+    next: 12.1.5
+    prettier: ^2.6.2
+    react: 18.0.0
+    react-dom: 18.0.0
+    react-icons: 4.3.1
+    react-redux: 8.0.1
+    redux: 4.2.0
+    sass: ^1.50.1
+    timeago-react: 3.0.4
+    typescript: ~4.6.3
+  languageName: unknown
+  linkType: soft
 
 "sass@npm:^1.50.1":
   version: 1.50.1
