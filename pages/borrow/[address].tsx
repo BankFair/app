@@ -1,15 +1,13 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
-import { GetStaticPaths, GetStaticProps, NextPage } from 'next'
+import { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import {
     APP_NAME,
     getAddress,
-    POOLS,
     useAccount,
-    useAddress,
     useProvider,
     useSelector,
 } from '../../app'
@@ -74,9 +72,11 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
     )
 }
 
-export default Borrow
+Borrow.getInitialProps = (context) => {
+    return { address: getAddress(context.query.address as string) }
+}
 
-export { getStaticPaths, getStaticProps } from '../../app'
+export default Borrow
 
 function RequestLoan({
     pool: { managerAddress, tokenDecimals },

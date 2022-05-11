@@ -8,7 +8,6 @@ import {
     useAccount,
     useProvider,
     infiniteAllowance,
-    useAddress,
     useSelector,
     getERC20Contract,
     getAddress,
@@ -81,9 +80,11 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
     )
 }
 
-export default Manage
+Manage.getInitialProps = (context) => {
+    return { address: getAddress(context.query.address as string) }
+}
 
-export { getStaticPaths, getStaticProps } from '../../app'
+export default Manage
 
 function Stake({
     pool: { tokenAddress, tokenDecimals },

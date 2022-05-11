@@ -68,10 +68,11 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
     )
 }
 
+Earn.getInitialProps = (context) => {
+    return { address: getAddress(context.query.address as string) }
+}
 
 export default Earn
-
-export { getStaticPaths, getStaticProps } from '../../app'
 
 function Deposit({
     pool: { managerAddress, tokenAddress, tokenDecimals },
