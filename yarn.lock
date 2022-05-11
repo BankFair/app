@@ -267,7 +267,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/providers@npm:5.6.4, @ethersproject/providers@npm:^5":
+"@ethersproject/providers@npm:5.6.4":
   version: 5.6.4
   resolution: "@ethersproject/providers@npm:5.6.4"
   dependencies:
@@ -291,6 +291,33 @@ __metadata:
     bech32: 1.1.4
     ws: 7.4.6
   checksum: 75ec09bbff5c7b8b9372fd7e35b11da1262ae5b16601beb27a028e3ac9332502765540fd9a07971b843aafb54a145e0a7c6a2f28ed97a5707be83d144a97e0f7
+  languageName: node
+  linkType: hard
+
+"@ethersproject/providers@npm:5.6.5, @ethersproject/providers@npm:^5":
+  version: 5.6.5
+  resolution: "@ethersproject/providers@npm:5.6.5"
+  dependencies:
+    "@ethersproject/abstract-provider": ^5.6.0
+    "@ethersproject/abstract-signer": ^5.6.0
+    "@ethersproject/address": ^5.6.0
+    "@ethersproject/basex": ^5.6.0
+    "@ethersproject/bignumber": ^5.6.0
+    "@ethersproject/bytes": ^5.6.0
+    "@ethersproject/constants": ^5.6.0
+    "@ethersproject/hash": ^5.6.0
+    "@ethersproject/logger": ^5.6.0
+    "@ethersproject/networks": ^5.6.0
+    "@ethersproject/properties": ^5.6.0
+    "@ethersproject/random": ^5.6.0
+    "@ethersproject/rlp": ^5.6.0
+    "@ethersproject/sha2": ^5.6.0
+    "@ethersproject/strings": ^5.6.0
+    "@ethersproject/transactions": ^5.6.0
+    "@ethersproject/web": ^5.6.0
+    bech32: 1.1.4
+    ws: 7.4.6
+  checksum: f8b37d72068e845f447f922cceddda73508ad539bb035e3f094b6feb7de2a8c6dde87ecd7ee2ec00712e7135145f7e9a902f0b845a0cb604313caf7cb6b440a7
   languageName: node
   linkType: hard
 
@@ -336,6 +363,20 @@ __metadata:
     elliptic: 6.5.4
     hash.js: 1.1.7
   checksum: c61118ff1ff89560da59cf77ca6553762e94b9d2757542be15dcf7eb4962327faede941d8461272afb8550cc2e28d38e7e89d199650ebae07a596df3c2059e08
+  languageName: node
+  linkType: hard
+
+"@ethersproject/signing-key@npm:5.6.1":
+  version: 5.6.1
+  resolution: "@ethersproject/signing-key@npm:5.6.1"
+  dependencies:
+    "@ethersproject/bytes": ^5.6.0
+    "@ethersproject/logger": ^5.6.0
+    "@ethersproject/properties": ^5.6.0
+    bn.js: ^4.11.9
+    elliptic: 6.5.4
+    hash.js: 1.1.7
+  checksum: 9292611a2206b9b160a6e7b8ecaf95090efa66e0fb09c4069f6adcceac678b8be59340c623f61a2ffcc57af814745b0fefc1381b0208eda0a62e84234fa85455
   languageName: node
   linkType: hard
 
@@ -445,6 +486,35 @@ __metadata:
   version: 1.1.3
   resolution: "@gar/promisify@npm:1.1.3"
   checksum: 4059f790e2d07bf3c3ff3e0fec0daa8144fe35c1f6e0111c9921bd32106adaa97a4ab096ad7dab1e28ee6a9060083c4d1a4ada42a7f5f3f7a96b8812e2b757c1
+  languageName: node
+  linkType: hard
+
+"@gnosis.pm/safe-apps-provider@npm:^0.11.0":
+  version: 0.11.0
+  resolution: "@gnosis.pm/safe-apps-provider@npm:0.11.0"
+  dependencies:
+    "@gnosis.pm/safe-apps-sdk": 7.3.0
+    events: ^3.3.0
+  checksum: 929c5a54449e588e0038eb2fc29bba9e14a66f0734666844d6fd938e956e46377de4814eac8b327a221650c6ca4c8f4dc9e42c7a72a6ce8be376515f3a527b2f
+  languageName: node
+  linkType: hard
+
+"@gnosis.pm/safe-apps-sdk@npm:7.3.0, @gnosis.pm/safe-apps-sdk@npm:^7.3.0":
+  version: 7.3.0
+  resolution: "@gnosis.pm/safe-apps-sdk@npm:7.3.0"
+  dependencies:
+    "@gnosis.pm/safe-react-gateway-sdk": ^2.10.0
+    ethers: ^5.4.7
+  checksum: 7c469b287d9be55ae0c0c2ffab250d8e8f730d3bf04469cdd8807b25572de88d02589b39570cbb25e45104f5cea58cdc8b2384d953bcf965a2df32ec64379fd6
+  languageName: node
+  linkType: hard
+
+"@gnosis.pm/safe-react-gateway-sdk@npm:^2.10.0":
+  version: 2.10.3
+  resolution: "@gnosis.pm/safe-react-gateway-sdk@npm:2.10.3"
+  dependencies:
+    cross-fetch: ^3.1.5
+  checksum: 289b7432437efaddd615a8930883b03335f132828fa66523f89f2bad6bbd876c9af0c39dd2814d6a74b661b82eb49f13920dfde18055cc40fb6006e3949d20ef
   languageName: node
   linkType: hard
 
@@ -1058,91 +1128,82 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@web3-react/core@npm:8.0.23-beta.0":
-  version: 8.0.23-beta.0
-  resolution: "@web3-react/core@npm:8.0.23-beta.0"
+"@web3-react/core@npm:beta":
+  version: 8.0.30-beta.0
+  resolution: "@web3-react/core@npm:8.0.30-beta.0"
   dependencies:
     "@ethersproject/providers": ^5
-    "@web3-react/store": ^8.0.17-beta.0
-    "@web3-react/types": ^8.0.12-beta.0
-    zustand: ^4.0.0-beta.3
+    "@web3-react/store": ^8.0.22-beta.0
+    "@web3-react/types": ^8.0.17-beta.0
+    zustand: ^4.0.0-rc.0
   peerDependencies:
     react: ">=16.8"
   dependenciesMeta:
     "@ethersproject/providers":
       optional: true
-  checksum: b5fd393b6432498ed11d5c9c50c157822cfc654122090d3bf76d59a499d4c478476b09e08c391fece02fc0e85770875725fdc00f484760f2abd5e0cdda4ac2b2
+  checksum: c20366c8f8f37f116a700620b17d11ca477ceb2cd1c929dafabad95457219459d335e0626328c8da791a5af91c080c551be2388792c0843d72a8024f96233c0d
   languageName: node
   linkType: hard
 
-"@web3-react/eip1193@npm:8.0.18-beta.0":
-  version: 8.0.18-beta.0
-  resolution: "@web3-react/eip1193@npm:8.0.18-beta.0"
+"@web3-react/eip1193@npm:beta":
+  version: 8.0.23-beta.0
+  resolution: "@web3-react/eip1193@npm:8.0.23-beta.0"
   dependencies:
-    "@web3-react/types": ^8.0.12-beta.0
-  checksum: 639e98c60ea8fd32fc1db5b4208cba96a0a0a3a20ccefd5a2951623b3375b8ebc924176112223136691eb13e0e204393505f2b8559a77b7b4716b22395d40d36
+    "@web3-react/types": ^8.0.17-beta.0
+  checksum: b88a7544534d955ca046271efe0e6cf71d999406490c2beb38235d0fd1d266d86174df04324e6e9d8a157b0dab2cbf2058f447c69b06d853b8a40e5070d8cefd
   languageName: node
   linkType: hard
 
-"@web3-react/eip1193@patch:@web3-react/eip1193@npm:8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::locator=sapling%40workspace%3A.":
-  version: 8.0.18-beta.0
-  resolution: "@web3-react/eip1193@patch:@web3-react/eip1193@npm%3A8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch::version=8.0.18-beta.0&hash=ee7a78&locator=sapling%40workspace%3A."
+"@web3-react/gnosis-safe@npm:beta":
+  version: 8.0.3-beta.0
+  resolution: "@web3-react/gnosis-safe@npm:8.0.3-beta.0"
   dependencies:
-    "@web3-react/types": ^8.0.12-beta.0
-  checksum: 0301ed32dab8486e43dbbae6b7af33d91a697dfc54d5e77fe73779bdcaa446a21d0d429c9b6abd695766e576f29a8c74e9911e52d7542a42b0d248cfbaf34097
+    "@gnosis.pm/safe-apps-provider": ^0.11.0
+    "@gnosis.pm/safe-apps-sdk": ^7.3.0
+    "@web3-react/types": ^8.0.17-beta.0
+  checksum: 4373eb861d397e39dc71a649072a9f2aa40909c6d09064c5db76581c1a4528552acb3e0ccb7c38629f5fae4d649db3fcc3aceecec25804c387da8481a4bf885c
   languageName: node
   linkType: hard
 
-"@web3-react/network@npm:8.0.18-beta.0":
-  version: 8.0.18-beta.0
-  resolution: "@web3-react/network@npm:8.0.18-beta.0"
+"@web3-react/network@npm:beta":
+  version: 8.0.23-beta.0
+  resolution: "@web3-react/network@npm:8.0.23-beta.0"
   dependencies:
     "@ethersproject/providers": ^5
-    "@web3-react/types": ^8.0.12-beta.0
-  checksum: 877e5b07d0b81708436a79b3f7aced8fc9628cc1b151483fe7e1768daaed3fb41eb839a8ba492f6ef5e78771a67dfb95e53cd894802b6e71c1fa26c4c4ddbb6e
+    "@web3-react/types": ^8.0.17-beta.0
+  checksum: 570230728dda8f4da53e10c40119f62271cfbb5728a024873ec3d60424ad86d899629f3dec85450aa7c82a2a6ba29794da6232592f8544a7bedf3342e12e63cc
   languageName: node
   linkType: hard
 
-"@web3-react/store@npm:8.0.17-beta.0":
-  version: 8.0.17-beta.0
-  resolution: "@web3-react/store@npm:8.0.17-beta.0"
+"@web3-react/store@npm:^8.0.22-beta.0":
+  version: 8.0.22-beta.0
+  resolution: "@web3-react/store@npm:8.0.22-beta.0"
   dependencies:
     "@ethersproject/address": ^5
-    "@web3-react/types": ^8.0.12-beta.0
-    zustand: ^4.0.0-beta.3
-  checksum: 3b5f45ab47080fd41cf2d867d5288721ba95611a960cd05e133510a1d02880235ef96c68fed200c8265b4ec6077602adcd8a2668639f31f096168db8a1e16e56
+    "@web3-react/types": ^8.0.17-beta.0
+    zustand: ^4.0.0-rc.0
+  checksum: 779b3b5debeb6f36e738635b4fc9eea9a690d1849d0aa566927e58cbf9e53981e32249ad79fcfaff747de1eb64d20a2102ad6ece7590fa66eb940a12e530cb25
   languageName: node
   linkType: hard
 
-"@web3-react/store@patch:@web3-react/store@npm:8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::locator=sapling%40workspace%3A.":
+"@web3-react/types@npm:^8.0.17-beta.0":
   version: 8.0.17-beta.0
-  resolution: "@web3-react/store@patch:@web3-react/store@npm%3A8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch::version=8.0.17-beta.0&hash=f4975b&locator=sapling%40workspace%3A."
+  resolution: "@web3-react/types@npm:8.0.17-beta.0"
   dependencies:
-    "@ethersproject/address": ^5
-    "@web3-react/types": ^8.0.12-beta.0
-    zustand: ^4.0.0-beta.3
-  checksum: 9bec671484ac72f384160beed04ee46bb8316f7a9902d6bba47bd8f6f341a1bc5c20208913d425510b4fef698e42c2260386c0c6ce98e3198e41e1c2fcd2a131
+    zustand: ^4.0.0-rc.0
+  checksum: e467ba7f2276c1316e61c51426db8d985de1695b92bc2b1dd1527ef8beb1404d2d5759ca038b7ea6803341bdb9db03ba0bb721f3b13ba213a221e2acbac1e03a
   languageName: node
   linkType: hard
 
-"@web3-react/types@npm:^8.0.12-beta.0":
-  version: 8.0.12-beta.0
-  resolution: "@web3-react/types@npm:8.0.12-beta.0"
+"@web3-react/walletconnect@npm:beta":
+  version: 8.0.31-beta.0
+  resolution: "@web3-react/walletconnect@npm:8.0.31-beta.0"
   dependencies:
-    zustand: ^4.0.0-beta.3
-  checksum: da8521835c020b8cc5da500ebf2e41351280dfe0fd7e5a2f57409a34c56f4eb01cb7c87d49fcc8d39ddf278fbcd1130c8afdfc4524bc9934c172641d4116d247
-  languageName: node
-  linkType: hard
-
-"@web3-react/walletconnect@npm:8.0.26-beta.0":
-  version: 8.0.26-beta.0
-  resolution: "@web3-react/walletconnect@npm:8.0.26-beta.0"
-  dependencies:
-    "@web3-react/types": ^8.0.12-beta.0
+    "@web3-react/types": ^8.0.17-beta.0
     eventemitter3: ^4.0.7
   peerDependencies:
     "@walletconnect/ethereum-provider": ^1.7.5
-  checksum: ef1de031cd830fb9edc3fcd8acf530f45e8144b283e9d24d7f7238026f78ce11f9a3b02a2fd1950f1d2930518165f810b9cf1b2b876a718a7c1e92b1c3605aff
+  checksum: d843a1a8e9e89fb3e0cef9ca2761d8832eb84c2b0e245a99b2cb9668ecc4a625477a5864c6119ee56d5406d5525495c11e9ee44203d71d640104c7e2b008bcda
   languageName: node
   linkType: hard
 
@@ -1677,7 +1738,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-fetch@npm:^3.1.4":
+"cross-fetch@npm:^3.1.4, cross-fetch@npm:^3.1.5":
   version: 3.1.5
   resolution: "cross-fetch@npm:3.1.5"
   dependencies:
@@ -2259,10 +2320,55 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ethers@npm:^5.4.7":
+  version: 5.6.5
+  resolution: "ethers@npm:5.6.5"
+  dependencies:
+    "@ethersproject/abi": 5.6.1
+    "@ethersproject/abstract-provider": 5.6.0
+    "@ethersproject/abstract-signer": 5.6.0
+    "@ethersproject/address": 5.6.0
+    "@ethersproject/base64": 5.6.0
+    "@ethersproject/basex": 5.6.0
+    "@ethersproject/bignumber": 5.6.0
+    "@ethersproject/bytes": 5.6.1
+    "@ethersproject/constants": 5.6.0
+    "@ethersproject/contracts": 5.6.0
+    "@ethersproject/hash": 5.6.0
+    "@ethersproject/hdnode": 5.6.0
+    "@ethersproject/json-wallets": 5.6.0
+    "@ethersproject/keccak256": 5.6.0
+    "@ethersproject/logger": 5.6.0
+    "@ethersproject/networks": 5.6.2
+    "@ethersproject/pbkdf2": 5.6.0
+    "@ethersproject/properties": 5.6.0
+    "@ethersproject/providers": 5.6.5
+    "@ethersproject/random": 5.6.0
+    "@ethersproject/rlp": 5.6.0
+    "@ethersproject/sha2": 5.6.0
+    "@ethersproject/signing-key": 5.6.1
+    "@ethersproject/solidity": 5.6.0
+    "@ethersproject/strings": 5.6.0
+    "@ethersproject/transactions": 5.6.0
+    "@ethersproject/units": 5.6.0
+    "@ethersproject/wallet": 5.6.0
+    "@ethersproject/web": 5.6.0
+    "@ethersproject/wordlists": 5.6.0
+  checksum: f2c2528452eea1fa3c6e735ea9acf8162555b681d712e770a2e11560a71f9c9ef4abbe686e68c4e2cfa4c51eda35fe06f1bac7dc030daf00747c229b8cab5812
+  languageName: node
+  linkType: hard
+
 "eventemitter3@npm:4.0.7, eventemitter3@npm:^4.0.7":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
   checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374
+  languageName: node
+  linkType: hard
+
+"events@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "events@npm:3.3.0"
+  checksum: f6f487ad2198aa41d878fa31452f1a3c00958f46e9019286ff4787c84aac329332ab45c9cdc8c445928fc6d7ded294b9e005a7fce9426488518017831b272780
   languageName: node
   linkType: hard
 
@@ -4066,10 +4172,11 @@ __metadata:
     "@types/react": ^18.0.6
     "@types/react-dom": ^18.0.2
     "@walletconnect/ethereum-provider": 1.7.7
-    "@web3-react/core": 8.0.23-beta.0
-    "@web3-react/eip1193": 8.0.18-beta.0
-    "@web3-react/network": 8.0.18-beta.0
-    "@web3-react/walletconnect": 8.0.26-beta.0
+    "@web3-react/core": beta
+    "@web3-react/eip1193": beta
+    "@web3-react/gnosis-safe": beta
+    "@web3-react/network": beta
+    "@web3-react/walletconnect": beta
     eslint: ^8.13.0
     eslint-config-next: ^12.1.5
     ethers: 5.6.4
@@ -4555,7 +4662,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-sync-external-store@npm:1.0.0, use-sync-external-store@npm:^1.0.0":
+"use-sync-external-store@npm:1.1.0":
+  version: 1.1.0
+  resolution: "use-sync-external-store@npm:1.1.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: 8993a0b642f91d7fcdbb02b7b3ac984bd3af4769686f38291fe7fcfe73dfb73d6c64d20dfb7e5e7fbf5a6da8f5392d6f8e5b00c243a04975595946e82c02b883
+  languageName: node
+  linkType: hard
+
+"use-sync-external-store@npm:^1.0.0":
   version: 1.0.0
   resolution: "use-sync-external-store@npm:1.0.0"
   peerDependencies:
@@ -4747,11 +4863,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zustand@npm:^4.0.0-beta.3":
-  version: 4.0.0-rc.0
-  resolution: "zustand@npm:4.0.0-rc.0"
+"zustand@npm:^4.0.0-rc.0":
+  version: 4.0.0-rc.1
+  resolution: "zustand@npm:4.0.0-rc.1"
   dependencies:
-    use-sync-external-store: 1.0.0
+    use-sync-external-store: 1.1.0
   peerDependencies:
     immer: ">=9.0"
     react: ">=16.8"
@@ -4760,6 +4876,6 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: fe927bd6b64102ce26d38096a9369fbd1fc733b2a81dde0fc73f96ff57eb356073ae62fff595ac354febe0b304d6b37d9056b5887a28e41c40f3695816d9ab83
+  checksum: c88ae96286229b3c463cf7989c860fcde8ec9cf885eb50a0e0eaf9642388d407a854e5e07b9f80676454732bf15e1c7645201cff21fd9feacd5df8bbd62fcd46
   languageName: node
   linkType: hard

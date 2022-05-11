@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
+import { inFrame } from '../../app'
+import { gnosisSafe } from '../../app/connectors/gnosisSafe'
 import { selectLastConnector } from './web3Slice'
 
 export function useConnectEagerly() {
@@ -12,10 +14,14 @@ export function useConnectEagerly() {
         // Read "Effects that should only run once can use a ref"
         ref.current = true
 
-        if (lastConnector) {
-            lastConnector.connectEagerly
-                ? lastConnector.connectEagerly()
-                : lastConnector.activate()
+        if (inFrame()) {
+            gnosisSafe.connectEagerly()
+        } else {
+            if (lastConnector) {
+                lastConnector.connectEagerly
+                    ? lastConnector.connectEagerly()
+                    : lastConnector.activate()
+            }
         }
     }, [lastConnector])
 }
