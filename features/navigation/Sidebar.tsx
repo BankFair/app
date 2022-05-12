@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import {
     COLOR_GREEN,
+    networks,
+    opacity,
+    rgbGreen,
+    RPC_NETWORK_ID,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
     useAccount,
 } from '../../app'
@@ -49,7 +53,7 @@ export default function Sidebar({
                     left: 0;
                     width: 100%;
                     height: 100vh;
-                    z-index: 1;
+                    z-index: 2;
                     padding-top: ${NAV_HEIGHT}px;
                     display: ${isVisible ? 'block' : 'none'};
 
@@ -57,6 +61,18 @@ export default function Sidebar({
                         position: absolute;
                         top: ${SIDEBAR_CLOSE_MARGIN}px;
                         right: ${SIDEBAR_CLOSE_MARGIN}px;
+                    }
+
+                    > .overlay {
+                        display: none;
+                        z-index: 1;
+                        position: fixed;
+                        top: 0;
+                        bottom: 0;
+                        margin-left: ${SIDEBAR_MAX_WIDTH}px;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.5);
                     }
                 }
 
@@ -73,7 +89,7 @@ export default function Sidebar({
                     padding: 8px 10px;
                     cursor: default;
                     border-radius: 8px;
-                    color: black;
+                    color: #637381;
 
                     > :global(svg) {
                         margin-right: 10px;
@@ -81,25 +97,33 @@ export default function Sidebar({
 
                     &.current,
                     &:hover {
-                        color: ${COLOR_GREEN};
-                        background-color: #ebf9f2;
+                        color: ${rgbGreen};
+                        background-color: ${opacity(COLOR_GREEN, 0.08)};
                     }
                 }
 
                 @media screen and (min-width: ${SIDEBAR_MAX_WIDTH}px) {
                     .sidebar {
                         width: ${SIDEBAR_MAX_WIDTH}px;
-                        border-right: 1px solid grey;
+                        border-right: 1px solid rgba(145, 158, 171, 0.24);
+
+                        > .overlay {
+                            display: block;
+                        }
                     }
                 }
 
                 @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
                     .sidebar {
                         display: block;
-                    }
 
-                    .sidebar > :global(.close-button) {
-                        display: none;
+                        > :global(.close-button) {
+                            display: none;
+                        }
+
+                        > .overlay {
+                            display: none;
+                        }
                     }
 
                     :global(#__next) {
@@ -157,7 +181,7 @@ export default function Sidebar({
                         </Link>
                     </li>
                 )}
-                {process.env.NODE_ENV === 'development' ? (
+                {RPC_NETWORK_ID === networks.optimismKovan ? (
                     <li>
                         <a
                             className={getSidebarItemClass('/faucet', pathname)}
@@ -186,6 +210,8 @@ export default function Sidebar({
                     </Link>
                 </li>
             </ul>
+
+            <div className="overlay" onClick={hideSidebar} />
         </div>
     )
 }

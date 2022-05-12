@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import { ButtonHTMLAttributes } from 'react'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
-import { COLOR_BLUE, COLOR_GREEN, COLOR_RED } from '../app'
+import {
+    COLOR_BLUE,
+    COLOR_GREEN,
+    COLOR_RED,
+    opacity,
+    rgbBlue,
+    rgbGreen,
+    rgbRed,
+} from '../app'
 
 export function Button({
     href,
@@ -36,25 +44,25 @@ export function Button({
                 a,
                 button {
                     cursor: default;
-                    background-color: ${COLOR_GREEN};
-                    border-color: ${COLOR_GREEN};
+                    background-color: ${rgbGreen};
+                    border-color: ${opacity(COLOR_GREEN, 0.48)};
                     padding: 8px 14px;
                     border-radius: 8px;
                     color: white;
                     border: 0 none;
-                    font-weight: 300;
+                    font-weight: 400;
                     font-size: 16px;
                     font-family: inherit;
                     display: inline-block;
 
                     &.red {
-                        background-color: ${COLOR_RED};
-                        border-color: ${COLOR_RED};
+                        background-color: ${rgbRed};
+                        border-color: ${opacity(COLOR_RED, 0.48)};
                     }
 
                     &.blue {
-                        background-color: ${COLOR_BLUE};
-                        border-color: ${COLOR_BLUE};
+                        background-color: ${rgbBlue};
+                        border-color: ${opacity(COLOR_BLUE, 0.48)};
                     }
 
                     &.disabled {
@@ -66,10 +74,13 @@ export function Button({
                         border-width: 1px;
                         border-style: solid;
                         background-color: transparent;
-                        color: ${COLOR_GREEN};
+                        color: ${rgbGreen};
 
+                        &.red {
+                            color: ${rgbRed};
+                        }
                         &.blue {
-                            color: ${COLOR_BLUE};
+                            color: ${rgbBlue};
                         }
                     }
                 }

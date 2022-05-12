@@ -1,5 +1,5 @@
 import { Button } from './Button'
-import { useActiveConnector } from '../app'
+import { Color, rgb, useActiveConnector } from '../app'
 import { useDispatch } from 'react-redux'
 import { clearLastConnectorName } from '../features/web3/web3Slice'
 import { ReactNode } from 'react'
@@ -64,6 +64,33 @@ export function Account() {
     )
 }
 
+const green: Color = {
+    r: 0,
+    g: 123,
+    b: 85,
+}
+
+const blue: Color = {
+    r: 24,
+    g: 144,
+    b: 255,
+}
+
+const yellow: Color = {
+    r: 183,
+    g: 129,
+    b: 3,
+}
+
+const red: Color = {
+    r: 189,
+    g: 58,
+    b: 76,
+}
+
+const gradient = (color: Color) =>
+    `linear-gradient(315deg, rgb(${color.r},${color.g},${color.b}) -200%, rgba(${color.r},${color.g},${color.b},0) 100%)`
+
 function Stat({
     value,
     name,
@@ -82,7 +109,7 @@ function Stat({
                     border-radius: 10px;
                     width: 250px;
                     height: 250px;
-                    margin: 30px;
+                    margin: 12px;
                     text-align: center;
                     padding-top: 40px;
 
@@ -104,61 +131,46 @@ function Stat({
                     > .name {
                         margin-top: 12px;
                         font-size: 14px;
+                        opacity: 0.72;
                     }
 
                     &.green {
                         background-color: #c8facd;
-                        color: #0b5248;
+                        color: #005249;
 
                         > .icon {
-                            background-image: linear-gradient(
-                                315deg,
-                                #a0e1b5 0%,
-                                rgba(0, 0, 0, 0) 100%
-                            );
-                            color: #117b56;
+                            background-image: ${gradient(green)};
+                            color: ${rgb(green)};
                         }
                     }
 
                     &.blue {
                         background-color: #d0f2ff;
-                        color: #14297b;
+                        color: #04297a;
 
                         > .icon {
-                            background-image: linear-gradient(
-                                315deg,
-                                #aaddff 0%,
-                                rgba(0, 0, 0, 0) 100%
-                            );
-                            color: #3790ff;
+                            background-image: ${gradient(blue)};
+                            color: ${rgb(blue)};
                         }
                     }
 
                     &.yellow {
-                        background-color: #fdf7cd;
+                        background-color: #fff7cd;
                         color: #7a4f01;
 
                         > .icon {
-                            background-image: linear-gradient(
-                                315deg,
-                                #f1dfa5 0%,
-                                rgba(0, 0, 0, 0) 100%
-                            );
-                            color: #b78105;
+                            background-image: ${gradient(yellow)};
+                            color: ${rgb(yellow)};
                         }
                     }
 
                     &.red {
-                        background-color: #fee7d9;
+                        background-color: #ffe7d9;
                         color: #7a0c2e;
 
                         > .icon {
-                            background-image: linear-gradient(
-                                315deg,
-                                #f0bdb6 0%,
-                                rgba(0, 0, 0, 0) 100%
-                            );
-                            color: #b72137;
+                            background-image: ${gradient(red)};
+                            color: ${rgb(red)};
                         }
                     }
                 }

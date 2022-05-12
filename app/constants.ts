@@ -44,10 +44,6 @@ export const CHAIN = {
             : [],
 }
 
-export const COLOR_GREEN = '#15ab54'
-export const COLOR_BLUE = '#3790ff'
-export const COLOR_RED = '#FF4842'
-
 export const LOCAL_STORAGE_LAST_CONNECTOR_KEY = 'sapling_lastConnector'
 export const LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT = 'WalletConnect'
 export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'

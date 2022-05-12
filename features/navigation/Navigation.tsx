@@ -7,7 +7,8 @@ import {
 import { Button, FlexGrow } from '../../components'
 import { LOGO_SIZE, NAV_HEIGHT, NAV_PADDING } from './constants'
 import Sidebar from './Sidebar'
-import { RiBankFill, RiMenuLine } from 'react-icons/ri'
+import { GrGrow } from 'react-icons/gr'
+import { RiMenuLine } from 'react-icons/ri'
 import { useRouter } from 'next/router'
 
 export default function Navigation() {
@@ -40,8 +41,9 @@ export default function Navigation() {
                     background-color: white;
 
                     > :global(.logo) {
-                        z-index: 2;
+                        z-index: 3;
                         position: relative;
+                        padding: 2px;
                     }
 
                     > :global(.menu-button) {
@@ -62,7 +64,7 @@ export default function Navigation() {
                     padding-top: ${NAV_HEIGHT}px;
                 }
             `}</style>
-            <RiBankFill className="logo" size={LOGO_SIZE} />
+            <GrGrow className="logo" size={LOGO_SIZE} />
             <RiMenuLine
                 className="menu-button"
                 size={24}

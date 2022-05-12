@@ -1,7 +1,7 @@
 import { Web3ReactProvider } from '@web3-react/core'
 import { Provider } from 'react-redux'
 import type { AppProps } from 'next/app'
-import { store, connectors, COLOR_BLUE } from '../app'
+import { store, connectors, rgbBlue } from '../app'
 import Navigation from '../features/navigation/Navigation'
 import { SwitchNetworkModal } from '../components'
 import { useFetchPoolsPropertiesOnce, useConnectEagerly } from '../features'
@@ -23,7 +23,7 @@ export default function App({ Component, pageProps }: AppProps) {
                     }
 
                     a {
-                        color: ${COLOR_BLUE};
+                        color: ${rgbBlue};
                         text-decoration: none;
                     }
 
