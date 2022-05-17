@@ -1,4 +1,4 @@
-import { ChangeEvent, ChangeEventHandler, useMemo } from 'react'
+import { ChangeEvent, useMemo } from 'react'
 import { input, prefix, rgbTextPrimary } from '../app'
 
 export function AmountInput({

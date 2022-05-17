@@ -29,6 +29,12 @@ interface Stats {
     blockNumber: number
 }
 
+interface AccountInfo {
+    balance: string
+    withdrawable: string
+    blockNumber: number
+}
+
 export interface Pool {
     name: string
     managerAddress: string
@@ -38,7 +44,10 @@ export interface Pool {
     loansBlockNumber: number
     loanUpdates: { loan: Loan; blockNumber: number }[]
     stats: Stats | null
+    accountInfo: Record<string, AccountInfo>
 }
+
+const oneHour = 60 * 60 * 1000
 
 const fetchStats = createAsyncThunk(
     'pools/fetchStats',
@@ -79,7 +88,42 @@ const fetchStats = createAsyncThunk(
 
 export const useFetchIntervalStats = createFetchIntervalHook(
     fetchStats,
-    60 * 60 * 1000,
+    oneHour,
+)
+
+const fetchAccountInfo = createAsyncThunk(
+    'pools/fetchAccountInfo',
+    async ({
+        poolAddress,
+        account,
+    }: {
+        poolAddress: string
+        account: string
+    }) => {
+        const { provider, contract: attached } = getBatchProviderAndContract(
+            3,
+            contract.attach(poolAddress),
+        )
+
+        const [balance, withdrawable, blockNumber] = await Promise.all([
+            attached.balanceOf(account),
+            attached.amountWithdrawable(account),
+            provider.getCurrentBlockNumber(),
+        ])
+
+        const accountInfo: AccountInfo = {
+            balance: balance.toHexString(),
+            withdrawable: withdrawable.toHexString(),
+            blockNumber,
+        }
+
+        return accountInfo
+    },
+)
+
+export const useFetchIntervalAccountInfo = createFetchIntervalHook(
+    fetchAccountInfo,
+    oneHour,
 )
 
 const initialState: Record<string, Pool> = {}
@@ -116,6 +160,7 @@ export const poolsSlice = createSlice({
                 loansBlockNumber: 0,
                 loanUpdates: [],
                 stats: null,
+                accountInfo: {},
             }
         },
 
@@ -184,17 +229,44 @@ export const poolsSlice = createSlice({
         },
     },
     extraReducers(builder) {
-        builder.addCase(
-            fetchStats.fulfilled,
-            (state, { payload, meta: { arg } }) => {
-                const pool = state[arg]
-                if (pool.stats) {
-                    if (pool.stats.blockNumber >= payload.blockNumber) return
-                }
+        builder
+            .addCase(
+                fetchStats.fulfilled,
+                (state, { payload, meta: { arg } }) => {
+                    const pool = state[arg]
+                    if (
+                        pool.stats &&
+                        pool.stats.blockNumber >= payload.blockNumber
+                    ) {
+                            return
+                    }
 
-                pool.stats = payload
-            },
-        )
+                    pool.stats = payload
+                },
+            )
+            .addCase(
+                fetchAccountInfo.fulfilled,
+                (
+                    state,
+                    {
+                        payload,
+                        meta: {
+                            arg: { poolAddress, account },
+                        },
+                    },
+                ) => {
+                    const pool = state[poolAddress]
+                    const previousInfo = pool.accountInfo[account]
+                    if (
+                        previousInfo &&
+                        previousInfo.blockNumber >= payload.blockNumber
+                    ) {
+                        return
+                    }
+
+                    pool.accountInfo[account] = payload
+                },
+            )
     },
 })
 

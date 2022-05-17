@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { rgbGreen, shadow } from '../app'
-import { Oval } from 'react-loading-icons'
+import Oval from 'react-loading-icons/dist/components/oval'
 
 export function Box({
     children,

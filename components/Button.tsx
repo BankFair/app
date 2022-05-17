@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { useMemo } from 'react'
 import { ButtonHTMLAttributes } from 'react'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
-import { Oval } from 'react-loading-icons'
+import Oval from 'react-loading-icons/dist/components/oval'
 import {
     COLOR_BLUE,
     COLOR_GREEN,

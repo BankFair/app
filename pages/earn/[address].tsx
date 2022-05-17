@@ -33,6 +33,7 @@ import {
     AmountInput,
     ConnectModal,
     PageLoading,
+    Skeleton,
 } from '../../components'
 import {
     contract,
@@ -41,6 +42,7 @@ import {
     useAllowanceAndBalance,
     isAllowanceInfinite,
     useAmountDepositable,
+    useFetchIntervalAccountInfo,
 } from '../../features'
 import { useCallback } from 'react'
 
@@ -92,6 +94,7 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             <h1>{name}</h1>
             <PoolStats pool={pool} poolAddress={address} />
             <Deposit pool={pool} poolAddress={address} />
+            <YourSupply pool={pool} poolAddress={address} />
             <DepositOld pool={pool} poolAddress={address} />
             <Withdraw pool={pool} poolAddress={address} />
             <Earnings pool={pool} poolAddress={address} />
@@ -117,7 +120,7 @@ function Deposit({
 }) {
     // TODO: Check if account has borrowed
 
-    const [loading, setLoading] = useState('')
+    const [loading, setLoading] = useState(false)
 
     const provider = useProvider()
 
@@ -127,13 +130,6 @@ function Deposit({
         balance,
         refetch: refetchAllowanceAndBalance,
     } = useAllowanceAndBalance(tokenAddress, poolAddress, account)
-    const allowanceRef = useRef<string | undefined>()
-    useEffect(() => {
-        if (loading === 'allowance' && allowanceRef.current !== allowance) {
-            setLoading('')
-        }
-        allowanceRef.current = allowance
-    }, [loading, allowance])
 
     const [showConnectModal, setShowConnectModal] = useState(false)
     useEffect(() => {
@@ -141,16 +137,6 @@ function Deposit({
     }, [account])
 
     const [amountDepositable, refetchStats] = useAmountDepositable(poolAddress)
-    const amountDepositableRef = useRef<string | undefined>(amountDepositable)
-    useEffect(() => {
-        if (
-            loading === 'deposit' &&
-            amountDepositableRef.current !== amountDepositable
-        ) {
-            setLoading('')
-        }
-        amountDepositableRef.current = amountDepositable
-    }, [loading, amountDepositable])
 
     const { max, cannotDeposit } = useMemo(() => {
         if (!amountDepositable) return { max: null, cannotDeposit: true }
@@ -182,6 +168,10 @@ function Deposit({
                 : false,
         }
     }, [max, tokenDecimals, amount, allowance])
+
+    const refetchAccountInfo = useFetchIntervalAccountInfo(
+        account ? { poolAddress, account } : null,
+    )
 
     const handleClickMax = useCallback(() => {
         setAmount(format(formatUnits(max!, tokenDecimals)))
@@ -259,36 +249,45 @@ function Deposit({
                     const signer = provider!.getSigner()
 
                     if (needsApproval) {
-                        setLoading('allowance')
+                        setLoading(true)
 
                         getERC20Contract(tokenAddress)
                             .connect(signer)
                             .approve(poolAddress, infiniteAllowance)
                             .then((tx) => tx.wait())
+                            .then(() => refetchAllowanceAndBalance())
                             .then(() => {
-                                refetchAllowanceAndBalance()
+                                setLoading(false)
                             })
                             .catch((reason) => {
                                 console.error(reason)
-                                setLoading('')
+                                setLoading(false)
                             })
 
                         return
                     }
 
-                    setLoading('deposit')
+                    setLoading(true)
 
                     contract
                         .attach(poolAddress)
                         .connect(signer)
                         .deposit(parseUnits(value, tokenDecimals))
                         .then((tx) => tx.wait())
+                        .then(() =>
+                            // TODO: Optimize provider. Currently it will make 3 separate requests.
+                            Promise.all([
+                                refetchAccountInfo(),
+                                refetchAllowanceAndBalance(),
+                                refetchStats(),
+                            ]),
+                        )
                         .then(() => {
-                            refetchStats()
+                            setLoading(false)
                         })
                         .catch((reason) => {
                             console.error(reason)
-                            setLoading('')
+                            setLoading(false)
                         })
                 }}
             >
@@ -331,6 +330,45 @@ function Deposit({
     )
 }
 
+function YourSupply({
+    pool: { managerAddress, tokenAddress, tokenDecimals },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
+    const account = useAccount()
+
+    useFetchIntervalAccountInfo(account ? { poolAddress, account } : null)
+
+    const info = useSelector((state) =>
+        account ? state.pools[poolAddress]?.accountInfo[account] : null,
+    )
+
+    if (!account) return null
+
+    return (
+        <Box s>
+            <div>
+                Your deposit:{' '}
+                {info ? (
+                    `$${format(formatUnits(info.balance, tokenDecimals))}`
+                ) : (
+                    <Skeleton width={35} />
+                )}
+            </div>
+            <div>
+                Withdrawable:
+                {info ? (
+                    `$${format(formatUnits(info.withdrawable, tokenDecimals))}`
+                ) : (
+                    <Skeleton width={35} />
+                )}
+            </div>
+        </Box>
+    )
+}
+
 function DepositOld({
     pool: { managerAddress, tokenAddress, tokenDecimals },
     poolAddress,
@@ -344,23 +382,6 @@ function DepositOld({
     const provider = useProvider()
 
     const isManager = managerAddress === account
-
-    const [deposited, setDeposited] = useState('0')
-    const ref = useRef<typeof account>(undefined)
-    useEffect(() => {
-        if (isManager) return
-        if (ref.current === account) return
-        ref.current = account
-
-        if (!account) return
-
-        contract
-            .attach(poolAddress)
-            .balanceOf(account)
-            .then((amount) => {
-                setDeposited(formatUnits(amount, tokenDecimals))
-            })
-    }, [account, tokenDecimals, poolAddress, isManager])
 
     const disabled = !account || !provider || isManager
 
@@ -419,13 +440,6 @@ function DepositOld({
 
                   await tx.wait()
 
-                  setDeposited((deposited) =>
-                      formatUnits(
-                          parseUnits(deposited, tokenDecimals).add(amount),
-                          tokenDecimals,
-                      ),
-                  )
-
                   // TODO: In page notification
 
                   setIsLoading(false)
@@ -438,11 +452,7 @@ function DepositOld({
 
             {managerAddress &&
                 account &&
-                (isManager ? (
-                    <div>Manager can not deposit</div>
-                ) : (
-                    <div>You deposited {deposited}</div>
-                ))}
+                (isManager ? <div>Manager can not deposit</div> : null)}
 
             <input
                 type="number"

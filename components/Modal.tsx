@@ -58,7 +58,7 @@ export function Modal({
                     background-color: white;
                     padding: 10px;
                     margin: 10px;
-                    border-radius: 10px;
+                    border-radius: 16px;
                     position: relative;
                 }
 
