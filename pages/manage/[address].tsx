@@ -8,7 +8,6 @@ import {
     useAccount,
     useProvider,
     infiniteAllowance,
-    useSelector,
     getERC20Contract,
     getAddress,
 } from '../../app'
@@ -20,6 +19,7 @@ import {
     useLoans,
     useSigner,
 } from '../../features'
+import { useSelector } from '../../store'
 
 const title = `Earn - ${APP_NAME}`
 
