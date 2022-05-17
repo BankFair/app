@@ -44,11 +44,11 @@ import {
 } from '../../features'
 import { useCallback } from 'react'
 
-const title = `Earn - ${APP_NAME}`
-
 const Earn: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
     const name = POOLS.find((pool) => pool.address === address)?.name
+
+    const title = `${name} - ${APP_NAME}`
 
     const head = (
         <Head>
