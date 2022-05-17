@@ -195,7 +195,7 @@ function Deposit({
         <Box
             s
             loading={Boolean(
-                (account ? !allowance || !balance : false) ||
+                (account && !cannotDeposit ? !allowance || !balance : false) ||
                     amountDepositable === undefined,
             )}
             overlay={

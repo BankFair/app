@@ -10,7 +10,7 @@ import {
     shadow,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
 } from '../app'
-import { Page } from '../components'
+import { Page, Skeleton } from '../components'
 import { useFetchIntervalStats, usePool } from '../features'
 
 const title = `Earn - ${APP_NAME}`
@@ -131,29 +131,31 @@ function Pool({ pool: { address, name } }: { pool: typeof POOLS[number] }) {
                         <div className="stat">
                             <div className="label">Pool Size</div>
                             <div className="value">
-                                $
-                                {pool && pool.stats
-                                    ? formatFloor(
-                                          formatUnits(
-                                              pool.stats.poolFunds,
-                                              pool.tokenDecimals,
-                                          ),
-                                      )
-                                    : 0}
+                                {pool && pool.stats ? (
+                                    `$${formatFloor(
+                                        formatUnits(
+                                            pool.stats.poolFunds,
+                                            pool.tokenDecimals,
+                                        ),
+                                    )}`
+                                ) : (
+                                    <Skeleton width={50} />
+                                )}
                             </div>
                         </div>
                         <div className="stat">
                             <div className="label">Available for deposits</div>
                             <div className="value">
-                                $
-                                {pool && pool.stats
-                                    ? formatFloor(
-                                          formatUnits(
-                                              pool.stats.amountDepositable,
-                                              pool.tokenDecimals,
-                                          ),
-                                      )
-                                    : 0}
+                                {pool && pool.stats ? (
+                                    `$${formatFloor(
+                                        formatUnits(
+                                            pool.stats.amountDepositable,
+                                            pool.tokenDecimals,
+                                        ),
+                                    )}`
+                                ) : (
+                                    <Skeleton width={50} />
+                                )}
                             </div>
                         </div>
                         <div className="stat">
@@ -163,7 +165,11 @@ function Pool({ pool: { address, name } }: { pool: typeof POOLS[number] }) {
                         <div className="stat">
                             <div className="label">Loans</div>
                             <div className="value">
-                                {pool && pool.stats ? pool.stats.loans : 0}
+                                {pool && pool.stats ? (
+                                    pool.stats.loans
+                                ) : (
+                                    <Skeleton width={30} />
+                                )}
                             </div>
                         </div>
                     </div>

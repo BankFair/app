@@ -14,6 +14,7 @@ export function useAllowanceAndBalance(
     )
     const balance = useSelector(createBalanceSelector(token, account))
 
+    // TODO: Stop fetching when `document.visibilityState` is `hidden`
     const refetch = useFetchIntervalAllowanceAndBalance(
         account ? { token, spender, account } : null,
     )

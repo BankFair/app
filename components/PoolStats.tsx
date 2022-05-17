@@ -2,6 +2,7 @@ import { EtherscanLink } from './EtherscanLink'
 import { Pool, useStats } from '../features'
 import { Box } from './Box'
 import { formatFloor, prefix, rgbTextPrimary, rgbTextSecondary } from '../app'
+import { Skeleton } from './Skeleton'
 
 export function PoolStats({
     pool: { managerAddress, tokenDecimals },
@@ -125,30 +126,48 @@ export function PoolStats({
             <div className="stats small">
                 <div className="stat">
                     <div className="number">
-                        ${formatFloor(stats?.totalPoolSize || '0')}
+                        {stats ? (
+                            `$${formatFloor(stats.totalPoolSize)}`
+                        ) : (
+                            <Skeleton width={50} />
+                        )}
                     </div>
                     <div className="label">Total Pool Size</div>
                 </div>
                 <div className="stat">
                     <div className="number">
-                        ${formatFloor(stats?.loansOutstanding || '0')}
+                        {stats ? (
+                            `$${formatFloor(stats.loansOutstanding)}`
+                        ) : (
+                            <Skeleton width={50} />
+                        )}
                     </div>
                     <div className="label">Loans Outstanding</div>
                 </div>
                 <div className="stat">
                     <div className="number">
-                        ${formatFloor(stats?.managerFunds || '0')}
+                        {stats ? (
+                            `$${formatFloor(stats.managerFunds)}`
+                        ) : (
+                            <Skeleton width={50} />
+                        )}
                     </div>
                     <div className="label">Manager Funds</div>
                 </div>
                 <div className="stat">
                     <div className="number">
-                        ${formatFloor(stats?.maxPoolSize || '0')}
+                        {stats ? (
+                            `$${formatFloor(stats.maxPoolSize)}`
+                        ) : (
+                            <Skeleton width={50} />
+                        )}
                     </div>
                     <div className="label">Max Pool Size</div>
                 </div>
                 <div className="stat">
-                    <div className="number">{stats?.loans || '0'}</div>
+                    <div className="number">
+                        {stats ? stats.loans : <Skeleton width={30} />}
+                    </div>
                     <div className="label">Loans</div>
                 </div>
             </div>
@@ -159,7 +178,11 @@ export function PoolStats({
                 </div>
                 <div className="stat">
                     <div className="number">
-                        ${formatFloor(stats?.availableForDeposits || '0')}
+                        {stats ? (
+                            `$${formatFloor(stats.availableForDeposits)}`
+                        ) : (
+                            <Skeleton width={70} />
+                        )}
                     </div>
                     <div className="label">Available for deposits</div>
                 </div>
