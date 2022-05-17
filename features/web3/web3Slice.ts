@@ -4,9 +4,8 @@ import {
     connectorsObject,
     jsonParse,
     LOCAL_STORAGE_LAST_CONNECTOR_KEY,
-    Action,
-    AppState,
 } from '../../app'
+import type { Action, AppState } from '../../store'
 
 interface State {
     lastConnectorName: string | null
@@ -45,8 +44,6 @@ export const selectLastConnector = (state: AppState): Connector | undefined =>
     connectorsObject[
         state.web3.lastConnectorName as keyof typeof connectorsObject
     ]
-
-export const web3Reducer = web3Slice.reducer
 
 function getLastConnectorName(): string | null {
     if (typeof window !== 'object') return null

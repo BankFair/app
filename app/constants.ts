@@ -1,4 +1,5 @@
 import { getAddress } from '@ethersproject/address'
+import { BigNumber } from 'ethers'
 
 export const networks = {
     optimism: 10,
@@ -57,3 +58,7 @@ export const POOLS = (JSON.parse(process.env.POOLS!) as PoolsEnv).map(
 )
 
 export const TOKEN_SYMBOL = 'USDC'
+
+export const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
+
+export const zero = BigNumber.from(0)

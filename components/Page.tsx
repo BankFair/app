@@ -6,7 +6,9 @@ export function Page({ children }: { children: ReactNode }) {
             <style jsx>{`
                 .page {
                     width: 100%;
-                    margin: 20px 0;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px 40px;
                 }
             `}</style>
             {children}

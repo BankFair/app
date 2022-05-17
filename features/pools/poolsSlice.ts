@@ -1,17 +1,7 @@
-import { createSelector, createSlice } from '@reduxjs/toolkit'
-import { useMemo } from 'react'
-import { CreateSelectorFunction, OutputSelectorFields } from 'reselect'
-import { AppState, Action, useSelector } from '../../app'
-
-export enum LoanStatus {
-    APPLIED,
-    DENIED,
-    APPROVED,
-    CANCELLED,
-    FUNDS_WITHDRAWN,
-    REPAID,
-    DEFAULTED,
-}
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { contract, LoanStatus, getBatchProviderAndContract } from './contract'
+import { createFetchIntervalHook } from '../../app'
+import type { AppState, Action } from '../../store'
 
 export interface Loan {
     id: number
@@ -30,6 +20,15 @@ export interface LoanDetails {
     approvedTime: number
 }
 
+interface Stats {
+    loans: number
+    balanceStaked: string
+    amountDepositable: string
+    poolFunds: string
+    poolLiquidity: string
+    blockNumber: number
+}
+
 export interface Pool {
     name: string
     managerAddress: string
@@ -38,7 +37,50 @@ export interface Pool {
     loans: Loan[]
     loansBlockNumber: number
     loanUpdates: { loan: Loan; blockNumber: number }[]
+    stats: Stats | null
 }
+
+const fetchStats = createAsyncThunk(
+    'pools/fetchStats',
+    async (poolAddress: string) => {
+        const { provider, contract: attached } = getBatchProviderAndContract(
+            6,
+            contract.attach(poolAddress),
+        )
+
+        const [
+            loansCount,
+            balanceStaked,
+            amountDepositable,
+            poolFunds,
+            poolLiquidity,
+            blockNumber,
+        ] = await Promise.all([
+            attached.loansCount(),
+            attached.balanceStaked(),
+            attached.amountDepositable(),
+            attached.poolFunds(),
+            attached.poolLiquidity(),
+            provider.getCurrentBlockNumber(),
+        ])
+
+        const stats: Stats = {
+            loans: loansCount.toNumber(),
+            balanceStaked: balanceStaked.toHexString(),
+            amountDepositable: amountDepositable.toHexString(),
+            poolFunds: poolFunds.toHexString(),
+            poolLiquidity: poolLiquidity.toHexString(),
+            blockNumber,
+        }
+
+        return stats
+    },
+)
+
+export const useFetchIntervalStats = createFetchIntervalHook(
+    fetchStats,
+    60 * 60 * 1000,
+)
 
 const initialState: Record<string, Pool> = {}
 
@@ -73,6 +115,7 @@ export const poolsSlice = createSlice({
                 loans: [],
                 loansBlockNumber: 0,
                 loanUpdates: [],
+                stats: null,
             }
         },
 
@@ -140,68 +183,25 @@ export const poolsSlice = createSlice({
             ).reverse()
         },
     },
+    extraReducers(builder) {
+        builder.addCase(
+            fetchStats.fulfilled,
+            (state, { payload, meta: { arg } }) => {
+                const pool = state[arg]
+                if (pool.stats) {
+                    if (pool.stats.blockNumber >= payload.blockNumber) return
+                }
+
+                pool.stats = payload
+            },
+        )
+    },
 })
 
 export const { setPoolInfo, setLoans, updateLoan, updateLoans } =
     poolsSlice.actions
 
 export const selectPools = (state: AppState) => state.pools
-
-export function usePool(pool: string): Pool | undefined {
-    return useSelector((s) => s.pools[pool])
-}
-
-const selectors: Record<string, (state: AppState) => Loan[]> = {}
-export function useLoans(address: string) {
-    const selector =
-        selectors[address] ||
-        (selectors[address] = createSelector(
-            (state: AppState) => state.pools[address]?.loans || [],
-            (state: AppState) => state.pools[address]?.loanUpdates || [],
-            (loans, loanUpdates) => {
-                const result = [...loans]
-
-                for (const { loan } of loanUpdates) {
-                    const { id } = loan
-                    const updateIndex = result.findIndex(
-                        (loan) => loan.id === id,
-                    )
-                    if (updateIndex === -1) {
-                        result.push(loan)
-                    } else {
-                        result[updateIndex] = loan
-                    }
-                }
-
-                return result
-            },
-        ))
-
-    return useSelector(selector)
-}
-export function useRequestedLoans(address: string) {
-    const loans = useLoans(address)
-    return useMemo(
-        () => loans.filter((loan) => loan.status === LoanStatus.APPLIED),
-        [loans],
-    )
-}
-export function useApprovedLoans(address: string) {
-    const loans = useLoans(address)
-    return useMemo(
-        () => loans.filter((loan) => loan.status === LoanStatus.APPROVED),
-        [loans],
-    )
-}
-export function useRejectedLoans(address: string) {
-    const loans = useLoans(address)
-    return useMemo(
-        () => loans.filter((loan) => loan.status === LoanStatus.DENIED),
-        [loans],
-    )
-}
-
-export const poolsReducer = poolsSlice.reducer
 
 type WithBlockNumber = { blockNumber: number }
 function sortByBlockNumberAscending(a: WithBlockNumber, b: WithBlockNumber) {

@@ -7,6 +7,7 @@ import {
     APP_NAME,
     LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
     LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
+    prefix,
     RPC_NETWORK_ID,
     useError,
 } from '../app'
@@ -15,8 +16,7 @@ import { setLastConnectorName } from '../features/web3/web3Slice'
 
 import { Button } from './Button'
 import { Modal } from './Modal'
-
-const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
+import { Box } from './Box'
 
 export function Connect() {
     const { isActivating } = useWeb3React()
@@ -44,98 +44,126 @@ export function Connect() {
                     align-items: center;
                     margin: 10px 0;
 
+                    > img {
+                        width: 28px;
+                        height: 28px;
+                    }
+
                     > h2 {
                         margin: 0 0 0 10px;
+                        font-size: 18px;
                     }
                 }
 
-                .wallet {
-                    max-width: 300px;
-                    margin: 20px auto;
-                    border: 1px solid grey;
-                    border-radius: 6px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    padding: 20px 10px;
+                .wallets {
                     text-align: center;
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
+
+                    > :global(div) {
+                        width: 320px;
+                        max-width: 320px;
+                        margin: 20px;
+
+                        > div {
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            height: 80px;
+                        }
+                    }
+                }
+
+                @media screen and (min-width: 480px) {
+                    header {
+                        > img {
+                            width: 32px;
+                            height: 32px;
+                        }
+
+                        > h2 {
+                            font-size: 24px;
+                        }
+                    }
                 }
             `}</style>
 
             <header>
-                <img
-                    src={`${prefix}/optimism.svg`}
-                    width={32}
-                    height={32}
-                    alt="Optimism"
-                />
+                <img src={`${prefix}/optimism.svg`} alt="Optimism" />
                 <h2>{APP_NAME} runs on Optimism</h2>
             </header>
 
-            <div className="wallet">
-                {isMetaMask ? (
-                    <img
-                        src={`${prefix}/metamask.svg`}
-                        width={32}
-                        height={32}
-                        alt="MetaMask logo"
-                    />
-                ) : (
-                    <FaWallet size={32} />
-                )}
-                <h4>
-                    Connect to your {isMetaMask ? 'MetaMask' : 'browser'} wallet
-                </h4>
-                <Button
-                    disabled={isActivating}
-                    onClick={() => {
-                        if (!(window as any).ethereum) {
-                            alert('No browser wallet detected')
-                            return
-                        }
+            <div className="wallets">
+                <Box>
+                    {isMetaMask ? (
+                        <img
+                            src={`${prefix}/metamask.svg`}
+                            width={48}
+                            height={48}
+                            alt="MetaMask logo"
+                        />
+                    ) : (
+                        <FaWallet size={32} />
+                    )}
+                    <div>
+                        <h4>
+                            Connect to your{' '}
+                            {isMetaMask ? 'MetaMask' : 'browser'} wallet
+                        </h4>
+                    </div>
+                    <Button
+                        disabled={isActivating}
+                        onClick={() => {
+                            if (!(window as any).ethereum) {
+                                alert('No browser wallet detected')
+                                return
+                            }
 
-                        eip1193.activate().then(() => {
-                            dispatch(
-                                setLastConnectorName(
-                                    LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
-                                ),
-                            )
-                        })
-                    }}
-                >
-                    Connect {isMetaMask ? 'MetaMask' : 'browser wallet'}
-                </Button>
-            </div>
-
-            <div className="wallet">
-                <img
-                    src={`${prefix}/walletconnect.svg`}
-                    width={32}
-                    height={32}
-                    alt="WalletConnect logo"
-                />
-                <h4>Scan with WalletConnect to connect</h4>
-                <Button
-                    disabled={isActivating}
-                    onClick={() => {
-                        walletConnect
-                            .activate(RPC_NETWORK_ID)
-                            .then(() => {
+                            eip1193.activate().then(() => {
                                 dispatch(
                                     setLastConnectorName(
-                                        LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
+                                        LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
                                     ),
                                 )
                             })
-                            .catch((error: any) => {
-                                console.error(error)
-                            })
-                    }}
-                >
-                    Use WalletConnect
-                </Button>
-            </div>
+                        }}
+                    >
+                        Connect {isMetaMask ? 'MetaMask' : 'browser wallet'}
+                    </Button>
+                </Box>
 
+                <Box>
+                    <img
+                        src={`${prefix}/walletconnect.svg`}
+                        width={48}
+                        height={48}
+                        alt="WalletConnect logo"
+                    />
+                    <div>
+                        <h4>Scan with WalletConnect to connect</h4>
+                    </div>
+                    <Button
+                        disabled={isActivating}
+                        onClick={() => {
+                            walletConnect
+                                .activate(RPC_NETWORK_ID)
+                                .then(() => {
+                                    dispatch(
+                                        setLastConnectorName(
+                                            LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
+                                        ),
+                                    )
+                                })
+                                .catch((error: any) => {
+                                    console.error(error)
+                                })
+                        }}
+                    >
+                        Use WalletConnect
+                    </Button>
+                </Box>
+            </div>
             {typeof eip1193Error === 'object' &&
                 (eip1193Error as unknown as { code: number }).code === -32002 &&
                 eip1193Error.message ===

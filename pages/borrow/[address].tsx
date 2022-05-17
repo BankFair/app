@@ -4,13 +4,7 @@ import { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import {
-    APP_NAME,
-    getAddress,
-    useAccount,
-    useProvider,
-    useSelector,
-} from '../../app'
+import { APP_NAME, getAddress, useAccount, useProvider } from '../../app'
 import { LoanView, Page } from '../../components'
 import {
     contract,
@@ -21,6 +15,7 @@ import {
     Pool,
     useLoans,
 } from '../../features'
+import { useSelector } from '../../store'
 
 const title = `Borrow - ${APP_NAME}`
 

@@ -4,14 +4,15 @@ import {
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
     useAccount,
 } from '../../app'
-import { Button, FlexGrow } from '../../components'
+import { Button } from '../Button'
+import { FlexGrow } from '../FlexGrow'
 import { LOGO_SIZE, NAV_HEIGHT, NAV_PADDING } from './constants'
-import Sidebar from './Sidebar'
+import { Sidebar } from './Sidebar'
 import { GrGrow } from 'react-icons/gr'
 import { RiMenuLine } from 'react-icons/ri'
 import { useRouter } from 'next/router'
 
-export default function Navigation() {
+export function Navigation() {
     const { pathname } = useRouter()
     const account = useAccount()
 

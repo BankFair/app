@@ -4,7 +4,7 @@ import { JsonRpcBatchProvider, JsonRpcProvider } from '@ethersproject/providers'
 import { Contract } from '@ethersproject/contracts'
 
 import { RPC_URL } from './constants'
-import { erc20Abi, ERC20Contract } from './utils'
+import { erc20Abi, ERC20Contract, nullAddress } from './utils'
 
 export const provider = new JsonRpcBatchProvider(RPC_URL)
 
@@ -34,9 +34,10 @@ export class CustomBatchProvider extends JsonRpcProvider {
         }
 
         if (this.batch.length === this.requestsCount) {
-            throw new Error(
-                'Calling `send` after `requestsCount` was reached. Create a new `CustomBatchProvider` instead.',
-            )
+            const message =
+                'Calling `send` after `requestsCount` was reached. Create a new `CustomBatchProvider` instead.'
+            console.error(message)
+            throw new Error(message)
         }
 
         const request = {
@@ -118,6 +119,11 @@ export class CustomBatchProvider extends JsonRpcProvider {
     }
 }
 
+const erc20Contract = new Contract(
+    nullAddress,
+    erc20Abi,
+    provider,
+) as ERC20Contract
 export function getERC20Contract(address: string) {
-    return new Contract(address, erc20Abi, provider) as ERC20Contract
+    return erc20Contract.attach(address)
 }

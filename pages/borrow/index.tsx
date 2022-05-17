@@ -1,7 +1,7 @@
 import { NextPage } from 'next'
 import Link from 'next/link'
-import { POOLS } from '../app'
-import { Page } from '../components'
+import { POOLS } from '../../app'
+import { Page } from '../../components'
 
 const BorrowPools: NextPage = () => {
     return (

@@ -1,10 +1,10 @@
 import { Web3ReactProvider } from '@web3-react/core'
 import { Provider } from 'react-redux'
 import type { AppProps } from 'next/app'
-import { store, connectors, rgbBlue } from '../app'
-import Navigation from '../features/navigation/Navigation'
-import { SwitchNetworkModal } from '../components'
+import { connectors, rgbBlue, rgbTextPrimary } from '../app'
+import { SwitchNetworkModal, Navigation } from '../components'
 import { useFetchPoolsPropertiesOnce, useConnectEagerly } from '../features'
+import { store } from '../store'
 
 export default function App({ Component, pageProps }: AppProps) {
     return (
@@ -20,11 +20,20 @@ export default function App({ Component, pageProps }: AppProps) {
                             Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
                             Droid Sans, Helvetica Neue, sans-serif;
                         font-weight: 300;
+                        color: ${rgbTextPrimary};
                     }
 
                     a {
                         color: ${rgbBlue};
                         text-decoration: none;
+
+                        &.primary {
+                            color: ${rgbTextPrimary};
+
+                            &:hover {
+                                text-decoration: underline;
+                            }
+                        }
                     }
 
                     * {

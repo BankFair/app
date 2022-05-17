@@ -2,9 +2,9 @@ import { NextPage } from 'next'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { useAccount } from '../app'
-import { Page } from '../components'
-import { selectPools } from '../features'
+import { useAccount } from '../../app'
+import { Page } from '../../components'
+import { selectPools } from '../../features'
 
 const ManagePools: NextPage = () => {
     const account = useAccount()

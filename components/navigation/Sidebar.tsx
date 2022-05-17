@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
     COLOR_GREEN,
     networks,
-    opacity,
+    rgba,
     rgbGreen,
     RPC_NETWORK_ID,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
@@ -22,10 +22,10 @@ import { MdOutlineAdminPanelSettings } from 'react-icons/md'
 import { FaFaucet } from 'react-icons/fa'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
-import { selectPools } from '../pools'
 import { useMemo } from 'react'
+import { selectPools } from '../../features'
 
-export default function Sidebar({
+export function Sidebar({
     isVisible,
     hideSidebar,
 }: {
@@ -98,7 +98,7 @@ export default function Sidebar({
                     &.current,
                     &:hover {
                         color: ${rgbGreen};
-                        background-color: ${opacity(COLOR_GREEN, 0.08)};
+                        background-color: ${rgba(COLOR_GREEN, 0.08)};
                     }
                 }
 

@@ -51,15 +51,19 @@ export function Modal({
                 }
 
                 .content {
-                    max-width: 400px;
+                    width: 90vw;
+                    max-width: 600px;
+                    max-height: 90vh;
+                    overflow-y: auto;
                     background-color: white;
                     padding: 10px;
                     margin: 10px;
                     border-radius: 10px;
+                    position: relative;
                 }
 
                 .close {
-                    text-align: right;
+                    float: right;
                 }
             `}</style>
 

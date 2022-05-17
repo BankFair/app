@@ -3,17 +3,23 @@ import {
     ThunkAction,
     Action as ReduxAction,
 } from '@reduxjs/toolkit'
-import { EqualityFn, useSelector as useReduxSelector } from 'react-redux'
+import {
+    EqualityFn,
+    useSelector as useReduxSelector,
+    useDispatch as useReduxDispatch,
+} from 'react-redux'
 
 // Do not use `../features`
-import { web3Reducer } from '../features/web3/web3Slice'
-import { poolsReducer } from '../features/pools/poolsSlice'
+import { web3Slice } from './features/web3/web3Slice'
+import { poolsSlice } from './features/pools/poolsSlice'
+import { erc20Slice } from './features/erc20/erc20Slice'
 
 export function makeStore() {
     return configureStore({
         reducer: {
-            web3: web3Reducer,
-            pools: poolsReducer,
+            web3: web3Slice.reducer,
+            pools: poolsSlice.reducer,
+            erc20: erc20Slice.reducer,
         },
     })
 }
@@ -40,3 +46,5 @@ export const useSelector: <Selected = unknown>(
     selector: (state: AppState) => Selected,
     equalityFn?: EqualityFn<Selected> | undefined,
 ) => Selected = useReduxSelector
+
+export const useDispatch: () => AppDispatch = useReduxDispatch

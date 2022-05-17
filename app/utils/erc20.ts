@@ -3,10 +3,13 @@ import { ContractTransaction } from '@ethersproject/contracts'
 import { CustomBaseContract, ContractFunction } from './ethers'
 
 export interface ERC20Contract extends CustomBaseContract {
-    allowance: ContractFunction<BigNumber, [string, string]>
+    allowance: ContractFunction<BigNumber, [owner: string, spender: string]>
     decimals: ContractFunction<number>
-    approve: ContractFunction<ContractTransaction, [string, BigNumber]>
-    balanceOf: ContractFunction<BigNumber, [string]>
+    approve: ContractFunction<
+        ContractTransaction,
+        [spender: string, allowance: BigNumber]
+    >
+    balanceOf: ContractFunction<BigNumber, [owner: string]>
 }
 
 export const infiniteAllowance = BigNumber.from(

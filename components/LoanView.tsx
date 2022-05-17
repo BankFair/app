@@ -3,12 +3,9 @@ import { BigNumber } from 'ethers'
 import { useCallback, useState } from 'react'
 import TimeAgo from 'timeago-react'
 
-import {
-    AppDispatch,
-    ERC20Contract,
-    infiniteAllowance,
-    TOKEN_SYMBOL,
-} from '../app'
+import { ERC20Contract, infiniteAllowance, TOKEN_SYMBOL } from '../app'
+
+import type { AppDispatch } from '../store'
 
 import { LoanStatus, Loan, CoreContract, fetchAndUpdateLoan } from '../features'
 
