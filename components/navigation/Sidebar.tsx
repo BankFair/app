@@ -71,7 +71,7 @@ export function Sidebar({
                         bottom: 0;
                         margin-left: ${SIDEBAR_MAX_WIDTH}px;
                         width: 100%;
-                        height: 100%;
+                        height: 100vh;
                         background-color: rgba(0, 0, 0, 0.5);
                     }
                 }
