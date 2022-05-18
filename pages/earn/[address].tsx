@@ -2,14 +2,7 @@ import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import {
-    ChangeEvent,
-    FormEventHandler,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react'
+import { FormEventHandler, useEffect, useMemo, useState } from 'react'
 import { useSelector } from '../../store'
 import {
     APP_NAME,
@@ -25,7 +18,6 @@ import {
 import {
     Page,
     PoolStats,
-    Steps,
     Box,
     Alert,
     Button,
@@ -40,7 +32,6 @@ import {
     Pool,
     useLoans,
     useAllowanceAndBalance,
-    isAllowanceInfinite,
     useAmountDepositable,
     useFetchIntervalAccountInfo,
 } from '../../features'
@@ -95,7 +86,6 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             <PoolStats pool={pool} poolAddress={address} />
             <Deposit pool={pool} poolAddress={address} />
             <YourSupply pool={pool} poolAddress={address} />
-            <DepositOld pool={pool} poolAddress={address} />
             <Withdraw pool={pool} poolAddress={address} />
             <Earnings pool={pool} poolAddress={address} />
             <div>
@@ -366,102 +356,6 @@ function YourSupply({
                 )}
             </div>
         </Box>
-    )
-}
-
-function DepositOld({
-    pool: { managerAddress, tokenAddress, tokenDecimals },
-    poolAddress,
-}: {
-    pool: Pool
-    poolAddress: string
-}) {
-    const [isLoading, setIsLoading] = useState(false)
-    const [value, setValue] = useState('100')
-    const account = useAccount()
-    const provider = useProvider()
-
-    const isManager = managerAddress === account
-
-    const disabled = !account || !provider || isManager
-
-    const noSubmit = disabled || isLoading
-
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = noSubmit
-        ? undefined
-        : (event) => {
-              event.preventDefault()
-              setIsLoading(true)
-
-              const amount = parseUnits(value, tokenDecimals)
-              const signer = provider.getSigner()
-
-              const attached = contract.attach(poolAddress)
-              const tokenContract = getERC20Contract(tokenAddress)
-
-              // TODO: Handle user cancelation
-              attached.amountDepositable().then(async (depositableAmount) => {
-                  if (amount.gt(depositableAmount)) {
-                      alert(
-                          `Maximum depositable amount is ${formatUnits(
-                              depositableAmount,
-                              tokenDecimals,
-                          )}`,
-                      ) // TODO: Display in component
-                      setIsLoading(false)
-                      return
-                  }
-
-                  const allowance = await tokenContract.allowance(
-                      account,
-                      poolAddress,
-                  )
-                  const tokenContractWithSigner = tokenContract.connect(signer)
-                  const balance = await tokenContractWithSigner.balanceOf(
-                      account,
-                  )
-
-                  if (balance.lt(amount)) {
-                      alert('USDC balance too low') // TODO: Display in component
-                      setIsLoading(false)
-                      return
-                  }
-
-                  if (amount.gt(allowance)) {
-                      const tx = await tokenContractWithSigner.approve(
-                          poolAddress,
-                          infiniteAllowance,
-                      )
-
-                      await tx.wait()
-                  }
-
-                  const tx = await attached.connect(signer).deposit(amount)
-
-                  await tx.wait()
-
-                  // TODO: In page notification
-
-                  setIsLoading(false)
-              })
-          }
-
-    return (
-        <form className="section" onSubmit={handleSubmit}>
-            <h4>Deposit</h4>
-
-            {managerAddress &&
-                account &&
-                (isManager ? <div>Manager can not deposit</div> : null)}
-
-            <input
-                type="number"
-                inputMode="decimal"
-                onChange={(event) => void setValue(event.target.value)}
-                value={value}
-            />
-            <button disabled={noSubmit}>Deposit</button>
-        </form>
     )
 }
 
