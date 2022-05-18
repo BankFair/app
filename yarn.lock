@@ -3929,10 +3929,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-loading-icons@npm:1.0.8":
-  version: 1.0.8
-  resolution: "react-loading-icons@npm:1.0.8"
-  checksum: 9a875cd2196fca652bd55653ac35839a807a51951cc935417ded63be6e3e7297f67db4610fc444676b1a4296654cc2d1fafa1f581b3be5b065108ff92dcb6ed3
+"react-loading-icons@npm:1.1.0":
+  version: 1.1.0
+  resolution: "react-loading-icons@npm:1.1.0"
+  checksum: 41ee0f589c4cf04c9745bb3bc19febcf82deb8e4623072102f8ef861b3e06ecab449a5f74490075a4ecd6de215bebdb33e06b8e0b609158866e119c108e1312f
   languageName: node
   linkType: hard
 
@@ -4192,7 +4192,7 @@ __metadata:
     react: 18.0.0
     react-dom: 18.0.0
     react-icons: 4.3.1
-    react-loading-icons: 1.0.8
+    react-loading-icons: 1.1.0
     react-redux: 8.0.1
     redux: 4.2.0
     sass: ^1.50.1

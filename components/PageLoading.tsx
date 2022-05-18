@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import Oval from 'react-loading-icons/dist/components/oval'
+import { Oval } from 'react-loading-icons'
 import { rgbGreen } from '../app'
 
 export function PageLoading({ children }: { children?: ReactNode }) {
