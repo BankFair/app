@@ -1,5 +1,21 @@
 import { Button } from './Button'
-import { Color, rgb, useActiveConnector } from '../app'
+import {
+    Color,
+    COLOR_BLUE,
+    COLOR_GREEN_DARK,
+    COLOR_RED_DARK,
+    COLOR_YELLOW_DARK,
+    rgb,
+    rgbBlueDarker,
+    rgbBlueLighter,
+    rgbGreenDarker,
+    rgbGreenLighter,
+    rgbRedDarker,
+    rgbRedLighter,
+    rgbYellowDarker,
+    rgbYellowLighter,
+    useActiveConnector,
+} from '../app'
 import { useDispatch } from 'react-redux'
 import { clearLastConnectorName } from '../features/web3/web3Slice'
 import { ReactNode } from 'react'
@@ -64,29 +80,10 @@ export function Account() {
     )
 }
 
-const green: Color = {
-    r: 0,
-    g: 123,
-    b: 85,
-}
-
-const blue: Color = {
-    r: 24,
-    g: 144,
-    b: 255,
-}
-
-const yellow: Color = {
-    r: 183,
-    g: 129,
-    b: 3,
-}
-
-const red: Color = {
-    r: 189,
-    g: 58,
-    b: 76,
-}
+const green: Color = COLOR_GREEN_DARK
+const blue: Color = COLOR_BLUE
+const yellow: Color = COLOR_YELLOW_DARK
+const red: Color = COLOR_RED_DARK
 
 const gradient = (color: Color) =>
     `linear-gradient(315deg, rgb(${color.r},${color.g},${color.b}) -200%, rgba(${color.r},${color.g},${color.b},0) 100%)`
@@ -135,8 +132,8 @@ function Stat({
                     }
 
                     &.green {
-                        background-color: #c8facd;
-                        color: #005249;
+                        background-color: ${rgbGreenLighter};
+                        color: ${rgbGreenDarker};
 
                         > .icon {
                             background-image: ${gradient(green)};
@@ -145,8 +142,8 @@ function Stat({
                     }
 
                     &.blue {
-                        background-color: #d0f2ff;
-                        color: #04297a;
+                        background-color: ${rgbBlueLighter};
+                        color: ${rgbBlueDarker};
 
                         > .icon {
                             background-image: ${gradient(blue)};
@@ -155,8 +152,8 @@ function Stat({
                     }
 
                     &.yellow {
-                        background-color: #fff7cd;
-                        color: #7a4f01;
+                        background-color: ${rgbYellowLighter};
+                        color: ${rgbYellowDarker};
 
                         > .icon {
                             background-image: ${gradient(yellow)};
@@ -165,8 +162,8 @@ function Stat({
                     }
 
                     &.red {
-                        background-color: #ffe7d9;
-                        color: #7a0c2e;
+                        background-color: ${rgbRedLighter};
+                        color: ${rgbRedDarker};
 
                         > .icon {
                             background-image: ${gradient(red)};

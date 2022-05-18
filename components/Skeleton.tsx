@@ -1,5 +1,3 @@
-import { disabledBackground } from '../app'
-
 export function Skeleton({
     width,
     height,
@@ -24,7 +22,7 @@ export function Skeleton({
 
                 .skeleton {
                     animation: pulse 1.5s ease-in-out 0.5s infinite;
-                    background-color: ${disabledBackground};
+                    background-color: var(--disabled-24);
                     border-radius: 4px;
                     user-select: none;
                     display: inline-block;

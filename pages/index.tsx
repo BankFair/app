@@ -6,8 +6,6 @@ import {
     APP_NAME,
     formatFloor,
     POOLS,
-    rgbTextPrimary,
-    shadow,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
 } from '../app'
 import { Page, Skeleton } from '../components'
@@ -52,14 +50,14 @@ function Pool({ pool: { address, name } }: { pool: typeof POOLS[number] }) {
         <li>
             <style jsx>{`
                 a {
-                    color: ${rgbTextPrimary};
+                    color: var(--color);
+                    background-color: var(--bg-color);
+                    box-shadow: var(--shadow) 0 1px 2px 0;
                     display: flex;
                     border-radius: 8px;
                     padding: 16px;
                     margin: 10px 0;
                     justify-content: space-between;
-                    background-color: white;
-                    box-shadow: ${shadow} 0 1px 2px 0;
                     flex-direction: column;
                 }
 
@@ -80,6 +78,7 @@ function Pool({ pool: { address, name } }: { pool: typeof POOLS[number] }) {
                         margin-top: 8px;
 
                         > .label {
+                            color: var(--color-secondary);
                             font-size: 10px;
                             text-transform: uppercase;
                             margin-bottom: 4px;

@@ -71,6 +71,7 @@ export function Connect() {
                             flex-direction: column;
                             justify-content: center;
                             height: 80px;
+                            color: var(--color-secondary);
                         }
                     }
                 }

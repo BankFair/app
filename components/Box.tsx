@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { rgbGreen, shadow } from '../app'
+import { rgbGreen } from '../app'
 import { Oval } from 'react-loading-icons'
 
 export function Box({
@@ -20,8 +20,8 @@ export function Box({
             <style jsx>{`
                 .box {
                     border-radius: 16px;
-                    background-color: white;
-                    box-shadow: ${shadow} 0 16px 32px -4px;
+                    background-color: var(--bg-color);
+                    box-shadow: var(--shadow) 0 16px 32px -4px;
                     margin: 40px auto;
                     padding: 26px 30px;
                     position: relative;
@@ -35,7 +35,7 @@ export function Box({
                     background-color: inherit;
                 }
                 .overlay-container {
-                    background-color: rgba(255, 255, 255, 0.9);
+                    background-color: var(--bg-overlay);
                     backdrop-filter: blur(5px);
                 }
                 .loading-container,

@@ -214,6 +214,7 @@ function Deposit({
                             line-height: 14px;
                             margin-bottom: 2px;
                             margin-right: 4px;
+                            color: var(--color-secondary);
 
                             > span {
                                 cursor: pointer;
@@ -335,7 +336,7 @@ function YourSupply({
         account ? state.pools[poolAddress]?.accountInfo[account] : null,
     )
 
-    if (!account) return null
+    if (!account || account === managerAddress) return null
 
     return (
         <Box s>

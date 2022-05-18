@@ -1,8 +1,5 @@
 import { RiAlertFill } from 'react-icons/ri'
-import { Color, rgb } from '../app'
-
-const COLOR_WARNING: Color = { r: 255, g: 193, b: 7 }
-const rgbWarning = rgb(COLOR_WARNING)
+import { rgbTextPrimaryDark, rgbYellow } from '../app'
 
 export function Alert({
     style,
@@ -22,7 +19,8 @@ export function Alert({
                     border-radius: 8px;
 
                     &.warning {
-                        background-color: ${rgbWarning};
+                        color: ${rgbTextPrimaryDark};
+                        background-color: ${rgbYellow};
                     }
                 }
 

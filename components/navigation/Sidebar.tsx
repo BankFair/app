@@ -47,7 +47,7 @@ export function Sidebar({
         <div className="sidebar">
             <style jsx>{`
                 .sidebar {
-                    background-color: white;
+                    background-color: var(--bg-color);
                     position: fixed;
                     top: 0;
                     left: 0;
@@ -61,6 +61,9 @@ export function Sidebar({
                         position: absolute;
                         top: ${SIDEBAR_CLOSE_MARGIN}px;
                         right: ${SIDEBAR_CLOSE_MARGIN}px;
+                        > :global(path) {
+                            stroke: var(--color-secondary);
+                        }
                     }
 
                     > .overlay {
@@ -89,7 +92,7 @@ export function Sidebar({
                     padding: 8px 10px;
                     cursor: default;
                     border-radius: 8px;
-                    color: #637381;
+                    color: var(--color-secondary);
 
                     > :global(svg) {
                         margin-right: 10px;
@@ -105,7 +108,7 @@ export function Sidebar({
                 @media screen and (min-width: ${SIDEBAR_MAX_WIDTH}px) {
                     .sidebar {
                         width: ${SIDEBAR_MAX_WIDTH}px;
-                        border-right: 1px solid rgba(145, 158, 171, 0.24);
+                        border-right: 1px solid var(--divider);
 
                         > .overlay {
                             display: block;

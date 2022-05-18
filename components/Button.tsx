@@ -9,8 +9,11 @@ import {
     COLOR_RED,
     rgba,
     rgbBlue,
+    rgbBlueDark,
     rgbGreen,
+    rgbGreenDark,
     rgbRed,
+    rgbRedDark,
 } from '../app'
 
 export function Button({
@@ -68,15 +71,30 @@ export function Button({
                     font-size: 16px;
                     font-family: inherit;
                     display: inline-block;
+                    transition-property: background-color;
+                    transition-duration: 100ms;
+                    transition-timing-function: linear;
+
+                    &:not(.disabled):not(.ghost):hover {
+                        background-color: ${rgbGreenDark};
+                    }
 
                     &.red {
                         background-color: ${rgbRed};
                         border-color: ${rgba(COLOR_RED, 0.48)};
+
+                        &:not(.disabled):not(.ghost):hover {
+                            background-color: ${rgbRedDark};
+                        }
                     }
 
                     &.blue {
                         background-color: ${rgbBlue};
                         border-color: ${rgba(COLOR_BLUE, 0.48)};
+
+                        &:not(.disabled):not(.ghost):hover {
+                            background-color: ${rgbBlueDark};
+                        }
                     }
 
                     &.disabled {

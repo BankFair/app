@@ -1,5 +1,5 @@
 import { ChangeEvent, useMemo } from 'react'
-import { input, prefix, rgbTextPrimary } from '../app'
+import { input, prefix } from '../app'
 
 export function AmountInput({
     decimals,
@@ -42,7 +42,7 @@ export function AmountInput({
                     border: 0 none;
                     border-radius: 8px;
                     background-color: ${input};
-                    color: ${rgbTextPrimary};
+                    color: var(--color);
 
                     &:disabled {
                         cursor: not-allowed;

@@ -1,7 +1,7 @@
 import { EtherscanLink } from './EtherscanLink'
 import { Pool, useStats } from '../features'
 import { Box } from './Box'
-import { formatFloor, prefix, rgbTextPrimary, rgbTextSecondary } from '../app'
+import { formatFloor, prefix } from '../app'
 import { Skeleton } from './Skeleton'
 
 export function PoolStats({
@@ -31,13 +31,13 @@ export function PoolStats({
                         display: none;
                         font-size: 13px;
                         > .label {
-                            color: ${rgbTextSecondary};
+                            color: var(--color-secondary);
                             margin-right: 4px;
                         }
                     }
                 }
                 .subtitle {
-                    color: ${rgbTextSecondary};
+                    color: var(--color-secondary);
                     font-size: 14px;
                     margin: 4px 0 20px;
                     display: flex;
@@ -56,11 +56,11 @@ export function PoolStats({
                     > .stat {
                         flex-basis: 50%;
                         > .number {
-                            color: ${rgbTextPrimary};
+                            color: var(--color);
                         }
 
                         > .label {
-                            color: ${rgbTextSecondary};
+                            color: var(--color-secondary);
                             font-size: 11.6px;
                         }
                     }

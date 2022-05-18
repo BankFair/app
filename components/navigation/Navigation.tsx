@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react'
 import {
+    COLOR_GREY_900,
+    COLOR_WHITE,
     prefix,
+    rgba,
     shortenAddress,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
     useAccount,
@@ -45,7 +48,7 @@ export function Navigation() {
                     display: flex;
                     align-items: center;
                     height: ${NAV_HEIGHT}px;
-                    background-color: rgba(255, 255, 255, 0.9);
+                    background-color: var(--bg-overlay);
                     backdrop-filter: blur(5px);
 
                     > .logo,
@@ -73,6 +76,15 @@ export function Navigation() {
                         margin-left: 8px;
                         width: 24px;
                         height: 24px;
+                        color: var(--color-secondary);
+                    }
+                }
+
+                @media (prefers-color-scheme: dark) {
+                    nav {
+                        > .logo-text {
+                            filter: none;
+                        }
                     }
                 }
 

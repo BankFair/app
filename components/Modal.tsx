@@ -55,7 +55,7 @@ export function Modal({
                     max-width: 600px;
                     max-height: 90vh;
                     overflow-y: auto;
-                    background-color: white;
+                    background-color: var(--bg-color);
                     padding: 10px;
                     margin: 10px;
                     border-radius: 16px;

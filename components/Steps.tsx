@@ -1,10 +1,5 @@
 import { Fragment } from 'react'
-import {
-    disabledBackground,
-    disabledContent,
-    disabledContentOpaque,
-    rgbGreen,
-} from '../app'
+import { rgbGreen, rgbWhite } from '../app'
 
 export function Steps({
     currentStep,
@@ -40,7 +35,7 @@ export function Steps({
                             line-height: 32px;
                             font-size: 14px;
                             text-align: center;
-                            color: white;
+                            color: ${rgbWhite};
                             background-color: ${rgbGreen};
                             border-radius: 50%;
                         }
@@ -59,13 +54,13 @@ export function Steps({
                             background-color: white;
 
                             > .circle {
-                                color: ${disabledContentOpaque};
-                                background-color: ${disabledBackground};
+                                color: var(--disabled-80);
+                                background-color: var(--disabled-24);
                             }
                         }
 
                         > .label {
-                            color: ${disabledContent};
+                            color: var(--color-disabled);
                         }
                     }
                 }
@@ -78,7 +73,7 @@ export function Steps({
                     margin: 14px -10px 0;
 
                     &.disabled {
-                        background-color: ${disabledBackground};
+                        background-color: var(--disabled-24);
                     }
                 }
             `}</style>
