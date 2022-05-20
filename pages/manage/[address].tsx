@@ -1,22 +1,25 @@
-import { parseUnits, formatUnits } from '@ethersproject/units'
+import { parseUnits } from '@ethersproject/units'
+import { BigNumber } from '@ethersproject/bignumber'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux'
+import { APP_NAME, useAccount, getAddress } from '../../app'
 import {
-    APP_NAME,
-    useAccount,
-    useProvider,
-    infiniteAllowance,
-    getERC20Contract,
-    getAddress,
-} from '../../app'
-import { LoanView, Page } from '../../components'
+    Alert,
+    Box,
+    LoanView,
+    Page,
+    Tabs,
+    useAmountForm,
+} from '../../components'
 import {
-    contract,
     Pool,
+    refetchStatsIfUsed,
+    useAmountDepositable,
     useLoadManagerState,
     useLoans,
+    useManagerInfo,
     useSigner,
 } from '../../features'
 import { useSelector } from '../../store'
@@ -43,8 +46,7 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
             {pool ? (
                 pool.managerAddress === account ? (
                     <>
-                        <Stake pool={pool} poolAddress={address} />
-                        <Unstake pool={pool} poolAddress={address} />
+                        <StakeAndUnstake pool={pool} poolAddress={address} />
                         <Loans pool={pool} poolAddress={address} />
                     </>
                 ) : (
@@ -86,174 +88,62 @@ Manage.getInitialProps = (context) => {
 
 export default Manage
 
-function Stake({
-    pool: { tokenAddress, tokenDecimals },
+const types = ['Stake', 'Unstake'] as const
+function StakeAndUnstake({
+    pool: { managerAddress, tokenAddress, tokenDecimals },
     poolAddress,
 }: {
     pool: Pool
     poolAddress: string
 }) {
-    const [loading, setLoading] = useState(false)
-    const [value, setValue] = useState('100')
+    const [type, setType] = useState<typeof types[number]>('Stake')
+
     const account = useAccount()
-    const provider = useProvider()
 
-    const [staked, setStaked] = useState('0')
-    useEffect(() => {
-        contract
-            .attach(poolAddress)
-            .balanceStaked()
-            .then((amount) => {
-                setStaked(formatUnits(amount, tokenDecimals))
-            })
-    }, [account, tokenDecimals, poolAddress])
+    const [info, refetchManagerInfo] = useManagerInfo(poolAddress)
 
-    if (!account || !provider || tokenDecimals === undefined) {
-        return null
-    }
+    const max = useMemo(() => {
+        if (type === 'Stake') return undefined
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-        event.preventDefault()
-        setLoading(true)
+        if (info) return BigNumber.from(info.unstakable)
 
-        const amount = parseUnits(value, tokenDecimals)
-        const signer = provider.getSigner()
-        const tokenContract = getERC20Contract(tokenAddress)
+        return undefined
+    }, [type, info])
 
-        tokenContract
-            .allowance(account, poolAddress)
-            .then(async (allowance) => {
-                const tokenContractWithSigner = tokenContract.connect(signer)
-                const balance = await tokenContractWithSigner.balanceOf(account)
+    const isNotManager = managerAddress !== account
 
-                if (balance.lt(amount)) {
-                    alert('USDC balance too low')
-                    setLoading(false)
-                    return
-                }
-
-                if (amount.gt(allowance)) {
-                    const tx = await tokenContractWithSigner.approve(
-                        poolAddress,
-                        infiniteAllowance,
-                    )
-
-                    await tx.wait()
-                }
-
-                const tx = await contract
-                    .attach(poolAddress)
-                    .connect(signer)
-                    .stake(amount)
-
-                await tx.wait()
-
-                setStaked((staked) =>
-                    formatUnits(
-                        parseUnits(staked, tokenDecimals).add(amount),
-                        tokenDecimals,
-                    ),
-                )
-
-                // TODO: In page notification
-
-                setLoading(false)
-            })
-    }
+    const { form } = useAmountForm({
+        type,
+        onSumbit:
+            type === 'Stake'
+                ? (contract, amount) =>
+                      contract.stake(parseUnits(amount, tokenDecimals))
+                : (contract, amount) =>
+                      contract.unstake(parseUnits(amount, tokenDecimals)),
+        refetch: () =>
+            Promise.all([
+                refetchManagerInfo(),
+                refetchStatsIfUsed(poolAddress),
+            ]),
+        poolAddress,
+        tokenAddress,
+        tokenDecimals,
+        disabled: Boolean(isNotManager),
+        max,
+    })
 
     return (
-        <form className="section" onSubmit={loading ? undefined : handleSubmit}>
-            <h4>Stake</h4>
-            <div>Staked: {staked}</div>
-            <input
-                type="number"
-                inputMode="decimal"
-                onChange={(event) => void setValue(event.target.value)}
-                value={value}
-            />
-            <button disabled={loading}>Stake</button>
-        </form>
-    )
-}
+        <Box
+            s
+            loading={Boolean(type === 'Unstake' && account ? !info : false)}
+            overlay={isNotManager ? 'Only manager can stake' : undefined}
+        >
+            <Tabs tabs={types} currentTab={type} setCurrentTab={setType}></Tabs>
 
-function Unstake({
-    pool: { tokenDecimals },
-    poolAddress,
-}: {
-    pool: Pool
-    poolAddress: string
-}) {
-    const [loading, setLoading] = useState(false)
-    const [value, setValue] = useState('100')
-    const loans = useLoans(poolAddress)
-    const provider = useProvider()
+            {form}
 
-    const [unstakable, setUnstakable] = useState('')
-    useEffect(() => {
-        if (!tokenDecimals) return
-        contract
-            .attach(poolAddress)
-            .amountUnstakable()
-            .then((value) => setUnstakable(formatUnits(value, tokenDecimals)))
-    }, [setUnstakable, poolAddress, tokenDecimals, loans, unstakable])
-
-    if (!provider) return null
-
-    const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-        event.preventDefault()
-        setLoading(true)
-
-        const amount = parseUnits(value, tokenDecimals)
-        const attached = contract.attach(poolAddress)
-
-        attached.amountUnstakable().then(async (unstakableAmount) => {
-            if (amount.gt(unstakableAmount)) {
-                alert(
-                    `Maximum unstakable amount is ${formatUnits(
-                        unstakableAmount,
-                        tokenDecimals,
-                    )}`,
-                )
-                setLoading(false)
-                return
-            }
-
-            const tx = await attached
-                .connect(provider.getSigner())
-                .unstake(amount)
-
-            await tx.wait()
-
-            // TODO: In page notification
-            // TODO: Refresh staked amount
-
-            setLoading(false)
-            setUnstakable(
-                formatUnits(
-                    parseUnits(unstakable, tokenDecimals).sub(amount),
-                    tokenDecimals,
-                ),
-            )
-        })
-    }
-
-    return (
-        <form className="section" onSubmit={loading ? undefined : handleSubmit}>
-            <h4>Unstake</h4>
-            {unstakable && (
-                <div>
-                    Maximum unstakable:{' '}
-                    <a onClick={() => setValue(unstakable)}>{unstakable}</a>
-                </div>
-            )}
-            <input
-                type="number"
-                inputMode="decimal"
-                onChange={(event) => void setValue(event.target.value)}
-                value={value}
-            />
-            <button disabled={loading}>Unstake</button>
-        </form>
+            <Alert style="warning" title="TODO: Explain the risks" />
+        </Box>
     )
 }
 

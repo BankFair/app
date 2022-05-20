@@ -15,7 +15,9 @@ import { AmountInput } from './AmountInput'
 import { Button } from './Button'
 import { ConnectModal } from './ConnectModal'
 
-export function useAmountForm({
+export function useAmountForm<
+    T extends 'Deposit' | 'Withdraw' | 'Stake' | 'Unstake',
+>({
     tokenDecimals,
     tokenAddress,
     poolAddress,
@@ -23,7 +25,7 @@ export function useAmountForm({
     refetch,
     max: maxProp,
     disabled,
-    type = 'Deposit',
+    type,
 }: {
     tokenDecimals: number
     tokenAddress: string
@@ -35,9 +37,9 @@ export function useAmountForm({
     refetch: () => Promise<any>
     max?: BigNumber
     disabled?: boolean
-    type?: 'Deposit' | 'Withdraw' | 'Stake' | 'Unstake'
+    type: T
 }) {
-    const [isLoading, setIsLoading] = useState(false)
+    const [loading, setLoading] = useState('')
 
     const isWithdraw = type === 'Unstake' || type === 'Withdraw'
 
@@ -72,19 +74,23 @@ export function useAmountForm({
             ? parseUnits(amount, tokenDecimals)
             : zero
         return {
-            value: max?.lt(amountBigNumber)
-                ? format(formatUnits(max, tokenDecimals))
-                : amount,
+            value:
+                loading ||
+                (max?.lt(amountBigNumber)
+                    ? format(formatUnits(max, tokenDecimals))
+                    : amount),
             needsApproval:
                 !isWithdraw && allowance
                     ? BigNumber.from(allowance).lt(amountBigNumber)
                     : false,
         }
-    }, [max, tokenDecimals, amount, allowance, isWithdraw])
+    }, [loading, max, tokenDecimals, amount, allowance, isWithdraw])
 
     const handleClickMax = useCallback(() => {
         setAmount(format(formatUnits(max!, tokenDecimals)))
     }, [max, tokenDecimals])
+
+    const inputDisabled = Boolean(disabled || loading)
 
     const form = (
         <form
@@ -98,26 +104,24 @@ export function useAmountForm({
 
                 const signer = provider!.getSigner()
 
-                if (needsApproval) {
-                    setIsLoading(true)
+                setLoading(value)
 
+                if (needsApproval) {
                     getERC20Contract(tokenAddress)
                         .connect(signer)
                         .approve(poolAddress, infiniteAllowance)
                         .then((tx) => tx.wait())
                         .then(() => refetchAllowanceAndBalance())
                         .then(() => {
-                            setIsLoading(false)
+                            setLoading('')
                         })
                         .catch((reason) => {
                             console.error(reason)
-                            setIsLoading(false)
+                            setLoading('')
                         })
 
                     return
                 }
-
-                setIsLoading(true)
 
                 onSumbit(contract.attach(poolAddress).connect(signer), value)
                     .then((tx) => tx.wait())
@@ -125,13 +129,14 @@ export function useAmountForm({
                         // TODO: Optimize provider. Currently it will make 3 separate requests.
                         Promise.all([refetch(), refetchAllowanceAndBalance()]),
                     )
-
                     .then(() => {
-                        setIsLoading(false)
+                        setLoading('')
+                        setAmount('')
                     })
                     .catch((reason) => {
                         console.error(reason)
-                        setIsLoading(false)
+                        setLoading('')
+                        setAmount('')
                     })
             }}
         >
@@ -174,7 +179,7 @@ export function useAmountForm({
                 </div>
                 <AmountInput
                     decimals={6}
-                    disabled={disabled || isLoading}
+                    disabled={inputDisabled}
                     value={value}
                     onChange={setAmount}
                 />
@@ -182,10 +187,10 @@ export function useAmountForm({
 
             <Button
                 key={type}
-                disabled={Boolean(disabled || isLoading || (!value && account))}
+                disabled={Boolean(inputDisabled || (!value && account))}
                 type="submit"
                 width={170}
-                loading={Boolean(isLoading)}
+                loading={Boolean(loading)}
                 blue={isWithdraw}
             >
                 {account

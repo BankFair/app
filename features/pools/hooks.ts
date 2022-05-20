@@ -22,8 +22,17 @@ import {
     LoanDetails as StateLoanDetails,
     useFetchIntervalStats,
     useFetchIntervalAccountInfo,
+    useFetchIntervalManagerInfo,
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
+
+export function useManagerInfo(poolAddress: string) {
+    const refetch = useFetchIntervalManagerInfo(poolAddress)
+
+    const info = useSelector((state) => state.pools[poolAddress]?.managerInfo)
+
+    return [info, refetch] as const
+}
 
 export function useAccountInfo(
     poolAddress: string,

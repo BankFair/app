@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { contract, LoanStatus, getBatchProviderAndContract } from './contract'
 import { createFetchIntervalHook } from '../../app'
-import type { AppState, Action } from '../../store'
+import { store, AppState, Action } from '../../store'
 
 export interface Loan {
     id: number
@@ -29,6 +29,12 @@ interface Stats {
     blockNumber: number
 }
 
+interface ManagerInfo {
+    staked: string
+    unstakable: string
+    blockNumber: number
+}
+
 interface AccountInfo {
     balance: string
     withdrawable: string
@@ -44,12 +50,14 @@ export interface Pool {
     loansBlockNumber: number
     loanUpdates: { loan: Loan; blockNumber: number }[]
     stats: Stats | null
+    managerInfo: ManagerInfo | null
     accountInfo: Record<string, AccountInfo>
+    loading: 'stats'[]
 }
 
 const oneHour = 60 * 60 * 1000
 
-const fetchStats = createAsyncThunk(
+export const fetchStats = createAsyncThunk(
     'pools/fetchStats',
     async (poolAddress: string) => {
         const { provider, contract: attached } = getBatchProviderAndContract(
@@ -126,6 +134,35 @@ export const useFetchIntervalAccountInfo = createFetchIntervalHook(
     oneHour,
 )
 
+const fetchManagerInfo = createAsyncThunk(
+    'pools/fetchManagerInfo',
+    async (poolAddress: string) => {
+        const { provider, contract: attached } = getBatchProviderAndContract(
+            3,
+            contract.attach(poolAddress),
+        )
+
+        const [staked, unstakable, blockNumber] = await Promise.all([
+            attached.balanceStaked(),
+            attached.amountUnstakable(),
+            provider.getCurrentBlockNumber(),
+        ])
+
+        const managerInfo: ManagerInfo = {
+            staked: staked.toHexString(),
+            unstakable: unstakable.toHexString(),
+            blockNumber,
+        }
+
+        return managerInfo
+    },
+)
+
+export const useFetchIntervalManagerInfo = createFetchIntervalHook(
+    fetchManagerInfo,
+    oneHour,
+)
+
 const initialState: Record<string, Pool> = {}
 
 export const poolsSlice = createSlice({
@@ -160,7 +197,9 @@ export const poolsSlice = createSlice({
                 loansBlockNumber: 0,
                 loanUpdates: [],
                 stats: null,
+                managerInfo: null,
                 accountInfo: {},
+                loading: [],
             }
         },
 
@@ -231,17 +270,23 @@ export const poolsSlice = createSlice({
     extraReducers(builder) {
         builder
             .addCase(
+                fetchStats.pending,
+                (state, { meta: { arg: poolAddress } }) => {
+                    const pool = state[poolAddress]
+                    const set = new Set(pool.loading)
+                    set.add('stats')
+                    pool.loading = Array.from(set)
+                },
+            )
+            .addCase(
                 fetchStats.fulfilled,
-                (state, { payload, meta: { arg } }) => {
-                    const pool = state[arg]
-                    if (
-                        pool.stats &&
-                        pool.stats.blockNumber >= payload.blockNumber
-                    ) {
-                            return
-                    }
+                (state, { payload, meta: { arg: poolAddress } }) => {
+                    const pool = state[poolAddress]
+                    const set = new Set(pool.loading)
+                    set.delete('stats')
+                    pool.loading = Array.from(set)
 
-                    pool.stats = payload
+                    replaceIfHigherBlockNumber(pool, 'stats', payload)
                 },
             )
             .addCase(
@@ -255,16 +300,21 @@ export const poolsSlice = createSlice({
                         },
                     },
                 ) => {
-                    const pool = state[poolAddress]
-                    const previousInfo = pool.accountInfo[account]
-                    if (
-                        previousInfo &&
-                        previousInfo.blockNumber >= payload.blockNumber
-                    ) {
-                        return
-                    }
-
-                    pool.accountInfo[account] = payload
+                    replaceIfHigherBlockNumber(
+                        state[poolAddress].accountInfo,
+                        account,
+                        payload,
+                    )
+                },
+            )
+            .addCase(
+                fetchManagerInfo.fulfilled,
+                (state, { payload, meta: { arg: poolAddress } }) => {
+                    replaceIfHigherBlockNumber(
+                        state[poolAddress],
+                        'managerInfo',
+                        payload,
+                    )
                 },
             )
     },
@@ -294,4 +344,15 @@ function filterUniqueIds<
         ids.add(id)
         return true
     })
+}
+
+function replaceIfHigherBlockNumber<
+    X extends { blockNumber: number },
+    K extends string,
+    T extends { [key in K]?: X | null },
+>(object: T, key: K, newValue: X) {
+    const oldValue = object[key]
+    if (oldValue && oldValue.blockNumber >= newValue.blockNumber) return
+
+    object[key] = newValue as T[K]
 }

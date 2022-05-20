@@ -79,7 +79,7 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
 
             <h1>{name}</h1>
             <PoolStats pool={pool} poolAddress={address} />
-            <Deposit pool={pool} poolAddress={address} />
+            <DepositAndWithdraw pool={pool} poolAddress={address} />
             <YourSupply pool={pool} poolAddress={address} />
             <Earnings pool={pool} poolAddress={address} />
             <div>
@@ -96,7 +96,7 @@ Earn.getInitialProps = (context) => {
 export default Earn
 
 const types = ['Deposit', 'Withdraw'] as const
-function Deposit({
+function DepositAndWithdraw({
     pool: { managerAddress, tokenAddress, tokenDecimals },
     poolAddress,
 }: {
@@ -168,17 +168,6 @@ function Deposit({
                     : undefined
             }
         >
-            <style jsx>{`
-                .title {
-                    > h3 {
-                        margin: 0;
-                        font-weight: 400;
-                        font-size: 18px;
-                        text-align: center;
-                    }
-                }
-            `}</style>
-
             <Tabs tabs={types} currentTab={type} setCurrentTab={setType}></Tabs>
 
             {form}
