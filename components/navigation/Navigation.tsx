@@ -122,12 +122,14 @@ export function Navigation() {
             />
             <FlexGrow />
             {account ? (
-                <Button href="/account" blue ghost>
+                <Button href="/account" blue ghost key="account">
                     {shortenAddress(account)}
                 </Button>
             ) : (
                 pathname !== '/account' && (
-                    <Button href="/account">Connect Wallet</Button>
+                    <Button href="/account" key="connect">
+                        Connect Wallet
+                    </Button>
                 )
             )}
             <Sidebar isVisible={isSidebarVisible} hideSidebar={hideSidebar} />

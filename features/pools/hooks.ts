@@ -21,19 +21,33 @@ import {
     Loan as StateLoan,
     LoanDetails as StateLoanDetails,
     useFetchIntervalStats,
+    useFetchIntervalAccountInfo,
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
 
-export function useAmountDepositable(
+export function useAccountInfo(
     poolAddress: string,
-): [string | undefined, () => void] {
+    account: string | undefined,
+) {
+    const refetch = useFetchIntervalAccountInfo(
+        account ? { poolAddress, account } : null,
+    )
+
+    const info = useSelector((state) =>
+        account ? state.pools[poolAddress]?.accountInfo[account] : null,
+    )
+
+    return [info, refetch] as const
+}
+
+export function useAmountDepositable(poolAddress: string) {
     const refetch = useFetchIntervalStats(poolAddress)
 
     const amountDepositable = useSelector(
         (state) => state.pools[poolAddress]?.stats?.amountDepositable,
     )
 
-    return [amountDepositable, refetch]
+    return [amountDepositable, refetch] as const
 }
 
 export function useStats(poolAddress: string, tokenDecimals: number) {

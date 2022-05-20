@@ -8,8 +8,6 @@ import {
     APP_NAME,
     useAccount,
     useProvider,
-    infiniteAllowance,
-    getERC20Contract,
     getAddress,
     zero,
     POOLS,
@@ -20,22 +18,19 @@ import {
     PoolStats,
     Box,
     Alert,
-    Button,
     EtherscanLink,
-    AmountInput,
-    ConnectModal,
     PageLoading,
     Skeleton,
+    useAmountForm,
+    Tabs,
 } from '../../components'
 import {
     contract,
     Pool,
-    useLoans,
-    useAllowanceAndBalance,
     useAmountDepositable,
     useFetchIntervalAccountInfo,
+    useAccountInfo,
 } from '../../features'
-import { useCallback } from 'react'
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
@@ -86,7 +81,6 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             <PoolStats pool={pool} poolAddress={address} />
             <Deposit pool={pool} poolAddress={address} />
             <YourSupply pool={pool} poolAddress={address} />
-            <Withdraw pool={pool} poolAddress={address} />
             <Earnings pool={pool} poolAddress={address} />
             <div>
                 Pool address: <EtherscanLink address={address} />
@@ -101,6 +95,7 @@ Earn.getInitialProps = (context) => {
 
 export default Earn
 
+const types = ['Deposit', 'Withdraw'] as const
 function Deposit({
     pool: { managerAddress, tokenAddress, tokenDecimals },
     poolAddress,
@@ -109,74 +104,61 @@ function Deposit({
     poolAddress: string
 }) {
     // TODO: Check if account has borrowed
-
-    const [loading, setLoading] = useState(false)
-
-    const provider = useProvider()
+    const [type, setType] = useState<typeof types[number]>('Deposit')
 
     const account = useAccount()
-    const {
-        allowance,
-        balance,
-        refetch: refetchAllowanceAndBalance,
-    } = useAllowanceAndBalance(tokenAddress, poolAddress, account)
-
-    const [showConnectModal, setShowConnectModal] = useState(false)
-    useEffect(() => {
-        if (account) setShowConnectModal(false)
-    }, [account])
 
     const [amountDepositable, refetchStats] = useAmountDepositable(poolAddress)
 
+    const [info, refetchAccountInfo] = useAccountInfo(poolAddress, account)
+
     const { max, cannotDeposit } = useMemo(() => {
-        if (!amountDepositable) return { max: null, cannotDeposit: true }
+        if (type === 'Withdraw') {
+            if (info)
+                return {
+                    max: BigNumber.from(info.withdrawable),
+                    cannotDeposit: false,
+                }
+
+            return { max: undefined, cannotDeposit: false }
+        }
+        if (!amountDepositable) return { max: undefined, cannotDeposit: true }
 
         const amountDepositableBigNumber = BigNumber.from(amountDepositable)
         const cannotDeposit = amountDepositableBigNumber.eq(zero)
 
-        if (!balance) return { max: null, cannotDeposit }
-
-        const balanceBigNumber = BigNumber.from(balance)
-        const max = balanceBigNumber.gt(amountDepositableBigNumber)
-            ? amountDepositableBigNumber
-            : balanceBigNumber
-
-        return { max, cannotDeposit }
-    }, [amountDepositable, balance])
-
-    const [amount, setAmount] = useState('')
-    const { value, needsApproval } = useMemo(() => {
-        const amountBigNumber = amount
-            ? parseUnits(amount, tokenDecimals)
-            : zero
-        return {
-            value: max?.lt(amountBigNumber)
-                ? format(formatUnits(max, tokenDecimals))
-                : amount,
-            needsApproval: allowance
-                ? BigNumber.from(allowance).lt(amountBigNumber)
-                : false,
-        }
-    }, [max, tokenDecimals, amount, allowance])
-
-    const refetchAccountInfo = useFetchIntervalAccountInfo(
-        account ? { poolAddress, account } : null,
-    )
-
-    const handleClickMax = useCallback(() => {
-        setAmount(format(formatUnits(max!, tokenDecimals)))
-    }, [max, tokenDecimals])
+        return { max: amountDepositableBigNumber, cannotDeposit }
+    }, [amountDepositable, type, info])
 
     const isManager = managerAddress === account
 
-    const disabled = Boolean(isManager || cannotDeposit || loading)
+    const { form, allowance, balance } = useAmountForm({
+        type,
+        onSumbit:
+            type === 'Deposit'
+                ? (contract, amount) =>
+                      contract.deposit(parseUnits(amount, tokenDecimals))
+                : (contract, amount) =>
+                      contract.withdraw(parseUnits(amount, tokenDecimals)),
+        refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
+        poolAddress,
+        tokenAddress,
+        tokenDecimals,
+        disabled: Boolean(isManager || cannotDeposit),
+        max,
+    })
 
     return (
         <Box
             s
             loading={Boolean(
-                (account && !cannotDeposit ? !allowance || !balance : false) ||
-                    amountDepositable === undefined,
+                type === 'Deposit'
+                    ? (account && !cannotDeposit
+                          ? !allowance || !balance
+                          : false) || amountDepositable === undefined
+                    : account
+                    ? !info
+                    : false,
             )}
             overlay={
                 isManager
@@ -195,128 +177,13 @@ function Deposit({
                         text-align: center;
                     }
                 }
-
-                form {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    margin: 12px 0;
-
-                    > .input-container {
-                        display: flex;
-                        flex-direction: column;
-                        margin-bottom: 8px;
-
-                        > .max {
-                            text-align: right;
-                            font-size: 12px;
-                            height: 14px;
-                            line-height: 14px;
-                            margin-bottom: 2px;
-                            margin-right: 4px;
-                            color: var(--color-secondary);
-
-                            > span {
-                                cursor: pointer;
-                            }
-                        }
-                    }
-                }
             `}</style>
 
-            <div className="title">
-                <h3>Deposit</h3>
-            </div>
+            <Tabs tabs={types} currentTab={type} setCurrentTab={setType}></Tabs>
 
-            <form
-                onSubmit={(event) => {
-                    event.preventDefault()
-
-                    if (!account) {
-                        setShowConnectModal(true)
-                        return
-                    }
-
-                    const signer = provider!.getSigner()
-
-                    if (needsApproval) {
-                        setLoading(true)
-
-                        getERC20Contract(tokenAddress)
-                            .connect(signer)
-                            .approve(poolAddress, infiniteAllowance)
-                            .then((tx) => tx.wait())
-                            .then(() => refetchAllowanceAndBalance())
-                            .then(() => {
-                                setLoading(false)
-                            })
-                            .catch((reason) => {
-                                console.error(reason)
-                                setLoading(false)
-                            })
-
-                        return
-                    }
-
-                    setLoading(true)
-
-                    contract
-                        .attach(poolAddress)
-                        .connect(signer)
-                        .deposit(parseUnits(value, tokenDecimals))
-                        .then((tx) => tx.wait())
-                        .then(() =>
-                            // TODO: Optimize provider. Currently it will make 3 separate requests.
-                            Promise.all([
-                                refetchAccountInfo(),
-                                refetchAllowanceAndBalance(),
-                                refetchStats(),
-                            ]),
-                        )
-                        .then(() => {
-                            setLoading(false)
-                        })
-                        .catch((reason) => {
-                            console.error(reason)
-                            setLoading(false)
-                        })
-                }}
-            >
-                <div className="input-container">
-                    <div className="max">
-                        {max ? (
-                            <span onClick={handleClickMax}>
-                                Max: {format(formatUnits(max, tokenDecimals))}
-                            </span>
-                        ) : null}
-                    </div>
-                    <AmountInput
-                        decimals={6}
-                        disabled={disabled}
-                        value={value}
-                        onChange={setAmount}
-                    />
-                </div>
-
-                <Button
-                    disabled={Boolean(disabled || (!value && account))}
-                    type="submit"
-                    width={170}
-                    loading={Boolean(loading)}
-                >
-                    {account
-                        ? needsApproval
-                            ? 'Approve USDC'
-                            : 'Deposit'
-                        : 'Connect Wallet'}
-                </Button>
-            </form>
+            {form}
 
             <Alert style="warning" title="TODO: Explain the risks" />
-
-            {showConnectModal ? (
-                <ConnectModal onClose={() => setShowConnectModal(false)} />
-            ) : null}
         </Box>
     )
 }
@@ -349,7 +216,7 @@ function YourSupply({
                 )}
             </div>
             <div>
-                Withdrawable:
+                Withdrawable:{' '}
                 {info ? (
                     `$${format(formatUnits(info.withdrawable, tokenDecimals))}`
                 ) : (
@@ -357,120 +224,6 @@ function YourSupply({
                 )}
             </div>
         </Box>
-    )
-}
-
-function Withdraw({
-    pool: { managerAddress, tokenDecimals },
-    poolAddress,
-}: {
-    pool: Pool
-    poolAddress: string
-}) {
-    const [isLoading, setIsLoading] = useState(false)
-    const [value, setValue] = useState('100')
-    const loans = useLoans(poolAddress)
-    const account = useAccount()
-    const provider = useProvider()
-
-    const isManager = managerAddress === account
-
-    const [withdrawable, setWithdrawable] = useState('0')
-    useEffect(() => {
-        if (!account) return
-
-        contract
-            .attach(poolAddress)
-            .amountWithdrawable(account)
-            .then((value) => {
-                setWithdrawable(formatUnits(value, tokenDecimals))
-            })
-    }, [
-        setWithdrawable,
-        account,
-        tokenDecimals,
-        loans,
-        withdrawable,
-        poolAddress,
-    ])
-
-    const disabled = !account || !provider || isManager
-
-    const noSubmit = disabled || isLoading
-
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = noSubmit
-        ? undefined
-        : (event) => {
-              event.preventDefault()
-              setIsLoading(true)
-
-              const amount = parseUnits(value, tokenDecimals)
-
-              const attached = contract.attach(poolAddress)
-
-              // TODO: Handle user cancelation
-              attached
-                  .amountWithdrawable(account)
-                  .then(async (withdrawableAmount) => {
-                      if (amount.gt(withdrawableAmount)) {
-                          alert(
-                              `Maximum withdrawable amount is ${formatUnits(
-                                  withdrawableAmount,
-                                  tokenDecimals,
-                              )}`,
-                          ) // TODO: Display in component
-                          setIsLoading(false)
-                          return
-                      }
-
-                      const tx = await attached
-                          .connect(provider.getSigner())
-                          .withdraw(amount)
-
-                      await tx.wait()
-
-                      // TODO: In page notification
-
-                      setIsLoading(false)
-
-                      // TODO: Refresh staked
-
-                      setWithdrawable(
-                          formatUnits(
-                              parseUnits(withdrawable, tokenDecimals).sub(
-                                  amount,
-                              ),
-                              tokenDecimals,
-                          ),
-                      )
-                  })
-          }
-
-    return (
-        <form className="section" onSubmit={handleSubmit}>
-            <h4>Withdraw</h4>
-
-            {managerAddress &&
-                account &&
-                (isManager ? (
-                    <div>Manager can not withdraw</div>
-                ) : (
-                    <div>
-                        Maximum withdrawable:{' '}
-                        <a onClick={() => setValue(withdrawable)}>
-                            {withdrawable}
-                        </a>
-                    </div>
-                ))}
-
-            <input
-                type="number"
-                inputMode="decimal"
-                onChange={(event) => void setValue(event.target.value)}
-                value={value}
-            />
-            <button disabled={noSubmit}>Withdraw</button>
-        </form>
     )
 }
 

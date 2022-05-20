@@ -1,4 +1,5 @@
-import { BigNumber, Contract, ContractTransaction, Event } from 'ethers'
+import { BigNumber } from '@ethersproject/bignumber'
+import { Contract, ContractTransaction, Event } from '@ethersproject/contracts'
 import {
     provider,
     CustomBatchProvider,
