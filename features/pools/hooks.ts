@@ -83,6 +83,7 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
             poolFunds.add(stats.amountDepositable),
             tokenDecimals,
         ),
+        apy: stats.apy,
     }
 }
 

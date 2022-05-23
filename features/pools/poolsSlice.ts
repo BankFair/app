@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { contract, LoanStatus, getBatchProviderAndContract } from './contract'
 import { createFetchIntervalHook } from '../../app'
-import { store, AppState, Action } from '../../store'
+import { AppState, Action } from '../../store'
 
 export interface Loan {
     id: number
@@ -26,6 +26,7 @@ interface Stats {
     amountDepositable: string
     poolFunds: string
     poolLiquidity: string
+    apy: number
     blockNumber: number
 }
 
@@ -61,7 +62,7 @@ export const fetchStats = createAsyncThunk(
     'pools/fetchStats',
     async (poolAddress: string) => {
         const { provider, contract: attached } = getBatchProviderAndContract(
-            6,
+            7,
             contract.attach(poolAddress),
         )
 
@@ -71,6 +72,7 @@ export const fetchStats = createAsyncThunk(
             amountDepositable,
             poolFunds,
             poolLiquidity,
+            apy,
             blockNumber,
         ] = await Promise.all([
             attached.loansCount(),
@@ -78,6 +80,7 @@ export const fetchStats = createAsyncThunk(
             attached.amountDepositable(),
             attached.poolFunds(),
             attached.poolLiquidity(),
+            attached.currentLenderAPY(),
             provider.getCurrentBlockNumber(),
         ])
 
@@ -87,6 +90,7 @@ export const fetchStats = createAsyncThunk(
             amountDepositable: amountDepositable.toHexString(),
             poolFunds: poolFunds.toHexString(),
             poolLiquidity: poolLiquidity.toHexString(),
+            apy: apy / 10,
             blockNumber,
         }
 

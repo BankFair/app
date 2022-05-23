@@ -159,7 +159,13 @@ function Pool({ pool: { address, name } }: { pool: typeof POOLS[number] }) {
                         </div>
                         <div className="stat">
                             <div className="label">Projected APY</div>
-                            <div className="value">0%</div>
+                            <div className="value">
+                                {pool && pool.stats ? (
+                                    `${pool.stats.apy}%`
+                                ) : (
+                                    <Skeleton width={30} />
+                                )}
+                            </div>
                         </div>
                         <div className="stat">
                             <div className="label">Loans</div>

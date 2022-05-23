@@ -173,7 +173,9 @@ export function PoolStats({
             </div>
             <div className="stats large">
                 <div className="stat">
-                    <div className="number">0%</div>
+                    <div className="number">
+                        {stats ? `${stats.apy}%` : <Skeleton width={70} />}
+                    </div>
                     <div className="label">Projected APY</div>
                 </div>
                 <div className="stat">

@@ -161,6 +161,7 @@ function DepositAndWithdraw({
                     : false,
             )}
             overlay={
+                // TODO: While the pool doesn't accept deposits a user may want to withdraw
                 isManager
                     ? "Manager can't deposit"
                     : cannotDeposit

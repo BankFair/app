@@ -8,11 +8,11 @@ module.exports = {
         POOLS: JSON.stringify([
             {
                 name: 'Test Pool #1',
-                address: '0xC333C44652cA9eFDb37094a228749782FaFd48a2',
+                address: '0xB7C871b52d127b5c8354AC5E90Eb108DA673A040',
             },
             {
                 name: 'Test Pool #2',
-                address: '0x0b7D394151ae9b252BaFd0012FC4cBAeF379ad99',
+                address: '0x9dAa37385F0DA29c742b4a248740bd86a240E853',
             },
         ]),
     },
