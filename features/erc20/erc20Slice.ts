@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, Draft } from '@reduxjs/toolkit'
 import {
-    createFetchIntervalHook,
+    createFetchInterval,
     CustomBatchProvider,
     getERC20Contract,
 } from '../../app'
@@ -59,10 +59,8 @@ const fetchAllowanceAndBalance = createAsyncThunk(
     },
 )
 
-export const useFetchIntervalAllowanceAndBalance = createFetchIntervalHook(
-    fetchAllowanceAndBalance,
-    30_000,
-)
+export const { hook: useFetchIntervalAllowanceAndBalance } =
+    createFetchInterval(fetchAllowanceAndBalance, 30_000)
 
 export const erc20Slice = createSlice({
     name: 'erc20',

@@ -1,7 +1,7 @@
 import { EtherscanLink } from './EtherscanLink'
 import { Pool, useStats } from '../features'
 import { Box } from './Box'
-import { formatFloor, prefix } from '../app'
+import { formatNoDecimals, prefix } from '../app'
 import { Skeleton } from './Skeleton'
 
 export function PoolStats({
@@ -127,7 +127,7 @@ export function PoolStats({
                 <div className="stat">
                     <div className="number">
                         {stats ? (
-                            `$${formatFloor(stats.totalPoolSize)}`
+                            `$${formatNoDecimals(stats.totalPoolSize)}`
                         ) : (
                             <Skeleton width={50} />
                         )}
@@ -137,7 +137,7 @@ export function PoolStats({
                 <div className="stat">
                     <div className="number">
                         {stats ? (
-                            `$${formatFloor(stats.loansOutstanding)}`
+                            `$${formatNoDecimals(stats.loansOutstanding)}`
                         ) : (
                             <Skeleton width={50} />
                         )}
@@ -147,7 +147,7 @@ export function PoolStats({
                 <div className="stat">
                     <div className="number">
                         {stats ? (
-                            `$${formatFloor(stats.managerFunds)}`
+                            `$${formatNoDecimals(stats.managerFunds)}`
                         ) : (
                             <Skeleton width={50} />
                         )}
@@ -157,7 +157,7 @@ export function PoolStats({
                 <div className="stat">
                     <div className="number">
                         {stats ? (
-                            `$${formatFloor(stats.maxPoolSize)}`
+                            `$${formatNoDecimals(stats.maxPoolSize)}`
                         ) : (
                             <Skeleton width={50} />
                         )}
@@ -181,7 +181,7 @@ export function PoolStats({
                 <div className="stat">
                     <div className="number">
                         {stats ? (
-                            `$${formatFloor(stats.availableForDeposits)}`
+                            `$${formatNoDecimals(stats.availableForDeposits)}`
                         ) : (
                             <Skeleton width={70} />
                         )}

@@ -2,12 +2,19 @@ import { Button } from './Button'
 import {
     Color,
     COLOR_BLUE,
+    COLOR_BLUE_DARKER,
     COLOR_GREEN_DARK,
+    COLOR_GREEN_DARKER,
     COLOR_RED_DARK,
+    COLOR_RED_DARKER,
     COLOR_YELLOW_DARK,
+    COLOR_YELLOW_DARKER,
+    formatNoDecimals,
     rgb,
+    rgba,
     rgbBlueDarker,
     rgbBlueLighter,
+    rgbGreen,
     rgbGreenDarker,
     rgbGreenLighter,
     rgbRedDarker,
@@ -25,10 +32,19 @@ import {
     BsFillCheckCircleFill,
 } from 'react-icons/bs'
 import { FaHeart } from 'react-icons/fa'
+import { useAccountStats } from '../features'
+import { Skeleton } from './Skeleton'
+
+const greenDarkerTransparent = rgba(COLOR_GREEN_DARKER, 0.6)
+const blueDarkerTransparent = rgba(COLOR_BLUE_DARKER, 0.6)
+const redDarkerTransparent = rgba(COLOR_RED_DARKER, 0.6)
+const yellowDarkerTransparent = rgba(COLOR_YELLOW_DARKER, 0.6)
 
 export function Account() {
     const dispatch = useDispatch()
     const connector = useActiveConnector()!
+
+    const accountStats = useAccountStats()
 
     return (
         <>
@@ -40,21 +56,59 @@ export function Account() {
                 }
             `}</style>
             <div className="stats">
-                <Stat value="$0" name="Lent" icon={<BsFillCheckCircleFill />} />
                 <Stat
-                    value="$0"
+                    value={
+                        accountStats ? (
+                            `$${formatNoDecimals(accountStats.lent)}`
+                        ) : (
+                            <Skeleton
+                                width={100}
+                                color={greenDarkerTransparent}
+                            />
+                        )
+                    }
+                    name="Lent"
+                    icon={<BsFillCheckCircleFill />}
+                    color="green"
+                />
+                <Stat
+                    value={
+                        accountStats ? (
+                            `$${formatNoDecimals(accountStats.earning)}`
+                        ) : (
+                            <Skeleton
+                                width={80}
+                                color={blueDarkerTransparent}
+                            />
+                        )
+                    }
                     name="Projected Earning PA"
                     icon={<BsFillClockFill />}
                     color="blue"
                 />
                 <Stat
-                    value="0%"
+                    value={
+                        accountStats ? (
+                            `${accountStats.apy}%`
+                        ) : (
+                            <Skeleton
+                                width={60}
+                                color={yellowDarkerTransparent}
+                            />
+                        )
+                    }
                     name="Projected APY"
                     icon={<BsBrightnessHighFill />}
                     color="yellow"
                 />
                 <Stat
-                    value="0"
+                    value={
+                        accountStats ? (
+                            `${accountStats.pools}`
+                        ) : (
+                            <Skeleton width={30} color={redDarkerTransparent} />
+                        )
+                    }
                     name="Pools Supported"
                     icon={<FaHeart />}
                     color="red"
@@ -92,12 +146,12 @@ function Stat({
     value,
     name,
     icon,
-    color = 'green',
+    color,
 }: {
-    value: string
+    value: ReactNode
     name: string
     icon: ReactNode
-    color?: 'green' | 'blue' | 'yellow' | 'red'
+    color: 'green' | 'blue' | 'yellow' | 'red'
 }) {
     return (
         <>

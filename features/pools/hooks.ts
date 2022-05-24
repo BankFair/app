@@ -1,7 +1,16 @@
 import { formatUnits } from '@ethersproject/units'
 import { useEffect, useMemo } from 'react'
-import { AppDispatch, useSelector, AppState } from '../../store'
-import { getERC20Contract, POOLS, useProvider, ERC20Contract } from '../../app'
+import { AppDispatch, useSelector, AppState, useDispatch } from '../../store'
+import {
+    getERC20Contract,
+    POOLS,
+    useProvider,
+    ERC20Contract,
+    useAccount,
+    zero,
+    USDC_DECIMALS,
+    ONE_HUNDRED_PERCENT,
+} from '../../app'
 import {
     contract,
     CoreContract,
@@ -10,7 +19,6 @@ import {
     EVMLoanDetails,
     LoanStatus,
 } from './contract'
-import { useDispatch } from 'react-redux'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
     updateLoan,
@@ -23,6 +31,8 @@ import {
     useFetchIntervalStats,
     useFetchIntervalAccountInfo,
     useFetchIntervalManagerInfo,
+    useFetchIntervalAllStats,
+    useFetchIntervalAccountInfoAllPools,
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
 
@@ -85,6 +95,79 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
         ),
         apy: stats.apy,
     }
+}
+
+export function useAccountStats() {
+    // TODO: Wait for pools to load
+    const pools = usePools()
+    const dispatch = useDispatch()
+    const account = useAccount()
+    const poolsLoaded = Object.keys(pools).length === POOLS.length
+    useFetchIntervalAllStats(poolsLoaded ? dispatch : null)
+    useFetchIntervalAccountInfoAllPools(
+        poolsLoaded && account ? { dispatch, account } : null,
+    )
+
+    return useMemo(() => {
+        const poolsArray = Object.values(pools)
+        if (
+            poolsArray.length !== POOLS.length ||
+            !account ||
+            poolsArray.filter(
+                (pool) =>
+                    pool.loading.includes('stats') ||
+                    pool.loading.includes(`accountInfo_${account}`),
+            ).length
+        )
+            return null
+
+        const data = POOLS.map(({ address }) => {
+            const pool = pools[address]
+            const accountInfo = pool?.accountInfo[account]
+
+            if (!accountInfo)
+                return {
+                    lentUSDC: '0x0',
+                    apy: 0,
+                }
+
+            return {
+                lentUSDC: accountInfo.balance,
+                apy: pool.stats!.apy,
+            }
+        })
+
+        let lent = zero
+        let poolsInvestedIn = 0
+
+        for (const item of data) {
+            const lentBigNumber = BigNumber.from(item.lentUSDC)
+            if (zero.eq(lentBigNumber)) continue
+
+            lent = lent.add(lentBigNumber)
+            poolsInvestedIn++
+        }
+
+        const apy = zero.eq(lent)
+            ? zero
+            : data
+                  .map((item) =>
+                      BigNumber.from(item.apy * 10)
+                          .mul(item.lentUSDC)
+                          .div(lent),
+                  )
+                  .reduce((accumulator, item) => accumulator.add(item), zero)
+
+        return {
+            lent: formatUnits(lent, USDC_DECIMALS),
+            apy: apy.toNumber() / 10,
+            earning: formatUnits(
+                lent.mul(apy).div(ONE_HUNDRED_PERCENT),
+                USDC_DECIMALS,
+            ),
+            pools: poolsInvestedIn,
+        }
+    }, [pools, account])
 }
 
 const ref = { current: false }
@@ -310,6 +393,10 @@ export function useTokenContractSigner(
     return provider
         ? () => getERC20Contract(tokenAddress).connect(provider.getSigner())
         : undefined
+}
+
+export function usePools() {
+    return useSelector((s) => s.pools)
 }
 
 export function usePool(pool: string): Pool | undefined {

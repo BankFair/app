@@ -179,7 +179,7 @@ function DepositAndWithdraw({
 }
 
 function YourSupply({
-    pool: { managerAddress, tokenAddress, tokenDecimals },
+    pool: { managerAddress, tokenDecimals },
     poolAddress,
 }: {
     pool: Pool

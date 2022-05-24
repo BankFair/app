@@ -1,7 +1,7 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice, Draft } from '@reduxjs/toolkit'
 import { contract, LoanStatus, getBatchProviderAndContract } from './contract'
-import { createFetchIntervalHook } from '../../app'
-import { AppState, Action } from '../../store'
+import { createFetchInterval, POOLS } from '../../app'
+import { AppState, Action, AppDispatch } from '../../store'
 
 export interface Loan {
     id: number
@@ -42,6 +42,8 @@ interface AccountInfo {
     blockNumber: number
 }
 
+type Loading = 'stats' | `accountInfo_${string}`
+
 export interface Pool {
     name: string
     managerAddress: string
@@ -53,7 +55,7 @@ export interface Pool {
     stats: Stats | null
     managerInfo: ManagerInfo | null
     accountInfo: Record<string, AccountInfo>
-    loading: 'stats'[]
+    loading: Loading[]
 }
 
 const oneHour = 60 * 60 * 1000
@@ -61,7 +63,7 @@ const oneHour = 60 * 60 * 1000
 export const fetchStats = createAsyncThunk(
     'pools/fetchStats',
     async (poolAddress: string) => {
-        const { provider, contract: attached } = getBatchProviderAndContract(
+        const { provider, contract: connected } = getBatchProviderAndContract(
             7,
             contract.attach(poolAddress),
         )
@@ -75,12 +77,12 @@ export const fetchStats = createAsyncThunk(
             apy,
             blockNumber,
         ] = await Promise.all([
-            attached.loansCount(),
-            attached.balanceStaked(),
-            attached.amountDepositable(),
-            attached.poolFunds(),
-            attached.poolLiquidity(),
-            attached.currentLenderAPY(),
+            connected.loansCount(),
+            connected.balanceStaked(),
+            connected.amountDepositable(),
+            connected.poolFunds(),
+            connected.poolLiquidity(),
+            connected.currentLenderAPY(),
             provider.getCurrentBlockNumber(),
         ])
 
@@ -98,8 +100,22 @@ export const fetchStats = createAsyncThunk(
     },
 )
 
-export const useFetchIntervalStats = createFetchIntervalHook(
+export const {fetch:fetchIntervalStats, hook:useFetchIntervalStats} = createFetchInterval(
     fetchStats,
+    oneHour,
+)
+
+export const fetchAllStats = createAsyncThunk(
+    'pools/fetchAllStats',
+    (dispatch: AppDispatch) => {
+        return Promise.all(
+            POOLS.map(({ address }) => (fetchIntervalStats(dispatch, address))),
+        )
+    },
+)
+
+export const {hook:useFetchIntervalAllStats} = createFetchInterval(
+    fetchAllStats,
     oneHour,
 )
 
@@ -112,14 +128,14 @@ const fetchAccountInfo = createAsyncThunk(
         poolAddress: string
         account: string
     }) => {
-        const { provider, contract: attached } = getBatchProviderAndContract(
+        const { provider, contract: connected } = getBatchProviderAndContract(
             3,
             contract.attach(poolAddress),
         )
 
         const [balance, withdrawable, blockNumber] = await Promise.all([
-            attached.balanceOf(account),
-            attached.amountWithdrawable(account),
+            connected.balanceOf(account),
+            connected.amountWithdrawable(account),
             provider.getCurrentBlockNumber(),
         ])
 
@@ -133,22 +149,38 @@ const fetchAccountInfo = createAsyncThunk(
     },
 )
 
-export const useFetchIntervalAccountInfo = createFetchIntervalHook(
+export const {fetch: fetchIntervalAccountInfo, hook:useFetchIntervalAccountInfo} = createFetchInterval(
     fetchAccountInfo,
+    oneHour,
+)
+
+export const fetchAccountInfoAllPools = createAsyncThunk(
+    'pools/fetchAccountInfoAllPools',
+    ({ dispatch, account }: { dispatch: AppDispatch; account: string }) => {
+        return Promise.all(
+            POOLS.map(({ address: poolAddress }) =>
+                (fetchIntervalAccountInfo(dispatch,{ poolAddress, account })),
+            ),
+        )
+    },
+)
+
+export const {hook:useFetchIntervalAccountInfoAllPools} = createFetchInterval(
+    fetchAccountInfoAllPools,
     oneHour,
 )
 
 const fetchManagerInfo = createAsyncThunk(
     'pools/fetchManagerInfo',
     async (poolAddress: string) => {
-        const { provider, contract: attached } = getBatchProviderAndContract(
+        const { provider, contract: connected } = getBatchProviderAndContract(
             3,
             contract.attach(poolAddress),
         )
 
         const [staked, unstakable, blockNumber] = await Promise.all([
-            attached.balanceStaked(),
-            attached.amountUnstakable(),
+            connected.balanceStaked(),
+            connected.amountUnstakable(),
             provider.getCurrentBlockNumber(),
         ])
 
@@ -162,12 +194,13 @@ const fetchManagerInfo = createAsyncThunk(
     },
 )
 
-export const useFetchIntervalManagerInfo = createFetchIntervalHook(
+export const {hook:useFetchIntervalManagerInfo} = createFetchInterval(
     fetchManagerInfo,
     oneHour,
 )
 
-const initialState: Record<string, Pool> = {}
+type State = Record<string, Pool>
+const initialState: State = {}
 
 export const poolsSlice = createSlice({
     name: 'pools',
@@ -276,21 +309,31 @@ export const poolsSlice = createSlice({
             .addCase(
                 fetchStats.pending,
                 (state, { meta: { arg: poolAddress } }) => {
-                    const pool = state[poolAddress]
-                    const set = new Set(pool.loading)
-                    set.add('stats')
-                    pool.loading = Array.from(set)
+                    setLoading(state, poolAddress, 'stats')
                 },
             )
             .addCase(
                 fetchStats.fulfilled,
                 (state, { payload, meta: { arg: poolAddress } }) => {
-                    const pool = state[poolAddress]
-                    const set = new Set(pool.loading)
-                    set.delete('stats')
-                    pool.loading = Array.from(set)
-
-                    replaceIfHigherBlockNumber(pool, 'stats', payload)
+                    removeLoading(state, poolAddress, 'stats')
+                    replaceIfHigherBlockNumber(
+                        state[poolAddress],
+                        'stats',
+                        payload,
+                    )
+                },
+            )
+            .addCase(
+                fetchAccountInfo.pending,
+                (
+                    state,
+                    {
+                        meta: {
+                            arg: { account, poolAddress },
+                        },
+                    },
+                ) => {
+                    setLoading(state, poolAddress, `accountInfo_${account}`)
                 },
             )
             .addCase(
@@ -304,6 +347,7 @@ export const poolsSlice = createSlice({
                         },
                     },
                 ) => {
+                    removeLoading(state, poolAddress, `accountInfo_${account}`)
                     replaceIfHigherBlockNumber(
                         state[poolAddress].accountInfo,
                         account,
@@ -348,6 +392,30 @@ function filterUniqueIds<
         ids.add(id)
         return true
     })
+}
+
+function setLoading(state: Draft<State>, poolAddress: string, value: Loading) {
+    const pool = state[poolAddress]
+    const set = new Set(pool.loading)
+    if (process.env.NODE_ENV === 'development' && set.has(value)) {
+        console.error(`Already loading \`${value}\``)
+    }
+    set.add(value)
+    pool.loading = Array.from(set)
+}
+
+function removeLoading(
+    state: Draft<State>,
+    poolAddress: string,
+    value: Loading,
+) {
+    const pool = state[poolAddress]
+    const set = new Set(pool.loading)
+    if (process.env.NODE_ENV === 'development' && !set.has(value)) {
+        console.error(`Already not loading \`${value}\``)
+    }
+    set.delete(value)
+    pool.loading = Array.from(set)
 }
 
 function replaceIfHigherBlockNumber<

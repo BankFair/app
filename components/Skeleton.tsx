@@ -1,12 +1,17 @@
 export function Skeleton({
     width,
     height,
+    color,
 }: {
     width?: number
     height?: number
+    color?: string
 }) {
     return (
-        <div className="skeleton" style={{ width, height }}>
+        <div
+            className="skeleton"
+            style={{ width, height, backgroundColor: color }}
+        >
             <style jsx>{`
                 @keyframes pulse {
                     0% {

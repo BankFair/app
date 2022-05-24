@@ -4,7 +4,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import {
     APP_NAME,
-    formatFloor,
+    formatNoDecimals,
     POOLS,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
 } from '../app'
@@ -131,7 +131,7 @@ function Pool({ pool: { address, name } }: { pool: typeof POOLS[number] }) {
                             <div className="label">Pool Size</div>
                             <div className="value">
                                 {pool && pool.stats ? (
-                                    `$${formatFloor(
+                                    `$${formatNoDecimals(
                                         formatUnits(
                                             pool.stats.poolFunds,
                                             pool.tokenDecimals,
@@ -146,7 +146,7 @@ function Pool({ pool: { address, name } }: { pool: typeof POOLS[number] }) {
                             <div className="label">Available for deposits</div>
                             <div className="value">
                                 {pool && pool.stats ? (
-                                    `$${formatFloor(
+                                    `$${formatNoDecimals(
                                         formatUnits(
                                             pool.stats.amountDepositable,
                                             pool.tokenDecimals,
