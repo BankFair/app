@@ -53,66 +53,79 @@ export function Account() {
                     display: flex;
                     justify-content: center;
                     flex-wrap: wrap;
+
+                    > div {
+                        display: flex;
+                        flex-wrap: wrap;
+                        justify-content: center;
+                    }
                 }
             `}</style>
             <div className="stats">
-                <Stat
-                    value={
-                        accountStats ? (
-                            `$${formatNoDecimals(accountStats.lent)}`
-                        ) : (
-                            <Skeleton
-                                width={100}
-                                color={greenDarkerTransparent}
-                            />
-                        )
-                    }
-                    name="Lent"
-                    icon={<BsFillCheckCircleFill />}
-                    color="green"
-                />
-                <Stat
-                    value={
-                        accountStats ? (
-                            `$${formatNoDecimals(accountStats.earning)}`
-                        ) : (
-                            <Skeleton
-                                width={80}
-                                color={blueDarkerTransparent}
-                            />
-                        )
-                    }
-                    name="Projected Earning PA"
-                    icon={<BsFillClockFill />}
-                    color="blue"
-                />
-                <Stat
-                    value={
-                        accountStats ? (
-                            `${accountStats.apy}%`
-                        ) : (
-                            <Skeleton
-                                width={60}
-                                color={yellowDarkerTransparent}
-                            />
-                        )
-                    }
-                    name="Projected APY"
-                    icon={<BsBrightnessHighFill />}
-                    color="yellow"
-                />
-                <Stat
-                    value={
-                        accountStats ? (
-                            `${accountStats.pools}`
-                        ) : (
-                            <Skeleton width={30} color={redDarkerTransparent} />
-                        )
-                    }
-                    name="Pools Supported"
-                    icon={<FaHeart />}
-                    color="red"
-                />
+                <div>
+                    <Stat
+                        value={
+                            accountStats ? (
+                                `$${formatNoDecimals(accountStats.lent)}`
+                            ) : (
+                                <Skeleton
+                                    width={100}
+                                    color={greenDarkerTransparent}
+                                />
+                            )
+                        }
+                        name="Lent"
+                        icon={<BsFillCheckCircleFill />}
+                        color="green"
+                    />
+                    <Stat
+                        value={
+                            accountStats ? (
+                                `$${formatNoDecimals(accountStats.earning)}`
+                            ) : (
+                                <Skeleton
+                                    width={80}
+                                    color={blueDarkerTransparent}
+                                />
+                            )
+                        }
+                        name="Projected Earning PA"
+                        icon={<BsFillClockFill />}
+                        color="blue"
+                    />
+                </div>
+                <div>
+                    <Stat
+                        value={
+                            accountStats ? (
+                                `${accountStats.apy}%`
+                            ) : (
+                                <Skeleton
+                                    width={60}
+                                    color={yellowDarkerTransparent}
+                                />
+                            )
+                        }
+                        name="Projected APY"
+                        icon={<BsBrightnessHighFill />}
+                        color="yellow"
+                    />
+                    <Stat
+                        value={
+                            accountStats ? (
+                                `${accountStats.pools}`
+                            ) : (
+                                <Skeleton
+                                    width={30}
+                                    color={redDarkerTransparent}
+                                />
+                            )
+                        }
+                        name="Pools Supported"
+                        icon={<FaHeart />}
+                        color="red"
+                    />
+                </div>
             </div>
 
             <Button
@@ -157,31 +170,31 @@ function Stat({
         <>
             <style jsx>{`
                 .container {
-                    border-radius: 10px;
-                    width: 250px;
-                    height: 250px;
-                    margin: 12px;
+                    border-radius: 6px;
+                    width: 150px;
+                    height: 150px;
+                    margin: 6px;
                     text-align: center;
-                    padding-top: 40px;
+                    padding-top: 20px;
 
                     > .icon {
                         border-radius: 50%;
-                        margin: 0 auto 35px;
-                        width: 64px;
-                        height: 64px;
-                        padding: 20px;
-                        font-size: 24px;
+                        margin: 0 auto 20px;
+                        width: 44px;
+                        height: 44px;
+                        padding: 12px;
+                        font-size: 20px;
                     }
 
                     > h3 {
                         margin: 0;
-                        font-size: 32px;
+                        font-size: 20px;
                         font-weight: 500;
                     }
 
                     > .name {
-                        margin-top: 12px;
-                        font-size: 14px;
+                        margin-top: 10px;
+                        font-size: 11px;
                         opacity: 0.72;
                     }
 
@@ -222,6 +235,33 @@ function Stat({
                         > .icon {
                             background-image: ${gradient(red)};
                             color: ${rgb(red)};
+                        }
+                    }
+                }
+
+                @media screen and (min-width: 868px) {
+                    .container {
+                        border-radius: 10px;
+                        width: 250px;
+                        height: 250px;
+                        margin: 12px;
+                        padding-top: 40px;
+
+                        > .icon {
+                            margin: 0 auto 35px;
+                            width: 64px;
+                            height: 64px;
+                            padding: 20px;
+                            font-size: 24px;
+                        }
+
+                        > h3 {
+                            font-size: 32px;
+                        }
+
+                        > .name {
+                            margin-top: 12px;
+                            font-size: 14px;
                         }
                     }
                 }

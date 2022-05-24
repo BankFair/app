@@ -9,7 +9,7 @@ const AccountPage: NextPage = () => {
     const title = `${account ? 'Connect wallet' : 'Account'} - ${APP_NAME}`
 
     return (
-        <Page>
+        <Page xl>
             <Head>
                 <title>{title}</title>
                 <meta
