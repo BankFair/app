@@ -50,6 +50,7 @@ export function Box({
                     align-items: center;
                     justify-content: center;
                     padding: inherit;
+                    text-align: center;
                 }
             `}</style>
 

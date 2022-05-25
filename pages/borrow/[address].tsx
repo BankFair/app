@@ -300,7 +300,13 @@ function RequestLoan({
         <Box
             s
             loading={componentIsLoading}
-            overlay={isManager ? `Manager can't request a loan` : undefined}
+            overlay={
+                isManager
+                    ? `Manager can't request a loan`
+                    : max === '0x00'
+                    ? 'There is no liquidity in the pool to request a loan'
+                    : undefined
+            }
         >
             <style jsx>{`
                 form {
