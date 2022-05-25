@@ -8,6 +8,7 @@ export interface Loan {
     status: LoanStatus
     borrower: string
     amount: string
+    duration: number
     requestedTime: number
     details: LoanDetails
 }

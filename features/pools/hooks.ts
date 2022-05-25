@@ -392,6 +392,7 @@ export function transformToStateLoan(
         status: loan.status,
         borrower: loan.borrower,
         amount: loan.amount.toHexString(),
+        duration: loan.duration.toNumber(),
         requestedTime: loan.requestedTime.toNumber() * 1000,
         details: transformToStateLoanDetails(details),
     }

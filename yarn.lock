@@ -783,6 +783,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/luxon@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "@types/luxon@npm:2.3.2"
+  checksum: b9fe79118681f4bb9f2e37696a7df992a82683ba4448e7ad1af8cc241443ffc64ef08fdeaad749de9e6259b42b0d4b6540d7e880bca39bb504e0f3863d503c98
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^17.0.25":
   version: 17.0.25
   resolution: "@types/node@npm:17.0.25"
@@ -3220,6 +3227,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"luxon@npm:2.4.0":
+  version: 2.4.0
+  resolution: "luxon@npm:2.4.0"
+  checksum: 6071028d65cc3d3bdab5e6a3995dd97411c92bb3b3163a02deb7b7014318ad3a6fd750ae77131c42141b717c14aef8880d3130f265281d500ef2365f7265b3f3
+  languageName: node
+  linkType: hard
+
 "make-fetch-happen@npm:^10.0.3":
   version: 10.1.2
   resolution: "make-fetch-happen@npm:10.1.2"
@@ -4175,6 +4189,7 @@ __metadata:
   dependencies:
     "@reduxjs/toolkit": 1.8.1
     "@styled-jsx/plugin-sass": ^4.0.2
+    "@types/luxon": ^2.3.2
     "@types/node": ^17.0.25
     "@types/react": ^18.0.6
     "@types/react-dom": ^18.0.2
@@ -4187,6 +4202,7 @@ __metadata:
     eslint: ^8.13.0
     eslint-config-next: ^12.1.5
     ethers: 5.6.4
+    luxon: 2.4.0
     next: 12.1.5
     prettier: ^2.6.2
     react: 18.0.0

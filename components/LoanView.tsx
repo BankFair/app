@@ -1,6 +1,7 @@
 import { formatUnits, parseUnits } from '@ethersproject/units'
 import { BigNumber } from 'ethers'
-import { useCallback, useState } from 'react'
+import { Duration } from 'luxon'
+import { useCallback, useMemo, useState } from 'react'
 import TimeAgo from 'timeago-react'
 
 import { ERC20Contract, infiniteAllowance, TOKEN_SYMBOL } from '../app'
@@ -15,7 +16,7 @@ import { Modal } from './Modal'
 import { Button } from './Button'
 
 export function LoanView({
-    loan: { borrower, amount, requestedTime, id, status, details },
+    loan: { borrower, amount, duration, requestedTime, id, status, details },
     tokenDecimals,
     poolAddress,
     account,
@@ -43,6 +44,27 @@ export function LoanView({
         }
     }
 
+    const humanReadableDuration = useMemo(
+        () =>
+            Duration.fromObject(
+                onlyPositive(
+                    Duration.fromObject({
+                        years: 0,
+                        weeks: 0,
+                        days: 0,
+                        hours: 0,
+                        minutes: 0,
+                        seconds: duration,
+                    })
+                        .normalize()
+                        .toObject(),
+                ),
+            ).toHuman({
+                listStyle: 'short',
+            }),
+        [duration],
+    )
+
     return (
         <table>
             <tbody>
@@ -69,6 +91,10 @@ export function LoanView({
                 <tr>
                     <td>Status</td>
                     <td>{formatStatus(status)}</td>
+                </tr>
+                <tr>
+                    <td>Duration</td>
+                    <td>{humanReadableDuration}</td>
                 </tr>
                 {status !== LoanStatus.APPLIED &&
                     status !== LoanStatus.DENIED &&
@@ -322,4 +348,18 @@ function formatStatus(status: LoanStatus) {
         case LoanStatus.REPAID:
             return 'Repaid'
     }
+}
+
+function onlyPositive<T, R extends { [key in keyof T]?: number }>(
+    object: R,
+): R {
+    const newObject = {} as R
+
+    for (const i in object) {
+        const value = object[i]
+        if (value <= 0) continue
+        newObject[i] = value
+    }
+
+    return newObject
 }
