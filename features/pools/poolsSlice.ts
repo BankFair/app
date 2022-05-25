@@ -42,6 +42,13 @@ interface AccountInfo {
     blockNumber: number
 }
 
+interface BorrowConstraints {
+    minAmount: string
+    minDuration: number
+    maxDuration: number
+    blockNumber: number
+}
+
 type Loading = 'stats' | `accountInfo_${string}`
 
 export interface Pool {
@@ -55,6 +62,7 @@ export interface Pool {
     stats: Stats | null
     managerInfo: ManagerInfo | null
     accountInfo: Record<string, AccountInfo>
+    borrowConstraints: BorrowConstraints | null
     loading: Loading[]
 }
 
@@ -100,21 +108,19 @@ export const fetchStats = createAsyncThunk(
     },
 )
 
-export const {fetch:fetchIntervalStats, hook:useFetchIntervalStats} = createFetchInterval(
-    fetchStats,
-    oneHour,
-)
+export const { fetch: fetchIntervalStats, hook: useFetchIntervalStats } =
+    createFetchInterval(fetchStats, oneHour)
 
 export const fetchAllStats = createAsyncThunk(
     'pools/fetchAllStats',
     (dispatch: AppDispatch) => {
         return Promise.all(
-            POOLS.map(({ address }) => (fetchIntervalStats(dispatch, address))),
+            POOLS.map(({ address }) => fetchIntervalStats(dispatch, address)),
         )
     },
 )
 
-export const {hook:useFetchIntervalAllStats} = createFetchInterval(
+export const { hook: useFetchIntervalAllStats } = createFetchInterval(
     fetchAllStats,
     oneHour,
 )
@@ -149,26 +155,24 @@ const fetchAccountInfo = createAsyncThunk(
     },
 )
 
-export const {fetch: fetchIntervalAccountInfo, hook:useFetchIntervalAccountInfo} = createFetchInterval(
-    fetchAccountInfo,
-    oneHour,
-)
+export const {
+    fetch: fetchIntervalAccountInfo,
+    hook: useFetchIntervalAccountInfo,
+} = createFetchInterval(fetchAccountInfo, oneHour)
 
 export const fetchAccountInfoAllPools = createAsyncThunk(
     'pools/fetchAccountInfoAllPools',
     ({ dispatch, account }: { dispatch: AppDispatch; account: string }) => {
         return Promise.all(
             POOLS.map(({ address: poolAddress }) =>
-                (fetchIntervalAccountInfo(dispatch,{ poolAddress, account })),
+                fetchIntervalAccountInfo(dispatch, { poolAddress, account }),
             ),
         )
     },
 )
 
-export const {hook:useFetchIntervalAccountInfoAllPools} = createFetchInterval(
-    fetchAccountInfoAllPools,
-    oneHour,
-)
+export const { hook: useFetchIntervalAccountInfoAllPools } =
+    createFetchInterval(fetchAccountInfoAllPools, oneHour)
 
 const fetchManagerInfo = createAsyncThunk(
     'pools/fetchManagerInfo',
@@ -194,8 +198,40 @@ const fetchManagerInfo = createAsyncThunk(
     },
 )
 
-export const {hook:useFetchIntervalManagerInfo} = createFetchInterval(
+export const { hook: useFetchIntervalManagerInfo } = createFetchInterval(
     fetchManagerInfo,
+    oneHour,
+)
+
+const fetchBorrowConstraints = createAsyncThunk(
+    'pools/fetchBorrowConstraints',
+    async (poolAddress: string) => {
+        const { provider, contract: connected } = getBatchProviderAndContract(
+            4,
+            contract.attach(poolAddress),
+        )
+
+        const [minAmount, minDuration, maxDuration, blockNumber] =
+            await Promise.all([
+                connected.minAmount(),
+                connected.minDuration(),
+                connected.maxDuration(),
+                provider.getCurrentBlockNumber(),
+            ])
+
+        const constraints: BorrowConstraints = {
+            minAmount: minAmount.toHexString(),
+            minDuration: minDuration.toNumber(),
+            maxDuration: maxDuration.toNumber(),
+            blockNumber,
+        }
+
+        return constraints
+    },
+)
+
+export const { hook: useFetchIntervalBorrowConstraints } = createFetchInterval(
+    fetchBorrowConstraints,
     oneHour,
 )
 
@@ -237,6 +273,7 @@ export const poolsSlice = createSlice({
                 managerInfo: null,
                 accountInfo: {},
                 loading: [],
+                borrowConstraints: null,
             }
         },
 
@@ -361,6 +398,16 @@ export const poolsSlice = createSlice({
                     replaceIfHigherBlockNumber(
                         state[poolAddress],
                         'managerInfo',
+                        payload,
+                    )
+                },
+            )
+            .addCase(
+                fetchBorrowConstraints.fulfilled,
+                (state, { payload, meta: { arg: poolAddress } }) => {
+                    replaceIfHigherBlockNumber(
+                        state[poolAddress],
+                        'borrowConstraints',
                         payload,
                     )
                 },

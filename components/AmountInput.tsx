@@ -1,16 +1,28 @@
-import { ChangeEvent, useMemo } from 'react'
-import { input, prefix } from '../app'
+import {
+    ChangeEvent,
+    FocusEventHandler,
+    KeyboardEventHandler,
+    useMemo,
+} from 'react'
+import { className, input, prefix } from '../app'
 
 export function AmountInput({
     decimals,
     value,
     onChange,
-    disabled,
+    onBlur,
+    onKeyDown,
+    ...classModifiers
 }: {
     decimals: number
     value: string
     onChange: (newValue: string) => void
+    onBlur?: FocusEventHandler<HTMLInputElement>
+    onKeyDown?: KeyboardEventHandler<HTMLInputElement>
     disabled?: boolean
+    noToken?: boolean
+    s?: boolean
+    center?: boolean
 }) {
     const handleChange = useMemo(() => {
         const regexp = new RegExp(`^\\d*\\.?\\d{0,${decimals}}$`)
@@ -23,7 +35,7 @@ export function AmountInput({
     }, [decimals, onChange])
 
     return (
-        <div className={`input ${disabled ? 'disabled' : ''}`}>
+        <div className={`input ${className(classModifiers)}`}>
             <style jsx>{`
                 .input {
                     position: relative;
@@ -32,6 +44,46 @@ export function AmountInput({
                     &.disabled {
                         cursor: not-allowed;
                         opacity: 0.7;
+                    }
+
+                    &.center {
+                        > input {
+                            text-align: center;
+                        }
+                    }
+
+                    &.noToken {
+                        > input {
+                            padding-right: 12px;
+                        }
+
+                        > .token {
+                            display: none;
+                        }
+                    }
+
+                    &.s {
+                        > input {
+                            padding: 6px 74px 6px 8px;
+                            border-radius: 6px;
+                            font-size: 16px;
+                        }
+
+                        > .token {
+                            font-size: 14px;
+                            right: 8px;
+
+                            > img {
+                                width: 20px;
+                                height: 20px;
+                            }
+                        }
+
+                        &.noToken {
+                            > input {
+                                padding-right: 8px;
+                            }
+                        }
                     }
                 }
 
@@ -71,10 +123,12 @@ export function AmountInput({
             <input
                 type="text"
                 inputMode="decimal"
-                disabled={disabled}
+                disabled={classModifiers.disabled}
                 placeholder="0"
                 value={value}
                 onChange={handleChange}
+                onBlur={onBlur}
+                onKeyDown={onKeyDown}
             />
             <div className="token">
                 <img src={`${prefix}/usdc.svg`} alt="USDC logo" />

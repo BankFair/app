@@ -6,6 +6,7 @@ import {
     COLOR_GREY_900,
     COLOR_WHITE,
     connectors,
+    input,
     rgba,
     rgbBlue,
     rgbGrey500,
@@ -67,6 +68,40 @@ export default function App({ Component, pageProps }: AppProps) {
 
                     input {
                         font-size: 16px;
+                    }
+
+                    select {
+                        display: inline-block;
+                        box-sizing: border-box;
+                        font: inherit;
+                        line-height: inherit;
+                        appearance: none;
+                        background-repeat: no-repeat;
+                        color: inherit;
+                        border: 0 none;
+                        border-radius: 8px;
+                        background-color: ${input};
+                        background-image: linear-gradient(
+                                45deg,
+                                transparent 50%,
+                                currentColor 50%
+                            ),
+                            linear-gradient(
+                                135deg,
+                                currentColor 50%,
+                                transparent 50%
+                            );
+                        background-position: right 15px top 1em,
+                            right 10px top 1em;
+                        background-size: 5px 5px, 5px 5px;
+                        padding: 10px 28px 10px 12px;
+
+                        &.s {
+                            padding: 6px 24px 6px 8px;
+                            border-radius: 6px;
+                            background-position: right 13px top 0.85em,
+                                right 8px top 0.85em;
+                        }
                     }
 
                     @media (prefers-color-scheme: dark) {

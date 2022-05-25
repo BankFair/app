@@ -33,6 +33,7 @@ import {
     useFetchIntervalManagerInfo,
     useFetchIntervalAllStats,
     useFetchIntervalAccountInfoAllPools,
+    useFetchIntervalBorrowConstraints,
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
 
@@ -69,6 +70,16 @@ export function useAmountDepositable(poolAddress: string) {
     return [amountDepositable, refetch] as const
 }
 
+export function usePoolLiquidity(poolAddress: string) {
+    const refetch = useFetchIntervalStats(poolAddress)
+
+    const poolLiquidity = useSelector(
+        (state) => state.pools[poolAddress]?.stats?.poolLiquidity,
+    )
+
+    return [poolLiquidity, refetch] as const
+}
+
 export function useStats(poolAddress: string, tokenDecimals: number) {
     useFetchIntervalStats(poolAddress)
 
@@ -95,6 +106,16 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
         ),
         apy: stats.apy,
     }
+}
+
+export function useBorrowConstraints(poolAddress: string) {
+    useFetchIntervalBorrowConstraints(poolAddress)
+
+    const borrowConstraints = useSelector(
+        (state) => state.pools[poolAddress]?.borrowConstraints,
+    )
+
+    return borrowConstraints
 }
 
 export function useAccountStats() {

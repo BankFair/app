@@ -4,6 +4,7 @@ import { ButtonHTMLAttributes } from 'react'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
 import { Oval } from 'react-loading-icons'
 import {
+    className,
     COLOR_BLUE,
     COLOR_GREEN,
     COLOR_RED,
@@ -40,7 +41,7 @@ export function Button({
 }) {
     const { disabled } = classModifiers
 
-    const Element = type ? 'button' : 'a'
+    const Element = type ? 'button' : href ? 'a' : 'button'
 
     const styleProp = useMemo(() => {
         if (!style && !width) return undefined
@@ -53,7 +54,7 @@ export function Button({
         <Element
             onClick={disabled ? undefined : onClick}
             disabled={disabled}
-            className={className(classModifiers as Record<string, boolean>)}
+            className={className(classModifiers)}
             style={styleProp}
             type={type}
         >
@@ -130,12 +131,6 @@ export function Button({
     )
 
     return href ? <Link href={href}>{anchor}</Link> : anchor
-}
-
-function className(props: Record<string, boolean>) {
-    return Object.keys(props)
-        .filter((key) => props[key])
-        .join(' ')
 }
 
 export type Button = typeof Button

@@ -36,15 +36,11 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
     const name = POOLS.find((pool) => pool.address === address)?.name
 
-    const title = `${name} - ${APP_NAME}`
+    const title = name ? `${name} - ${APP_NAME}` : APP_NAME
 
     const head = (
         <Head>
             <title>{title}</title>
-            <meta
-                name="description"
-                content="" // TODO: Fix
-            />
             <link rel="icon" href="/favicon.ico" />
         </Head>
     )
