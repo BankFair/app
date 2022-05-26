@@ -78,9 +78,9 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             <DepositAndWithdraw pool={pool} poolAddress={address} />
             <YourSupply pool={pool} poolAddress={address} />
             <Earnings pool={pool} poolAddress={address} />
-            <div>
+            {/* <div>
                 Pool address: <EtherscanLink address={address} />
-            </div>
+            </div> */}
         </Page>
     )
 }

@@ -67,6 +67,7 @@ export function AmountInput({
                             padding: 6px 74px 6px 8px;
                             border-radius: 6px;
                             font-size: 16px;
+                            line-height: 19px;
                         }
 
                         > .token {
@@ -89,6 +90,7 @@ export function AmountInput({
 
                 input {
                     font-size: 18px;
+                    line-height: 21px;
                     width: 100%;
                     padding: 10px 84px 10px 12px;
                     border: 0 none;

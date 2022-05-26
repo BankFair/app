@@ -75,8 +75,8 @@ export default function App({ Component, pageProps }: AppProps) {
                     select {
                         display: inline-block;
                         box-sizing: border-box;
-                        font: inherit;
-                        line-height: inherit;
+                        font-size: 16px;
+                        line-height: 19px;
                         appearance: none;
                         background-repeat: no-repeat;
                         color: inherit;
