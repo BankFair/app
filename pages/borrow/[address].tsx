@@ -150,6 +150,7 @@ function RequestLoan({
         return {
             maxElement: max ? (
                 <span
+                    tabIndex={0}
                     onClick={() => {
                         setAmount(maxFormatted)
                         setDisplayAlert(true)

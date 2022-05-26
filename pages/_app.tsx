@@ -15,6 +15,7 @@ import {
     rgbTextPrimaryDark,
     rgbTextPrimaryLight,
     rgbWhite,
+    useClickTabIndexElement,
 } from '../app'
 import { SwitchNetworkModal, Navigation } from '../components'
 import { useFetchPoolsPropertiesOnce, useConnectEagerly } from '../features'
@@ -127,5 +128,6 @@ export default function App({ Component, pageProps }: AppProps) {
 function Setup() {
     useFetchPoolsPropertiesOnce()
     useConnectEagerly()
+    useClickTabIndexElement()
     return null
 }

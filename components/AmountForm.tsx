@@ -181,7 +181,7 @@ export function useAmountForm<
             <div className="input-container">
                 <div className="max">
                     {max ? (
-                        <span onClick={handleClickMax}>
+                        <span tabIndex={0} onClick={handleClickMax}>
                             Max: {formattedMax}
                         </span>
                     ) : null}

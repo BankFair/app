@@ -43,6 +43,7 @@ export function Tabs<T extends readonly string[]>({
             `}</style>
             {tabs.map((tab) => (
                 <div
+                    tabIndex={0}
                     key={tab}
                     className={currentTab === tab ? 'selected' : ''}
                     onClick={() => setCurrentTab(tab)}
