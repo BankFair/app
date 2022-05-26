@@ -1,15 +1,23 @@
 import { RiAlertFill } from 'react-icons/ri'
-import { rgbTextPrimaryDark, rgbYellow } from '../app'
+import { BsExclamationCircleFill } from 'react-icons/bs'
+import {
+    rgbRed,
+    rgbTextPrimaryDark,
+    rgbTextPrimaryLight,
+    rgbYellow,
+} from '../app'
 
 export function Alert({
     style,
     title,
     body,
 }: {
-    style: 'warning'
+    style: 'warning' | 'critical'
     title: string
     body?: string
 }) {
+    const Icon = style === 'critical' ? BsExclamationCircleFill : RiAlertFill // warning
+
     return (
         <div className={`alert ${style}`}>
             <style jsx>{`
@@ -19,13 +27,18 @@ export function Alert({
                     border-radius: 8px;
 
                     &.warning {
-                        color: ${rgbTextPrimaryDark};
+                        color: ${rgbTextPrimaryLight};
                         background-color: ${rgbYellow};
+                    }
+
+                    &.critical {
+                        color: ${rgbTextPrimaryDark};
+                        background-color: ${rgbRed};
                     }
                 }
 
                 .text-container {
-                    margin-left: 4px;
+                    margin-left: 6px;
 
                     .title {
                         font-size: 16px;
@@ -38,7 +51,7 @@ export function Alert({
                 }
             `}</style>
 
-            <RiAlertFill size={24} />
+            <Icon size={24} />
 
             <div className="text-container">
                 <div className="title">{title}</div>

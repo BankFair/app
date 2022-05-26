@@ -11,8 +11,9 @@ import {
     rgbBlue,
     rgbGrey500,
     rgbGrey600,
-    rgbGrey800,
     rgbGrey900,
+    rgbTextPrimaryDark,
+    rgbTextPrimaryLight,
     rgbWhite,
 } from '../app'
 import { SwitchNetworkModal, Navigation } from '../components'
@@ -28,7 +29,7 @@ export default function App({ Component, pageProps }: AppProps) {
                     :root {
                         --bg-color: ${rgbWhite};
                         --bg-overlay: ${rgba(COLOR_WHITE, 0.9)};
-                        --color: ${rgbGrey800};
+                        --color: ${rgbTextPrimaryLight};
                         --color-secondary: ${rgbGrey600};
                         --color-disabled: ${rgbGrey500};
                         --disabled-24: ${rgba(COLOR_GREY_500, 0.24)};
@@ -108,7 +109,7 @@ export default function App({ Component, pageProps }: AppProps) {
                         :root {
                             --bg-color: ${rgbGrey900};
                             --bg-overlay: ${rgba(COLOR_GREY_900, 0.9)};
-                            --color: ${rgbWhite};
+                            --color: ${rgbTextPrimaryDark};
                             --color-secondary: ${rgbGrey500};
                             --color-disabled: ${rgbGrey600};
                             --shadow: rgba(0, 0, 0, 0.16);

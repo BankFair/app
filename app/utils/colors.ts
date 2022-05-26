@@ -66,5 +66,6 @@ export const input = rgba(COLOR_DISABLED, 0.12)
 
 // #region Text
 export const COLOR_TEXT_PRIMARY_DARK: Color = COLOR_GREY_800
-export const rgbTextPrimaryDark = rgbGrey800
+export const rgbTextPrimaryLight = rgbGrey800
+export const rgbTextPrimaryDark = rgbWhite
 // #endregion

@@ -59,7 +59,8 @@ export const POOLS = (JSON.parse(process.env.POOLS!) as PoolsEnv).map(
 
 export const TOKEN_SYMBOL = 'USDC'
 export const USDC_DECIMALS = 6
-export const ONE_HUNDRED_PERCENT = BigNumber.from(1000)
+export const oneHundredPercent = 1000
+export const ONE_HUNDRED_PERCENT = BigNumber.from(oneHundredPercent)
 
 export const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
 

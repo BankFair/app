@@ -41,9 +41,6 @@ export interface CoreContract
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber, [account: string]>
-    maxDuration: ContractFunction<BigNumber>
-    minAmount: ContractFunction<BigNumber>
-    minDuration: ContractFunction<BigNumber>
     requestLoan: ContractFunction<
         ContractTransaction,
         [amount: BigNumber, loanDuration: BigNumber]
@@ -64,6 +61,11 @@ export interface CoreContract
     poolFunds: ContractFunction<BigNumber>
     poolLiquidity: ContractFunction<BigNumber>
     currentLenderAPY: ContractFunction<number>
+
+    defaultAPR: ContractFunction<number>
+    maxDuration: ContractFunction<BigNumber>
+    minAmount: ContractFunction<BigNumber>
+    minDuration: ContractFunction<BigNumber>
 
     protocolEarningsOf: ContractFunction<BigNumber, [account: string]>
     withdrawProtocolEarnings: ContractFunction<ContractTransaction>

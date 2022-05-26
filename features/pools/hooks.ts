@@ -33,7 +33,7 @@ import {
     useFetchIntervalManagerInfo,
     useFetchIntervalAllStats,
     useFetchIntervalAccountInfoAllPools,
-    useFetchIntervalBorrowConstraints,
+    useFetchIntervalBorrowInfo,
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
 
@@ -108,14 +108,10 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
     }
 }
 
-export function useBorrowConstraints(poolAddress: string) {
-    useFetchIntervalBorrowConstraints(poolAddress)
+export function useBorrowInfo(poolAddress: string) {
+    useFetchIntervalBorrowInfo(poolAddress)
 
-    const borrowConstraints = useSelector(
-        (state) => state.pools[poolAddress]?.borrowConstraints,
-    )
-
-    return borrowConstraints
+    return useSelector((state) => state.pools[poolAddress]?.borrowInfo)
 }
 
 export function useAccountStats() {

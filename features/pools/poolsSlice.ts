@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, Draft } from '@reduxjs/toolkit'
 import { contract, LoanStatus, getBatchProviderAndContract } from './contract'
-import { createFetchInterval, POOLS } from '../../app'
+import { createFetchInterval, oneHundredPercent, POOLS } from '../../app'
 import { AppState, Action, AppDispatch } from '../../store'
 
 export interface Loan {
@@ -43,10 +43,11 @@ interface AccountInfo {
     blockNumber: number
 }
 
-interface BorrowConstraints {
+interface BorrowInfo {
     minAmount: string
     minDuration: number
     maxDuration: number
+    apr: number
     blockNumber: number
 }
 
@@ -63,7 +64,7 @@ export interface Pool {
     stats: Stats | null
     managerInfo: ManagerInfo | null
     accountInfo: Record<string, AccountInfo>
-    borrowConstraints: BorrowConstraints | null
+    borrowInfo: BorrowInfo | null
     loading: Loading[]
 }
 
@@ -204,35 +205,37 @@ export const { hook: useFetchIntervalManagerInfo } = createFetchInterval(
     oneHour,
 )
 
-const fetchBorrowConstraints = createAsyncThunk(
+const fetchBorrowInfo = createAsyncThunk(
     'pools/fetchBorrowConstraints',
     async (poolAddress: string) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            4,
+            5,
             contract.attach(poolAddress),
         )
 
-        const [minAmount, minDuration, maxDuration, blockNumber] =
+        const [minAmount, minDuration, maxDuration, apr, blockNumber] =
             await Promise.all([
                 connected.minAmount(),
                 connected.minDuration(),
                 connected.maxDuration(),
+                connected.defaultAPR(),
                 provider.getCurrentBlockNumber(),
             ])
 
-        const constraints: BorrowConstraints = {
+        const info: BorrowInfo = {
             minAmount: minAmount.toHexString(),
             minDuration: minDuration.toNumber(),
             maxDuration: maxDuration.toNumber(),
+            apr: (apr / oneHundredPercent) * 100,
             blockNumber,
         }
 
-        return constraints
+        return info
     },
 )
 
-export const { hook: useFetchIntervalBorrowConstraints } = createFetchInterval(
-    fetchBorrowConstraints,
+export const { hook: useFetchIntervalBorrowInfo } = createFetchInterval(
+    fetchBorrowInfo,
     oneHour,
 )
 
@@ -274,7 +277,7 @@ export const poolsSlice = createSlice({
                 managerInfo: null,
                 accountInfo: {},
                 loading: [],
-                borrowConstraints: null,
+                borrowInfo: null,
             }
         },
 
@@ -404,11 +407,11 @@ export const poolsSlice = createSlice({
                 },
             )
             .addCase(
-                fetchBorrowConstraints.fulfilled,
+                fetchBorrowInfo.fulfilled,
                 (state, { payload, meta: { arg: poolAddress } }) => {
                     replaceIfHigherBlockNumber(
                         state[poolAddress],
-                        'borrowConstraints',
+                        'borrowInfo',
                         payload,
                     )
                 },

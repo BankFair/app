@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux'
 import {
     APP_NAME,
     format,
+    formatMaxDecimals,
     getAddress,
     POOLS,
     rgbRed,
@@ -15,6 +16,7 @@ import {
     zero,
 } from '../../app'
 import {
+    Alert,
     AmountInput,
     Box,
     Button,
@@ -22,6 +24,7 @@ import {
     LoanView,
     Page,
     PageLoading,
+    Skeleton,
 } from '../../components'
 import {
     contract,
@@ -32,7 +35,7 @@ import {
     Pool,
     useLoans,
     usePoolLiquidity,
-    useBorrowConstraints,
+    useBorrowInfo,
     loanRequestedSignature,
 } from '../../features'
 import { useSelector } from '../../store'
@@ -134,24 +137,30 @@ function RequestLoan({
         [account, loading, loans],
     )
 
-    const borrowConstraints = useBorrowConstraints(poolAddress)
+    const borrowInfo = useBorrowInfo(poolAddress)
 
     const [amount, setAmount] = useState(initialAmount)
     const [max, refetch] = usePoolLiquidity(poolAddress)
-    const maxElement = useMemo(
-        () =>
-            max ? (
+    const { maxElement, canRequest } = useMemo(() => {
+        if (!max || !borrowInfo) return { maxElement: null, canRequest: false }
+
+        const maxBigNumber = BigNumber.from(max)
+        const maxFormatted = format(formatUnits(maxBigNumber, tokenDecimals))
+
+        return {
+            maxElement: max ? (
                 <span
                     onClick={() => {
-                        setAmount(format(formatUnits(max, tokenDecimals)))
+                        setAmount(maxFormatted)
                         setDisplayAlert(true)
                     }}
                 >
-                    Max: {format(formatUnits(max, tokenDecimals))}
+                    Max: {maxFormatted}
                 </span>
             ) : null,
-        [max, tokenDecimals],
-    )
+            canRequest: maxBigNumber.gte(borrowInfo.minAmount),
+        }
+    }, [borrowInfo, max, tokenDecimals])
     const value = useMemo(() => {
         if (!max) return amount
         const maxBigNumber = BigNumber.from(max)
@@ -164,21 +173,22 @@ function RequestLoan({
     }, [max, amount, tokenDecimals])
     const isAmountTooLow = useMemo(
         () =>
-            borrowConstraints &&
+            borrowInfo &&
             value &&
-            parseUnits(value, tokenDecimals).lt(borrowConstraints.minAmount),
-        [borrowConstraints, tokenDecimals, value],
+            parseUnits(value, tokenDecimals).lt(borrowInfo.minAmount),
+        [borrowInfo, tokenDecimals, value],
     )
 
     const [duration, setDuration] = useState(initialDuration)
     const [durationMultiplier, setDurationMultiplier] = useState(
         initialDurationMultiplier,
     )
+
     const durationInSeconds = Number(duration) * Number(durationMultiplier)
     const isDurationTooLow =
-        borrowConstraints && durationInSeconds < borrowConstraints.minDuration
+        borrowInfo && durationInSeconds < borrowInfo.minDuration
     const isDurationTooHigh =
-        borrowConstraints && durationInSeconds > borrowConstraints.maxDuration
+        borrowInfo && durationInSeconds > borrowInfo.maxDuration
 
     useEffect(() => {
         if (!loading || loading === -1) return
@@ -204,23 +214,23 @@ function RequestLoan({
                     : isAmountTooLow && displayAlert
                     ? `Minimum amount is ${format(
                           formatUnits(
-                              BigNumber.from(borrowConstraints!.minAmount),
+                              BigNumber.from(borrowInfo!.minAmount),
                               tokenDecimals,
                           ),
                       )}`
                     : isDurationTooLow
                     ? `Minimum duration is ${
-                          borrowConstraints.minDuration / oneDay
+                          borrowInfo.minDuration / oneDay
                       } day`
                     : isDurationTooHigh
                     ? `Maximum duration is ${
-                          borrowConstraints.maxDuration / oneYear
+                          borrowInfo.maxDuration / oneYear
                       } years`
                     : null,
         }),
         [
             displayAlert,
-            borrowConstraints,
+            borrowInfo,
             isAmountTooLow,
             isDurationTooHigh,
             isDurationTooLow,
@@ -229,14 +239,27 @@ function RequestLoan({
         ],
     )
 
+    const willOwe = useMemo(() => {
+        if (!borrowInfo) return '0'
+
+        const valueNumber = Number(value)
+        const willOwe =
+            valueNumber +
+            (valueNumber *
+                ((borrowInfo.apr * durationInSeconds) / 60 / 60 / 24 / 365)) /
+                100
+        return formatMaxDecimals(willOwe.toString(), 6)
+    }, [borrowInfo, durationInSeconds, value])
+
     const isManager = managerAddress === account
-    const componentIsLoading = !max || !borrowConstraints
+    const componentIsLoading = !max || !borrowInfo
     const disabled = isManager || componentIsLoading
     const waitingForTransaction = loading !== 0
     const disabledSubmit = Boolean(
         waitingForTransaction ||
             disabled ||
             !value ||
+            !canRequest ||
             alert ||
             willDisplayAlert,
     )
@@ -303,8 +326,8 @@ function RequestLoan({
             overlay={
                 isManager
                     ? `Manager can't request a loan`
-                    : max === '0x00'
-                    ? 'There is no liquidity in the pool to request a loan'
+                    : !canRequest
+                    ? 'There is not enough liquidity in the pool to request a loan'
                     : undefined
             }
         >
@@ -329,7 +352,7 @@ function RequestLoan({
                         margin-right: 4px;
                         color: var(--color-secondary);
 
-                        > span {
+                        > :global(span) {
                             cursor: pointer;
                         }
                     }
@@ -353,13 +376,39 @@ function RequestLoan({
                         }
                     }
 
-                    .alert {
-                        color: ${rgbRed};
-                        font-size: 13px;
-                        height: 15px;
-                        margin: 8px 0;
+                    .info {
+                        display: flex;
+                        position: relative;
+                        padding: 16px 0;
                         text-align: center;
-                        font-weight: 500;
+
+                        > .item {
+                            flex-basis: 50%;
+
+                            > .label {
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                font-weight: 300;
+                            }
+                            > .value {
+                                font-size: 18px;
+                                padding-top: 2px;
+                                font-weight: 400;
+                            }
+                        }
+
+                        > .alert-positioner {
+                            position: absolute;
+                            top: 0;
+                            bottom: 0;
+                            width: 100%;
+                            display: flex;
+                            align-items: center;
+
+                            > :global(.alert) {
+                                width: 100%;
+                            }
+                        }
                     }
 
                     > .button-container {
@@ -437,7 +486,26 @@ function RequestLoan({
                     </tbody>
                 </table>
 
-                <div className="alert">{alert}</div>
+                <div className="info">
+                    <div className="item">
+                        <div className="label">Interest rate</div>
+                        <div className="value">
+                            {borrowInfo ? borrowInfo.apr : '0'}%
+                        </div>
+                    </div>
+                    <div className="item">
+                        <div className="label">Owed after duration</div>
+                        <div className="value">
+                            {borrowInfo ? willOwe : '0'}
+                        </div>
+                    </div>
+
+                    {alert ? (
+                        <div className="alert-positioner">
+                            <Alert style="critical" title={alert} />
+                        </div>
+                    ) : null}
+                </div>
 
                 <div className="button-container">
                     <Button
