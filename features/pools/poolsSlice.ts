@@ -234,8 +234,24 @@ const fetchBorrowInfo = createAsyncThunk(
     },
 )
 
-export const { hook: useFetchIntervalBorrowInfo } = createFetchInterval(
-    fetchBorrowInfo,
+export const {
+    fetch: fetchIntervalBorrowInfo,
+    hook: useFetchIntervalBorrowInfo,
+} = createFetchInterval(fetchBorrowInfo, oneHour)
+
+export const fetchAllBorrowInfo = createAsyncThunk(
+    'pools/fetchAllBorrowInfo',
+    (dispatch: AppDispatch) => {
+        return Promise.all(
+            POOLS.map(({ address }) =>
+                fetchIntervalBorrowInfo(dispatch, address),
+            ),
+        )
+    },
+)
+
+export const { hook: useFetchIntervalAllBorrowInfo } = createFetchInterval(
+    fetchAllBorrowInfo,
     oneHour,
 )
 

@@ -1,20 +1,58 @@
+import { formatUnits } from 'ethers/lib/utils'
 import { NextPage } from 'next'
-import Link from 'next/link'
-import { POOLS } from '../../app'
-import { Page } from '../../components'
+import Head from 'next/head'
+import { useDispatch } from 'react-redux'
+import { APP_NAME, formatNoDecimals, POOLS } from '../../app'
+import { LinkList, Page, Skeleton } from '../../components'
+import {
+    useFetchIntervalAllBorrowInfo,
+    useFetchIntervalAllStats,
+    usePools,
+} from '../../features'
+
+const title = `Borrow - ${APP_NAME}`
+const labels = ['Available liquidity', 'Interest rate']
 
 const BorrowPools: NextPage = () => {
+    const pools = usePools()
+    const dispatch = useDispatch()
+    const poolsLoaded = Object.keys(pools).length === POOLS.length
+    const hookArg = poolsLoaded ? dispatch : null
+    useFetchIntervalAllStats(hookArg)
+    useFetchIntervalAllBorrowInfo(hookArg)
+
     return (
         <Page>
-            <ul>
-                {POOLS.map(({ address, name }) => (
-                    <li key={address}>
-                        <Link href={`/borrow/${address}`}>
-                            <a>{name}</a>
-                        </Link>
-                    </li>
-                ))}
-            </ul>
+            <Head>
+                <title>{title}</title>
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+
+            <LinkList
+                items={POOLS.map(({ address, name }) => {
+                    const pool = pools[address]
+                    return {
+                        link: `/borrow/${address}`,
+                        name,
+                        stats:
+                            pool && pool.stats && pool.borrowInfo
+                                ? [
+                                      `$${formatNoDecimals(
+                                          formatUnits(
+                                              pool.stats.poolLiquidity,
+                                              pool.tokenDecimals,
+                                          ),
+                                      )}`,
+                                      `${pool.borrowInfo.apr}%`,
+                                  ]
+                                : [
+                                      <Skeleton key="1" width={50} />,
+                                      <Skeleton key="2" width={30} />,
+                                  ],
+                    }
+                })}
+                labels={labels}
+            />
         </Page>
     )
 }
