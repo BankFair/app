@@ -64,6 +64,10 @@ export function Modal({
 
                 .close {
                     float: right;
+
+                    > :global(svg > path) {
+                        stroke: var(--color);
+                    }
                 }
             `}</style>
 
