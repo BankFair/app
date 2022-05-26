@@ -266,8 +266,8 @@ function RequestLoan({
     )
     const displayS = Number(duration) !== 1
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined =
-        disabledSubmit
+    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = account
+        ? disabledSubmit
             ? undefined
             : (event) => {
                   event.preventDefault()
@@ -319,6 +319,10 @@ function RequestLoan({
                       setDisplayAlert(initialDisplayAlert)
                   }
               }
+        : (event) => {
+              event.preventDefault()
+              setShowConnectModal(true)
+          }
 
     return (
         <Box
@@ -510,14 +514,16 @@ function RequestLoan({
 
                 <div className="button-container">
                     <Button
-                        disabled={disabledSubmit}
+                        disabled={account ? disabledSubmit : false}
                         loading={waitingForTransaction}
                     >
                         {account ? 'Request Loan' : 'Connect Wallet'}
                     </Button>
 
                     {/* Disabled elements prevent any click events to be fired resulting in inputs not being blurred */}
-                    {disabledSubmit ? <div className="clickable" /> : null}
+                    {account && disabledSubmit ? (
+                        <div className="clickable" />
+                    ) : null}
                 </div>
             </form>
 
