@@ -69,26 +69,35 @@ export function useAmountForm<
     }, [account])
 
     const [amount, setAmount] = useState('')
-    const { value, needsApproval } = useMemo(() => {
-        const amountBigNumber = amount
-            ? parseUnits(amount, tokenDecimals)
-            : zero
-        return {
-            value:
+    const { value, isValueBiggerThanZero, needsApproval, formattedMax } =
+        useMemo(() => {
+            const amountBigNumber = amount
+                ? parseUnits(amount, tokenDecimals)
+                : zero
+
+            const value =
                 loading ||
                 (max?.lt(amountBigNumber)
                     ? format(formatUnits(max, tokenDecimals))
-                    : amount),
-            needsApproval:
-                !isWithdraw && allowance
-                    ? BigNumber.from(allowance).lt(amountBigNumber)
-                    : false,
-        }
-    }, [loading, max, tokenDecimals, amount, allowance, isWithdraw])
+                    : amount)
+
+            const valueBigNumber = parseUnits(value || '0', tokenDecimals)
+            return {
+                value,
+                isValueBiggerThanZero: valueBigNumber.gt(zero),
+                needsApproval:
+                    !isWithdraw && allowance
+                        ? BigNumber.from(allowance).lt(valueBigNumber)
+                        : false,
+                formattedMax: max
+                    ? format(formatUnits(max, tokenDecimals))
+                    : '',
+            }
+        }, [loading, max, tokenDecimals, amount, allowance, isWithdraw])
 
     const handleClickMax = useCallback(() => {
-        setAmount(format(formatUnits(max!, tokenDecimals)))
-    }, [max, tokenDecimals])
+        setAmount(formattedMax)
+    }, [formattedMax])
 
     const inputDisabled = Boolean(disabled || loading)
 
@@ -173,7 +182,7 @@ export function useAmountForm<
                 <div className="max">
                     {max ? (
                         <span onClick={handleClickMax}>
-                            Max: {format(formatUnits(max, tokenDecimals))}
+                            Max: {formattedMax}
                         </span>
                     ) : null}
                 </div>
@@ -187,7 +196,9 @@ export function useAmountForm<
 
             <Button
                 key={type}
-                disabled={Boolean(inputDisabled || (!value && account))}
+                disabled={Boolean(
+                    inputDisabled || (!isValueBiggerThanZero && account),
+                )}
                 type="submit"
                 width={170}
                 loading={Boolean(loading)}
