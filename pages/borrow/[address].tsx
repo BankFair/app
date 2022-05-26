@@ -394,6 +394,7 @@ function RequestLoan({
                                 font-size: 11px;
                                 text-transform: uppercase;
                                 font-weight: 300;
+                                color: var(--color-secondary);
                             }
                             > .value {
                                 font-size: 18px;

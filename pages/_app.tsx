@@ -7,6 +7,8 @@ import {
     COLOR_WHITE,
     connectors,
     input,
+    inputNonTransparentDark,
+    inputNonTransparentLight,
     rgba,
     rgbBlue,
     rgbGrey500,
@@ -79,7 +81,7 @@ export default function App({ Component, pageProps }: AppProps) {
                         line-height: 19px;
                         appearance: none;
                         background-repeat: no-repeat;
-                        color: inherit;
+                        color: var(--color);
                         border: 0 none;
                         border-radius: 8px;
                         background-color: ${input};
@@ -104,6 +106,11 @@ export default function App({ Component, pageProps }: AppProps) {
                             background-position: right 13px top 0.85em,
                                 right 8px top 0.85em;
                         }
+
+                        > option {
+                            background-color: ${inputNonTransparentLight};
+                            color: var(--color);
+                        }
                     }
 
                     @media (prefers-color-scheme: dark) {
@@ -114,6 +121,10 @@ export default function App({ Component, pageProps }: AppProps) {
                             --color-secondary: ${rgbGrey500};
                             --color-disabled: ${rgbGrey600};
                             --shadow: rgba(0, 0, 0, 0.16);
+                        }
+
+                        select > option {
+                            background-color: ${inputNonTransparentDark};
                         }
                     }
                 `}</style>

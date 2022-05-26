@@ -1,3 +1,5 @@
+import color from 'color'
+
 export interface Color {
     r: number
     g: number
@@ -63,6 +65,14 @@ export const COLOR_DISABLED: Color = COLOR_GREY_500
 export const disabledContentOpaque = rgba(COLOR_DISABLED, 0.8)
 export const disabledContent = rgba(COLOR_DISABLED, 0.8)
 export const input = rgba(COLOR_DISABLED, 0.12)
+export const inputNonTransparentLight = color(rgbWhite).mix(
+    color(rgbGrey500),
+    0.12,
+)
+export const inputNonTransparentDark = color(rgbGrey900).mix(
+    color(rgbGrey500),
+    0.12,
+)
 
 // #region Text
 export const COLOR_TEXT_PRIMARY_DARK: Color = COLOR_GREY_800
