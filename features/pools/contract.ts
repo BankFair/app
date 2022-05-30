@@ -1,4 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber'
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { Contract, ContractTransaction, Event } from '@ethersproject/contracts'
 import { id } from '@ethersproject/hash'
 import {
@@ -46,7 +46,7 @@ export interface CoreContract
         [amount: BigNumber, loanDuration: BigNumber]
     >
     cancelLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
-    borrow: ContractFunction<ContractTransaction, [loanId: BigNumber]>
+    borrow: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     repay: ContractFunction<
         ContractTransaction,
         [loanId: BigNumber, amount: BigNumber]
@@ -55,8 +55,8 @@ export interface CoreContract
     denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumber]>
     defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
 
-    loans: ContractFunction<EVMLoan, [loanId: BigNumber | number]>
-    loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumber | number]>
+    loans: ContractFunction<EVMLoan, [loanId: BigNumberish]>
+    loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumberish]>
 
     poolFunds: ContractFunction<BigNumber>
     poolLiquidity: ContractFunction<BigNumber>
@@ -83,40 +83,52 @@ export interface CoreContract
 
         /**
          * ```solidity
-         * event LoanApproved(uint256 loanId)
+         * event LoanApproved(uint256 loanId, address borrower)
          * ```
          */
-        LoanApproved: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+        LoanApproved: EventFilterFactory<
+            [loanId: BigNumber, borrower: string],
+            ['loanId', 'borrower']
+        >
 
         /**
          * ```solidity
-         * event LoanDenied(uint256 loanId)
+         * event LoanDenied(uint256 loanId, address borrower)
          * ```
          */
-        LoanDenied: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+        LoanDenied: EventFilterFactory<
+            [loanId: BigNumber, borrower: string],
+            ['loanId', 'borrower']
+        >
 
         /**
          * ```solidity
-         * event LoanCancelled(uint256 loanId)
+         * event LoanCancelled(uint256 loanId, address borrower)
          * ```
          */
-        LoanCancelled: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+        LoanCancelled: EventFilterFactory<
+            [loanId: BigNumber, borrower: string],
+            ['loanId', 'borrower']
+        >
 
         /**
          * ```solidity
-         * event LoanRepaid(uint256 loanId)
+         * event LoanRepaid(uint256 loanId, address borrower)
          * ```
          */
-        LoanRepaid: EventFilterFactory<[loanId: BigNumber], ['loanId']>
+        LoanRepaid: EventFilterFactory<
+            [loanId: BigNumber, borrower: string],
+            ['loanId', 'borrower']
+        >
 
         /**
          * ```solidity
-         * event LoanDefaulted(uint256 loanId, uint256 amountLost)
+         * event LoanDefaulted(uint256 loanId, address borrower, uint256 amountLost)
          * ```
          */
         LoanDefaulted: EventFilterFactory<
-            [loanId: BigNumber, amountLost: BigNumber],
-            ['loanId', 'amountLost']
+            [loanId: BigNumber, borrower: string, amountLost: BigNumber],
+            ['loanId', 'borrower', 'amountLost']
         >
     }
 

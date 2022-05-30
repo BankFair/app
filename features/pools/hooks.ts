@@ -21,19 +21,19 @@ import {
 } from './contract'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
-    updateLoan,
     updateLoans,
     setLoans,
     Pool,
     setPoolInfo,
     Loan as StateLoan,
-    LoanDetails as StateLoanDetails,
     useFetchIntervalStats,
     useFetchIntervalAccountInfo,
     useFetchIntervalManagerInfo,
     useFetchIntervalAllStats,
     useFetchIntervalAccountInfoAllPools,
     useFetchIntervalBorrowInfo,
+    transformToStateLoans,
+    fetchLoan,
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
 
@@ -135,22 +135,25 @@ export function useAccountStats() {
                     pool.loading.includes('stats') ||
                     pool.loading.includes(`accountInfo_${account}`),
             ).length
-        )
+        ) {
             return null
+        }
 
         const data = POOLS.map(({ address }) => {
             const pool = pools[address]
             const accountInfo = pool?.accountInfo[account]
+            const stats = pool?.stats
 
-            if (!accountInfo)
+            if (!accountInfo || !stats) {
                 return {
                     lentUSDC: '0x0',
                     apy: 0,
                 }
+            }
 
             return {
                 lentUSDC: accountInfo.balance,
-                apy: pool.stats!.apy,
+                apy: stats.apy,
             }
         })
 
@@ -218,20 +221,19 @@ export function useFetchPoolsPropertiesOnce() {
     }, [dispatch])
 }
 
-const map: Record<string, string[]> = {}
+const map: Record<string, true> = {}
 export function useLoadAccountLoans(
     poolAddress: string,
     account: string | undefined,
     dispatch: AppDispatch,
-    pool?: Pool,
+    pool: Pool | undefined,
 ) {
     useEffect(() => {
         if (!account || !pool) return
         if (pool.managerAddress === account) return
-        const subscribed: string[] | undefined = map[poolAddress]
-        const accounts = subscribed || (map[poolAddress] = [])
-        if (accounts.includes(account)) return
-        accounts.push(account)
+        const key = `${poolAddress}_${account}`
+        if (map[key]) return
+        map[key] = true
 
         const attached = contract.attach(poolAddress)
         attached
@@ -256,20 +258,23 @@ export function useLoadAccountLoans(
             attached.filters.LoanRequested(null, account),
             handleLoanEvent,
         )
-
-        if (subscribed) return
-
-        attached.on(attached.filters.LoanApproved(), handleLoanEvent)
-        attached.on(attached.filters.LoanDenied(), handleLoanEvent)
-        attached.on(attached.filters.LoanCancelled(), handleLoanEvent)
-        attached.on(attached.filters.LoanRepaid(), handleLoanEvent)
-        attached.on(attached.filters.LoanDefaulted(), handleLoanEvent)
+        attached.on(
+            attached.filters.LoanApproved(null, account),
+            handleLoanEvent,
+        )
+        attached.on(attached.filters.LoanDenied(null, account), handleLoanEvent)
+        attached.on(
+            attached.filters.LoanCancelled(null, account),
+            handleLoanEvent,
+        )
+        attached.on(attached.filters.LoanRepaid(null, account), handleLoanEvent)
+        attached.on(
+            attached.filters.LoanDefaulted(null, account),
+            handleLoanEvent,
+        )
 
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            fetchAndUpdateLoan(poolAddress, attached, loanId).then((action) => {
-                if (!accounts.includes(action.payload.loan.borrower)) return
-                dispatch(action)
-            })
+            dispatch(fetchLoan({ poolAddress, loanId }))
         }
     }, [account, pool, dispatch, poolAddress])
 }
@@ -306,36 +311,9 @@ export function useLoadManagerState(address: string, pool: Pool | undefined) {
         attached.on(attached.filters.LoanRepaid(), handleLoanEvent)
         attached.on(attached.filters.LoanDefaulted(), handleLoanEvent)
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            fetchAndUpdateLoan(address, attached, loanId).then(dispatch)
+            dispatch(fetchLoan({ poolAddress: address, loanId }))
         }
     }, [address, dispatch, pool])
-}
-
-export function fetchAndUpdateLoan(
-    poolAddress: string,
-    attachedContract: CoreContract,
-    loanId: number | BigNumber,
-): Promise<ReturnType<typeof updateLoan>> {
-    const { provider, contract } = getBatchProviderAndContract(
-        3,
-        attachedContract,
-    )
-
-    return Promise.all([
-        contract.loans(
-            typeof loanId === 'number' ? BigNumber.from(loanId) : loanId,
-        ),
-        contract.loanDetails(
-            typeof loanId === 'number' ? BigNumber.from(loanId) : loanId,
-        ),
-        provider.getCurrentBlockNumber(),
-    ]).then(([loan, details, blockNumber]) =>
-        updateLoan({
-            poolAddress,
-            loan: transformToStateLoan(loan, details),
-            blockNumber,
-        }),
-    )
 }
 
 export function fetchLoans(
@@ -352,46 +330,6 @@ export function fetchLoans(
         Promise.all(ids.map((id) => contract.loanDetails(id))),
         provider.getCurrentBlockNumber(),
     ])
-}
-
-export function transformToStateLoansDetails(
-    loans: EVMLoanDetails[],
-): StateLoanDetails[] {
-    return loans.map(transformToStateLoanDetails)
-}
-export function transformToStateLoanDetails(
-    details: EVMLoanDetails,
-): StateLoanDetails {
-    return {
-        id: details.loanId.toNumber(),
-        approvedTime: Number(details.approvedTime.toString()) * 1000,
-        baseAmountRepaid: details.baseAmountRepaid.toString(),
-        interestPaid: details.interestPaid.toString(),
-        totalAmountRepaid: details.totalAmountRepaid.toString(),
-    }
-}
-
-export function transformToStateLoans(
-    loans: EVMLoan[],
-    details: EVMLoanDetails[],
-): StateLoan[] {
-    return loans.map((loan, index) =>
-        transformToStateLoan(loan, details[index]),
-    )
-}
-export function transformToStateLoan(
-    loan: EVMLoan,
-    details: EVMLoanDetails,
-): StateLoan {
-    return {
-        id: loan.id.toNumber(),
-        status: loan.status,
-        borrower: loan.borrower,
-        amount: loan.amount.toHexString(),
-        duration: loan.duration.toNumber(),
-        requestedTime: loan.requestedTime.toNumber() * 1000,
-        details: transformToStateLoanDetails(details),
-    }
 }
 
 export function useSigner(
@@ -421,34 +359,54 @@ export function usePool(pool: string): Pool | undefined {
     return useSelector((s) => s.pools[pool])
 }
 
+// #region useLoans
 const selectors: Record<string, (state: AppState) => StateLoan[]> = {}
-export function useLoans(address: string) {
-    const selector =
-        selectors[address] ||
-        (selectors[address] = createSelector(
-            (state: AppState) => state.pools[address]?.loans || [],
-            (state: AppState) => state.pools[address]?.loanUpdates || [],
-            (loans, loanUpdates) => {
-                const result = [...loans]
+const emptyArray: never[] = []
+const returnEmptyArray = <T>(): T[] => emptyArray
+function createLoansSelector(address: string, account?: string) {
+    return createSelector(
+        (state: AppState) => state.pools[address]?.loans || emptyArray,
+        (state: AppState) => state.pools[address]?.loanUpdates || emptyArray,
+        (loans, loanUpdates) => {
+            const result = account
+                ? loans.filter((loan) => loan.borrower === account)
+                : [...loans]
 
-                for (const { loan } of loanUpdates) {
-                    const { id } = loan
-                    const updateIndex = result.findIndex(
-                        (loan) => loan.id === id,
-                    )
-                    if (updateIndex === -1) {
-                        result.push(loan)
-                    } else {
-                        result[updateIndex] = loan
-                    }
+            for (const { loan } of loanUpdates) {
+                const { id } = loan
+                const updateIndex = result.findIndex((loan) => loan.id === id)
+                if (updateIndex === -1) {
+                    if (account && loan.borrower !== account) continue
+                    result.push(loan)
+                } else {
+                    result[updateIndex] = loan
                 }
+            }
 
-                return result
-            },
-        ))
+            return result
+        },
+    )
+}
+export function useLoans(address: string): StateLoan[]
+export function useLoans(
+    address: string,
+    account: string | undefined,
+): StateLoan[]
+export function useLoans(address: string, account?: string) {
+    const forAddress = arguments.length === 2
+
+    const selectorKey = `${address}_${account}`
+
+    const selector =
+        forAddress && !account
+            ? returnEmptyArray
+            : selectors[selectorKey] ||
+              (selectors[selectorKey] = createLoansSelector(address, account))
 
     return useSelector(selector)
 }
+// #endregion
+
 export function useRequestedLoans(address: string) {
     const loans = useLoans(address)
     return useMemo(

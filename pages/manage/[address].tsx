@@ -8,7 +8,7 @@ import { APP_NAME, useAccount, getAddress } from '../../app'
 import {
     Alert,
     Box,
-    LoanView,
+    LoanViewOld,
     Page,
     Tabs,
     useAmountForm,
@@ -174,13 +174,10 @@ function Loans({
         loans
             .sort((a, b) => b.id - a.id)
             .map((loan) => (
-                <LoanView
+                <LoanViewOld
                     key={loan.id}
                     loan={loan}
-                    account={account}
                     tokenDecimals={tokenDecimals}
-                    poolAddress={poolAddress}
-                    dispatch={dispatch}
                     getContract={getContract}
                     manage
                 />

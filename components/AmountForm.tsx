@@ -15,9 +15,8 @@ import { AmountInput } from './AmountInput'
 import { Button } from './Button'
 import { ConnectModal } from './ConnectModal'
 
-export function useAmountForm<
-    T extends 'Deposit' | 'Withdraw' | 'Stake' | 'Unstake',
->({
+type Types = 'Deposit' | 'Withdraw' | 'Stake' | 'Unstake' | 'Repay'
+export function useAmountForm<T extends Types>({
     tokenDecimals,
     tokenAddress,
     poolAddress,
@@ -34,7 +33,7 @@ export function useAmountForm<
         contract: CoreContract,
         amount: string,
     ) => Promise<ContractTransaction>
-    refetch: () => Promise<any>
+    refetch: () => Promise<unknown>
     max?: BigNumber
     disabled?: boolean
     type: T
@@ -42,6 +41,7 @@ export function useAmountForm<
     const [loading, setLoading] = useState('')
 
     const isWithdraw = type === 'Unstake' || type === 'Withdraw'
+    const isRepay = type === 'Repay'
 
     const account = useAccount()
     const provider = useProvider()
@@ -202,7 +202,7 @@ export function useAmountForm<
                 type="submit"
                 width={170}
                 loading={Boolean(loading)}
-                blue={isWithdraw}
+                blue={isWithdraw || isRepay}
             >
                 {account
                     ? needsApproval

@@ -8,11 +8,13 @@ export function Modal({
     onClose,
     element: Element = 'div',
     onSubmit,
+    autoWidth,
 }: {
     children: ReactNode
     onClose?(): void
     element?: 'div' | 'form'
     onSubmit?: FormEventHandler<HTMLDivElement | HTMLFormElement>
+    autoWidth?: boolean
 }) {
     const shouldCloseRef = useRef(false)
     const backgroundRef = useRef<HTMLDivElement>(null)
@@ -60,10 +62,17 @@ export function Modal({
                     margin: 10px;
                     border-radius: 16px;
                     position: relative;
+
+                    &.auto-width {
+                        width: auto;
+                    }
                 }
 
                 .close {
-                    float: right;
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    padding: 4px;
 
                     > :global(svg > path) {
                         stroke: var(--color);
@@ -72,7 +81,7 @@ export function Modal({
             `}</style>
 
             <Element
-                className="content"
+                className={autoWidth ? 'content auto-width' : 'content'}
                 onMouseDown={stopPropagation}
                 onSubmit={onSubmit}
             >

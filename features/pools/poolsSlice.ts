@@ -1,5 +1,12 @@
+import { BigNumberish } from '@ethersproject/bignumber'
 import { createAsyncThunk, createSlice, Draft } from '@reduxjs/toolkit'
-import { contract, LoanStatus, getBatchProviderAndContract } from './contract'
+import {
+    contract,
+    LoanStatus,
+    getBatchProviderAndContract,
+    EVMLoan,
+    EVMLoanDetails,
+} from './contract'
 import { createFetchInterval, oneHundredPercent, POOLS } from '../../app'
 import { AppState, Action, AppDispatch } from '../../store'
 
@@ -10,6 +17,8 @@ export interface Loan {
     amount: string
     duration: number
     requestedTime: number
+    apr: number
+    lateAPRDelta: number
     details: LoanDetails
 }
 
@@ -255,6 +264,31 @@ export const { hook: useFetchIntervalAllBorrowInfo } = createFetchInterval(
     oneHour,
 )
 
+export const fetchLoan = createAsyncThunk(
+    'pools/fetchLoan',
+    ({
+        loanId,
+        poolAddress,
+    }: {
+        poolAddress: string
+        loanId: BigNumberish
+    }) => {
+        const { provider, contract: connected } = getBatchProviderAndContract(
+            3,
+            contract.attach(poolAddress),
+        )
+
+        return Promise.all([
+            connected.loans(loanId),
+            connected.loanDetails(loanId),
+            provider.getCurrentBlockNumber(),
+        ]).then(([loan, details, blockNumber]) => ({
+            loan: transformToStateLoan(loan, details),
+            blockNumber,
+        }))
+    },
+)
+
 type State = Record<string, Pool>
 const initialState: State = {}
 
@@ -315,28 +349,6 @@ export const poolsSlice = createSlice({
             state[poolAddress].loanUpdates = state[
                 poolAddress
             ].loanUpdates.filter((loan) => loan.blockNumber > blockNumber)
-        },
-        updateLoan(
-            state,
-            {
-                payload,
-            }: Action<{
-                poolAddress: string
-                loan: Loan
-                blockNumber: number
-            }>,
-        ) {
-            const { blockNumber, poolAddress } = payload
-            if (blockNumber > state[poolAddress].loansBlockNumber) {
-                const updates = [
-                    ...state[poolAddress].loanUpdates,
-                    payload,
-                ].sort(sortByBlockNumberDescending)
-                state[poolAddress].loanUpdates = filterUniqueIds(
-                    updates,
-                    'loan',
-                ).reverse()
-            }
         },
         updateLoans(
             state,
@@ -432,11 +444,34 @@ export const poolsSlice = createSlice({
                     )
                 },
             )
+            .addCase(
+                fetchLoan.fulfilled,
+                (
+                    state,
+                    {
+                        payload,
+                        meta: {
+                            arg: { poolAddress },
+                        },
+                    },
+                ) => {
+                    const { blockNumber } = payload
+                    if (blockNumber > state[poolAddress].loansBlockNumber) {
+                        const updates = [
+                            ...state[poolAddress].loanUpdates,
+                            payload,
+                        ].sort(sortByBlockNumberDescending)
+                        state[poolAddress].loanUpdates = filterUniqueIds(
+                            updates,
+                            'loan',
+                        ).reverse()
+                    }
+                },
+            )
     },
 })
 
-export const { setPoolInfo, setLoans, updateLoan, updateLoans } =
-    poolsSlice.actions
+export const { setPoolInfo, setLoans, updateLoans } = poolsSlice.actions
 
 export const selectPools = (state: AppState) => state.pools
 
@@ -494,4 +529,46 @@ function replaceIfHigherBlockNumber<
     if (oldValue && oldValue.blockNumber >= newValue.blockNumber) return
 
     object[key] = newValue as T[K]
+}
+
+export function transformToStateLoansDetails(
+    loans: EVMLoanDetails[],
+): LoanDetails[] {
+    return loans.map(transformToStateLoanDetails)
+}
+export function transformToStateLoanDetails(
+    details: EVMLoanDetails,
+): LoanDetails {
+    return {
+        id: details.loanId.toNumber(),
+        approvedTime: details.approvedTime.toNumber(),
+        baseAmountRepaid: details.baseAmountRepaid.toString(),
+        interestPaid: details.interestPaid.toString(),
+        totalAmountRepaid: details.totalAmountRepaid.toString(),
+    }
+}
+
+export function transformToStateLoans(
+    loans: EVMLoan[],
+    details: EVMLoanDetails[],
+): Loan[] {
+    return loans.map((loan, index) =>
+        transformToStateLoan(loan, details[index]),
+    )
+}
+export function transformToStateLoan(
+    loan: EVMLoan,
+    details: EVMLoanDetails,
+): Loan {
+    return {
+        id: loan.id.toNumber(),
+        status: loan.status,
+        borrower: loan.borrower,
+        amount: loan.amount.toHexString(),
+        duration: loan.duration.toNumber(),
+        apr: (loan.apr / oneHundredPercent) * 100,
+        lateAPRDelta: (loan.lateAPRDelta / oneHundredPercent) * 100,
+        requestedTime: loan.requestedTime.toNumber(),
+        details: transformToStateLoanDetails(details),
+    }
 }

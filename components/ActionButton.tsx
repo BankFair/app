@@ -19,6 +19,7 @@ export function ActionButton<T>({
         <Button
             {...props}
             disabled={loading}
+            loading={loading}
             onClick={() => {
                 setLoading(true)
                 if (onSuccess) {
@@ -31,7 +32,7 @@ export function ActionButton<T>({
                 }
             }}
         >
-            {loading ? 'Loading…' : children}
+            {children}
         </Button>
     )
 }

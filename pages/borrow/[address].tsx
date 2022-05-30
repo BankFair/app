@@ -2,17 +2,23 @@ import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useEffect, useMemo, useState } from 'react'
-import { useDispatch } from 'react-redux'
+import {
+    FormEventHandler,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import {
     APP_NAME,
     format,
-    formatMaxDecimals,
     getAddress,
+    noop,
+    oneHundredPercent,
     POOLS,
-    rgbRed,
     useAccount,
     useProvider,
+    withInterest,
     zero,
 } from '../../app'
 import {
@@ -22,23 +28,24 @@ import {
     Button,
     ConnectModal,
     LoanView,
+    Modal,
     Page,
     PageLoading,
-    Skeleton,
+    useAmountForm,
 } from '../../components'
 import {
     contract,
     useLoadAccountLoans,
-    useSigner,
-    useTokenContractSigner,
     LoanStatus,
     Pool,
     useLoans,
     usePoolLiquidity,
     useBorrowInfo,
     loanRequestedSignature,
+    CoreContract,
+    fetchLoan,
 } from '../../features'
-import { useSelector } from '../../store'
+import { useSelector, useDispatch } from '../../store'
 
 const title = `Borrow - ${APP_NAME}`
 
@@ -59,31 +66,9 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
         <Page>
             {head}
 
-            <style jsx global>{`
-                .page > .section {
-                    max-width: 300px;
-                    margin: 10px auto;
-                    border: 1px solid grey;
-                    border-radius: 8px;
-                    text-align: center;
-                    padding: 20px 0;
-
-                    > h4 {
-                        margin: 0 0 10px;
-                    }
-
-                    > table {
-                        margin: 15px auto 0;
-                    }
-                }
-
-                h3 {
-                    text-align: center;
-                }
-            `}</style>
-
             <h1>{name}</h1>
             <RequestLoan pool={pool} poolAddress={address} />
+            <h2>Your loans</h2>
             <Loans pool={pool} poolAddress={address} />
         </Page>
     )
@@ -243,14 +228,17 @@ function RequestLoan({
     const willOwe = useMemo(() => {
         if (!borrowInfo) return '0'
 
-        const valueNumber = Number(value)
-        const willOwe =
-            valueNumber +
-            (valueNumber *
-                ((borrowInfo.apr * durationInSeconds) / 60 / 60 / 24 / 365)) /
-                100
-        return formatMaxDecimals(willOwe.toString(), 6)
-    }, [borrowInfo, durationInSeconds, value])
+        return format(
+            formatUnits(
+                withInterest(
+                    parseUnits(value || '0', tokenDecimals),
+                    BigNumber.from((borrowInfo.apr / 100) * oneHundredPercent),
+                    durationInSeconds / oneDay,
+                ),
+                tokenDecimals,
+            ),
+        )
+    }, [borrowInfo, durationInSeconds, value, tokenDecimals])
 
     const isManager = managerAddress === account
     const componentIsLoading = !max || !borrowInfo
@@ -536,42 +524,140 @@ function RequestLoan({
 }
 
 function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
-    const getContract = useSigner(poolAddress)
-    const getTokenContractSigner = useTokenContractSigner(pool.tokenAddress)
     const account = useAccount()
-    const allLoans = useLoans(poolAddress)
-    const loans = useMemo(
-        () =>
-            allLoans
-                .filter((loan) => loan.borrower === account)
-                .sort((a, b) => b.id - a.id),
-        [account, allLoans],
+    const provider = useProvider()
+    const loans = useLoans(poolAddress, account)
+    const sortedLoans = useMemo(
+        () => loans.sort((a, b) => b.id - a.id),
+        [loans],
     )
     const dispatch = useDispatch()
+    const [repay, setRepay] = useState<{ id: number; max: BigNumber } | null>(
+        null,
+    )
 
     useLoadAccountLoans(poolAddress, account, dispatch, pool)
 
-    if (!account || !getTokenContractSigner) return null
+    const handleBorrow = useCallback(
+        (loanId: number) => {
+            return contract
+                .attach(poolAddress)
+                .connect(provider!.getSigner())
+                .borrow(BigNumber.from(loanId))
+                .then(() => new Promise(noop)) // Event handler will unmount borrow button
+        },
+        [poolAddress, provider],
+    )
 
-    const { tokenDecimals } = pool
+    const handleRepay = useCallback(
+        (id: number, max: BigNumber) => setRepay({ id, max }),
+        [],
+    )
 
     return (
-        <div className="section">
-            <h4>Your loans</h4>
+        <div className="loans">
+            <style jsx>{`
+                .loans {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: flex-start;
 
-            {loans.map((loan) => (
+                    > :global(.loan) {
+                        flex-basis: 100%;
+                    }
+
+                    @media screen and (min-width: 850px) {
+                        > :global(.loan) {
+                            flex-basis: calc(50% - 8px);
+
+                            &:nth-child(2n - 1) {
+                                margin-right: 8px;
+                            }
+
+                            &:nth-child(2n) {
+                                margin-left: 8px;
+                            }
+                        }
+                    }
+                }
+            `}</style>
+
+            {sortedLoans.map((loan) => (
                 <LoanView
                     key={loan.id}
                     loan={loan}
-                    account={account}
-                    tokenDecimals={tokenDecimals}
-                    poolAddress={poolAddress}
-                    dispatch={dispatch}
-                    getContract={getContract}
-                    borrow={getTokenContractSigner}
-                    hideBorrower
+                    tokenDecimals={pool.tokenDecimals}
+                    onBorrow={handleBorrow}
+                    onRepay={handleRepay}
                 />
             ))}
+
+            {repay ? (
+                <RepayModal
+                    poolAddress={poolAddress}
+                    loanId={repay.id}
+                    tokenDecimals={pool.tokenDecimals}
+                    tokenAddress={pool.tokenAddress}
+                    max={repay.max}
+                    onClose={() => setRepay(null)}
+                />
+            ) : null}
         </div>
+    )
+}
+
+function RepayModal({
+    poolAddress,
+    loanId,
+    tokenDecimals,
+    tokenAddress,
+    max,
+    onClose,
+}: {
+    poolAddress: string
+    loanId: number
+    tokenDecimals: number
+    tokenAddress: string
+    max: BigNumber
+    onClose(): void
+}) {
+    const dispatch = useDispatch()
+
+    const { form } = useAmountForm({
+        tokenAddress,
+        tokenDecimals,
+        poolAddress,
+        onSumbit: (contract: CoreContract, amount: string) =>
+            contract.repay(
+                BigNumber.from(loanId),
+                parseUnits(amount, tokenDecimals),
+            ),
+        refetch: () =>
+            dispatch(fetchLoan({ poolAddress, loanId })).then(onClose),
+        max,
+        disabled: false,
+        type: 'Repay',
+    })
+
+    return (
+        <Modal onClose={onClose} autoWidth>
+            <div>
+                <style jsx>{`
+                    div {
+                        padding: 16px 24px;
+
+                        > :global(form) {
+                            margin: 0;
+                        }
+                    }
+                    h3 {
+                        text-align: center;
+                        margin: 0 0 8px;
+                    }
+                `}</style>
+                <h3>Repay</h3>
+                {form}
+            </div>
+        </Modal>
     )
 }

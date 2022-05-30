@@ -18,7 +18,6 @@ import {
     PoolStats,
     Box,
     Alert,
-    EtherscanLink,
     PageLoading,
     Skeleton,
     useAmountForm,
