@@ -70,6 +70,9 @@ export interface CoreContract
     protocolEarningsOf: ContractFunction<BigNumber, [account: string]>
     withdrawProtocolEarnings: ContractFunction<ContractTransaction>
 
+    isValidLender: ContractFunction<boolean, [account: string]>
+    isValidBorrower: ContractFunction<boolean, [account: string]>
+
     filters: {
         /**
          * ```solidity

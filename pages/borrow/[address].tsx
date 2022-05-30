@@ -95,10 +95,28 @@ function RequestLoan({
     pool: Pool
     poolAddress: string
 }) {
-    // TODO: Check if user has already deposited in pool
-
     const account = useAccount()
     const provider = useProvider()
+
+    const [isValidBorrower, setIsValidBorrower] = useState<
+        [string, boolean] | null
+    >(null)
+    useEffect(() => {
+        if (!account) return
+        let canceled = false
+        contract
+            .attach(poolAddress)
+            .isValidBorrower(account)
+            .then((isValid) => {
+                if (canceled) return
+                console.log([account, isValid])
+                setIsValidBorrower([account, isValid])
+            })
+
+        return () => {
+            canceled = true
+        }
+    }, [account, poolAddress])
 
     const [displayAlert, setDisplayAlert] = useState(initialDisplayAlert)
 
@@ -176,18 +194,19 @@ function RequestLoan({
     const isDurationTooHigh =
         borrowInfo && durationInSeconds > borrowInfo.maxDuration
 
+    function reset() {
+        setAmount(initialAmount)
+        setDuration(initialDuration)
+        setDurationMultiplier(initialDurationMultiplier)
+        setDisplayAlert(initialDisplayAlert)
+    }
+
     useEffect(() => {
         if (!loading || loading === -1) return
 
         if (loans.filter((loan) => loan.id === loading).length) {
             setLoading(0)
-            // #region reset
-            // !!! Sync with region function
-            setAmount(initialAmount)
-            setDuration(initialDuration)
-            setDurationMultiplier(initialDurationMultiplier)
-            setDisplayAlert(initialDisplayAlert)
-            // #endregion
+            reset()
         }
     }, [loans, loading])
 
@@ -244,8 +263,13 @@ function RequestLoan({
     const componentIsLoading = !max || !borrowInfo
     const disabled = isManager || componentIsLoading
     const waitingForTransaction = loading !== 0
+    const invalidBorrower =
+        !isValidBorrower ||
+        isValidBorrower[0] !== account ||
+        !isValidBorrower[1]
     const disabledSubmit = Boolean(
-        waitingForTransaction ||
+        invalidBorrower ||
+            waitingForTransaction ||
             disabled ||
             !value ||
             !canRequest ||
@@ -298,14 +322,6 @@ function RequestLoan({
                           setLoading(0)
                           reset()
                       })
-
-                  function reset() {
-                      // !!! Sync with the reset region
-                      setAmount(initialAmount)
-                      setDuration(initialDuration)
-                      setDurationMultiplier(initialDurationMultiplier)
-                      setDisplayAlert(initialDisplayAlert)
-                  }
               }
         : (event) => {
               event.preventDefault()
@@ -319,6 +335,10 @@ function RequestLoan({
             overlay={
                 isManager
                     ? `Manager can't request a loan`
+                    : isValidBorrower &&
+                      isValidBorrower[0] === account &&
+                      invalidBorrower
+                    ? `Lenders can't borrow`
                     : !canRequest
                     ? 'There is not enough liquidity in the pool to request a loan'
                     : undefined

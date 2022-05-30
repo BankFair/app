@@ -115,7 +115,6 @@ export function useBorrowInfo(poolAddress: string) {
 }
 
 export function useAccountStats() {
-    // TODO: Wait for pools to load
     const pools = usePools()
     const dispatch = useDispatch()
     const account = useAccount()

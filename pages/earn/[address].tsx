@@ -98,10 +98,28 @@ function DepositAndWithdraw({
     pool: Pool
     poolAddress: string
 }) {
-    // TODO: Check if account has borrowed
     const [type, setType] = useState<typeof types[number]>('Deposit')
 
     const account = useAccount()
+
+    const [isValidLender, setIsValidLender] = useState<
+        [string, boolean] | null
+    >(null)
+    useEffect(() => {
+        if (!account) return
+        let canceled = false
+        contract
+            .attach(poolAddress)
+            .isValidLender(account)
+            .then((isValid) => {
+                if (canceled) return
+                setIsValidLender([account, isValid])
+            })
+
+        return () => {
+            canceled = true
+        }
+    }, [account, poolAddress])
 
     const [amountDepositable, refetchStats] = useAmountDepositable(poolAddress)
 
@@ -127,6 +145,9 @@ function DepositAndWithdraw({
 
     const isManager = managerAddress === account
 
+    const invalidLender =
+        !isValidLender || isValidLender[0] !== account || !isValidLender[1]
+
     const { form, allowance, balance } = useAmountForm({
         type,
         onSumbit:
@@ -139,7 +160,7 @@ function DepositAndWithdraw({
         poolAddress,
         tokenAddress,
         tokenDecimals,
-        disabled: Boolean(isManager || cannotDeposit),
+        disabled: Boolean(isManager || cannotDeposit || invalidLender),
         max,
     })
 
@@ -159,6 +180,10 @@ function DepositAndWithdraw({
                 // TODO: While the pool doesn't accept deposits a user may want to withdraw
                 isManager
                     ? "Manager can't deposit"
+                    : isValidLender &&
+                      isValidLender[0] === account &&
+                      invalidLender
+                    ? `Borrowers can't lend`
                     : cannotDeposit
                     ? "This pool doesn't accept deposits"
                     : undefined

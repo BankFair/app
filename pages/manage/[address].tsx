@@ -36,10 +36,6 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
         <Page>
             <Head>
                 <title>{title}</title>
-                <meta
-                    name="description"
-                    content="" // TODO: Fix
-                />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
