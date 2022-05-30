@@ -11,6 +11,7 @@ import {
 } from 'react'
 import {
     APP_NAME,
+    disabledBackground,
     format,
     getAddress,
     noop,
@@ -573,6 +574,21 @@ function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
         (id: number, max: BigNumber) => setRepay({ id, max }),
         [],
     )
+
+    if (!sortedLoans.length)
+        return (
+            <div>
+                <style jsx>{`
+                    div {
+                        text-align: center;
+                        border-radius: 16px;
+                        padding: 30px 0;
+                        background-color: ${disabledBackground};
+                    }
+                `}</style>
+                You haven&apos;t requested any loans yet
+            </div>
+        )
 
     return (
         <div className="loans">

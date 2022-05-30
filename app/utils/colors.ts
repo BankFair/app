@@ -62,8 +62,8 @@ export const rgbGrey800 = rgb(COLOR_GREY_800)
 export const rgbGrey900 = rgb(COLOR_GREY_900)
 
 export const COLOR_DISABLED: Color = COLOR_GREY_500
-export const disabledContentOpaque = rgba(COLOR_DISABLED, 0.8)
 export const disabledContent = rgba(COLOR_DISABLED, 0.8)
+export const disabledBackground = rgba(COLOR_DISABLED, 0.1)
 export const input = rgba(COLOR_DISABLED, 0.12)
 export const inputNonTransparentLight = color(rgbWhite).mix(
     color(rgbGrey500),
