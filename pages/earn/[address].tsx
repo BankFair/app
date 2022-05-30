@@ -22,6 +22,7 @@ import {
     Skeleton,
     useAmountForm,
     Tabs,
+    Button,
 } from '../../components'
 import {
     contract,
@@ -164,6 +165,14 @@ function DepositAndWithdraw({
         max,
     })
 
+    const overlay = isManager
+        ? "Manager can't deposit"
+        : isValidLender && isValidLender[0] === account && invalidLender
+        ? `Borrowers can't lend`
+        : cannotDeposit
+        ? "This pool doesn't accept deposits"
+        : undefined
+
     return (
         <Box
             s
@@ -177,16 +186,22 @@ function DepositAndWithdraw({
                     : false,
             )}
             overlay={
-                // TODO: While the pool doesn't accept deposits a user may want to withdraw
-                isManager
-                    ? "Manager can't deposit"
-                    : isValidLender &&
-                      isValidLender[0] === account &&
-                      invalidLender
-                    ? `Borrowers can't lend`
-                    : cannotDeposit
-                    ? "This pool doesn't accept deposits"
-                    : undefined
+                overlay ? (
+                    <div>
+                        {overlay}
+                        {info && zero.lt(info.withdrawable) ? (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <Button
+                                    onClick={() => setType('Withdraw')}
+                                    ghost
+                                    blue
+                                >
+                                    Withdraw
+                                </Button>
+                            </div>
+                        ) : null}
+                    </div>
+                ) : null
             }
         >
             <Tabs tabs={types} currentTab={type} setCurrentTab={setType}></Tabs>
