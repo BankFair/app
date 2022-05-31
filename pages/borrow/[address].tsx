@@ -584,6 +584,7 @@ function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
                         border-radius: 16px;
                         padding: 30px 0;
                         background-color: ${disabledBackground};
+                        color: var(--disabled-80);
                     }
                 `}</style>
                 You haven&apos;t requested any loans yet

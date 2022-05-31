@@ -1,3 +1,11 @@
+import '@formatjs/intl-locale/polyfill'
+import '@formatjs/intl-numberformat/polyfill'
+import '@formatjs/intl-numberformat/locale-data/en'
+import '@formatjs/intl-pluralrules/polyfill'
+import '@formatjs/intl-pluralrules/locale-data/en'
+import '@formatjs/intl-listformat/polyfill'
+import '@formatjs/intl-listformat/locale-data/en'
+
 import { formatUnits } from '@ethersproject/units'
 import { BigNumber } from 'ethers'
 import { Duration } from 'luxon'
@@ -9,7 +17,6 @@ import {
     format,
     noop,
     oneHundredPercent,
-    ONE_HUNDRED_PERCENT,
     rgbBlue,
     rgbGreen,
     rgbRed,

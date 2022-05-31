@@ -11,6 +11,10 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@formatjs/intl-listformat": "7.0.1",
+        "@formatjs/intl-locale": "3.0.1",
+        "@formatjs/intl-numberformat": "8.0.1",
+        "@formatjs/intl-pluralrules": "5.0.1",
         "@reduxjs/toolkit": "1.8.1",
         "@walletconnect/ethereum-provider": "1.7.7",
         "@web3-react/core": "beta",
