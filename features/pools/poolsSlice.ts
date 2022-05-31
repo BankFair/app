@@ -37,6 +37,7 @@ interface Stats {
     poolFunds: string
     poolLiquidity: string
     apy: number
+    earlyExitFeePercent: number
     blockNumber: number
 }
 
@@ -49,6 +50,7 @@ interface ManagerInfo {
 interface AccountInfo {
     balance: string
     withdrawable: string
+    earlyExitDeadline: number
     blockNumber: number
 }
 
@@ -83,7 +85,7 @@ export const fetchStats = createAsyncThunk(
     'pools/fetchStats',
     async (poolAddress: string) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            7,
+            8,
             contract.attach(poolAddress),
         )
 
@@ -94,6 +96,7 @@ export const fetchStats = createAsyncThunk(
             poolFunds,
             poolLiquidity,
             apy,
+            earlyExitFeePercent,
             blockNumber,
         ] = await Promise.all([
             connected.loansCount(),
@@ -102,6 +105,7 @@ export const fetchStats = createAsyncThunk(
             connected.poolFunds(),
             connected.poolLiquidity(),
             connected.currentLenderAPY(),
+            connected.earlyExitFeePercent(),
             provider.getCurrentBlockNumber(),
         ])
 
@@ -111,7 +115,9 @@ export const fetchStats = createAsyncThunk(
             amountDepositable: amountDepositable.toHexString(),
             poolFunds: poolFunds.toHexString(),
             poolLiquidity: poolLiquidity.toHexString(),
-            apy: apy / 10,
+            apy: (apy * 100) / oneHundredPercent,
+            earlyExitFeePercent:
+                (earlyExitFeePercent.toNumber() * 100) / oneHundredPercent,
             blockNumber,
         }
 
@@ -146,19 +152,22 @@ const fetchAccountInfo = createAsyncThunk(
         account: string
     }) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            3,
+            4,
             contract.attach(poolAddress),
         )
 
-        const [balance, withdrawable, blockNumber] = await Promise.all([
-            connected.balanceOf(account),
-            connected.amountWithdrawable(account),
-            provider.getCurrentBlockNumber(),
-        ])
+        const [balance, withdrawable, earlyExitDeadline, blockNumber] =
+            await Promise.all([
+                connected.balanceOf(account),
+                connected.amountWithdrawable(account),
+                connected.earlyExitDeadlines(account),
+                provider.getCurrentBlockNumber(),
+            ])
 
         const accountInfo: AccountInfo = {
             balance: balance.toHexString(),
             withdrawable: withdrawable.toHexString(),
+            earlyExitDeadline: earlyExitDeadline.toNumber(),
             blockNumber,
         }
 

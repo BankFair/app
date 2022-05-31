@@ -217,5 +217,5 @@ export function useAmountForm<T extends Types>({
         </form>
     )
 
-    return { form, allowance, balance }
+    return { form, allowance, balance, value }
 }

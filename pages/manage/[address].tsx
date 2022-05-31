@@ -138,7 +138,7 @@ function StakeAndUnstake({
 
             {form}
 
-            <Alert style="warning" title="TODO: Explain the risks" />
+            <Alert style="warning-filled" title="TODO: Explain the risks" />
         </Box>
     )
 }

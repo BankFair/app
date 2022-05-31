@@ -517,7 +517,7 @@ function RequestLoan({
 
                     {alert ? (
                         <div className="alert-positioner">
-                            <Alert style="critical" title={alert} />
+                            <Alert style="error-filled" title={alert} />
                         </div>
                     ) : null}
                 </div>

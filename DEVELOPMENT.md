@@ -4,21 +4,13 @@
 
 ### Without Nix
 
-If you have Yarn installed run the following:
-
 ```bash
 yarn
 ```
 
-If you don't have Yarn installed run the following:
-
-```bash
-npm i
-```
-
 ### With Nix
 
-If you have direnv installed run the following:
+If you have direnv installed and flakes enabled run the following:
 
 ```bash
 direnv allow
@@ -42,7 +34,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Environment
 
-The contract address is hard-coded in the `.env` file. Changing that value requires the development server to be restarted.
+The contract addresses are hard-coded in the `next.config.js` file. Changing addresses requires the development server to be restarted.
 
 ## Libraries used by this project
 

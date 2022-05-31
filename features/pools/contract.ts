@@ -73,6 +73,9 @@ export interface CoreContract
     isValidLender: ContractFunction<boolean, [account: string]>
     isValidBorrower: ContractFunction<boolean, [account: string]>
 
+    earlyExitDeadlines: ContractFunction<BigNumber, [account: string]>
+    earlyExitFeePercent: ContractFunction<BigNumber>
+
     filters: {
         /**
          * ```solidity

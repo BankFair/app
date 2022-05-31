@@ -1,5 +1,6 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
+import { DateTime } from 'luxon'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useEffect, useMemo, useState } from 'react'
@@ -12,6 +13,7 @@ import {
     zero,
     POOLS,
     format,
+    formatMaxDecimals,
 } from '../../app'
 import {
     Page,
@@ -27,9 +29,9 @@ import {
 import {
     contract,
     Pool,
-    useAmountDepositable,
     useFetchIntervalAccountInfo,
     useAccountInfo,
+    useStatsState,
 } from '../../features'
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
@@ -122,7 +124,7 @@ function DepositAndWithdraw({
         }
     }, [account, poolAddress])
 
-    const [amountDepositable, refetchStats] = useAmountDepositable(poolAddress)
+    const [stats, refetchStats] = useStatsState(poolAddress)
 
     const [info, refetchAccountInfo] = useAccountInfo(poolAddress, account)
 
@@ -136,20 +138,22 @@ function DepositAndWithdraw({
 
             return { max: undefined, cannotDeposit: false }
         }
-        if (!amountDepositable) return { max: undefined, cannotDeposit: true }
+        if (!stats) return { max: undefined, cannotDeposit: false }
 
-        const amountDepositableBigNumber = BigNumber.from(amountDepositable)
+        const amountDepositableBigNumber = BigNumber.from(
+            stats.amountDepositable,
+        )
         const cannotDeposit = amountDepositableBigNumber.eq(zero)
 
         return { max: amountDepositableBigNumber, cannotDeposit }
-    }, [amountDepositable, type, info])
+    }, [stats, type, info])
 
     const isManager = managerAddress === account
 
     const invalidLender =
         !isValidLender || isValidLender[0] !== account || !isValidLender[1]
 
-    const { form, allowance, balance } = useAmountForm({
+    const { form, allowance, balance, value } = useAmountForm({
         type,
         onSumbit:
             type === 'Deposit'
@@ -161,7 +165,9 @@ function DepositAndWithdraw({
         poolAddress,
         tokenAddress,
         tokenDecimals,
-        disabled: Boolean(isManager || cannotDeposit || invalidLender),
+        disabled: Boolean(
+            isManager || !stats || cannotDeposit || invalidLender,
+        ),
         max,
     })
 
@@ -180,7 +186,7 @@ function DepositAndWithdraw({
                 type === 'Deposit'
                     ? (account && !cannotDeposit
                           ? !allowance || !balance
-                          : false) || amountDepositable === undefined
+                          : false) || stats === undefined
                     : account
                     ? !info
                     : false,
@@ -208,7 +214,30 @@ function DepositAndWithdraw({
 
             {form}
 
-            <Alert style="warning" title="TODO: Explain the risks" />
+            {type === 'Deposit' ? (
+                <Alert style="warning-filled" title="TODO: Explain the risks" />
+            ) : info && stats && info.earlyExitDeadline > Date.now() / 1000 ? (
+                <Alert
+                    style="warning"
+                    title={`Exit fee of ${stats.earlyExitFeePercent}% ${
+                        value
+                            ? `(${formatMaxDecimals(
+                                  (
+                                      Number(value) *
+                                      (stats.earlyExitFeePercent / 100)
+                                  ).toString(),
+                                  6,
+                              )} USDC) `
+                            : ''
+                    }when withdrawing before ${DateTime.fromSeconds(
+                        info.earlyExitDeadline,
+                    )
+                        .toLocal()
+                        .toLocaleString(DateTime.DATETIME_SHORT)}`}
+                />
+            ) : (
+                <Alert style="info" title="No exit fee" />
+            )}
         </Box>
     )
 }

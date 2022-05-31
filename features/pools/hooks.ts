@@ -70,6 +70,14 @@ export function useAmountDepositable(poolAddress: string) {
     return [amountDepositable, refetch] as const
 }
 
+export function useStatsState(poolAddress: string) {
+    const refetch = useFetchIntervalStats(poolAddress)
+
+    const stats = useSelector((state) => state.pools[poolAddress]?.stats)
+
+    return [stats, refetch] as const
+}
+
 export function usePoolLiquidity(poolAddress: string) {
     const refetch = useFetchIntervalStats(poolAddress)
 
