@@ -25,6 +25,7 @@ import {
     useAmountForm,
     Tabs,
     Button,
+    EnterExitAlert,
 } from '../../components'
 import {
     contract,
@@ -192,30 +193,13 @@ function DepositAndWithdraw({
 
             {form}
 
-            {type === 'Deposit' ? (
-                <Alert style="warning-filled" title="TODO: Explain the risks" />
-            ) : info && stats && info.earlyExitDeadline > Date.now() / 1000 ? (
-                <Alert
-                    style="warning"
-                    title={`Exit fee of ${stats.earlyExitFeePercent}% ${
-                        value
-                            ? `(${formatMaxDecimals(
-                                  (
-                                      Number(value) *
-                                      (stats.earlyExitFeePercent / 100)
-                                  ).toString(),
-                                  6,
-                              )} USDC) `
-                            : ''
-                    }when withdrawing before ${DateTime.fromSeconds(
-                        info.earlyExitDeadline,
-                    )
-                        .toLocal()
-                        .toLocaleString(DateTime.DATETIME_SHORT)}`}
-                />
-            ) : (
-                <Alert style="info" title="No exit fee" />
-            )}
+            <EnterExitAlert
+                enter={type === 'Deposit'}
+                value={value}
+                exitVerb="withdrawing"
+                earlyExitDeadline={info ? info.earlyExitDeadline : 0}
+                earlyExitFeePercent={stats ? stats.earlyExitFeePercent : 0}
+            />
         </Box>
     )
 }

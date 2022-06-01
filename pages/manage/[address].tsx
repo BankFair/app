@@ -8,6 +8,7 @@ import { APP_NAME, useAccount, getAddress } from '../../app'
 import {
     Alert,
     Box,
+    EnterExitAlert,
     LoanViewOld,
     Page,
     Tabs,
@@ -21,6 +22,7 @@ import {
     useLoans,
     useManagerInfo,
     useSigner,
+    useStatsState,
 } from '../../features'
 import { useSelector } from '../../store'
 
@@ -96,7 +98,11 @@ function StakeAndUnstake({
 
     const account = useAccount()
 
-    const [info, refetchManagerInfo] = useManagerInfo(poolAddress)
+    const [stats] = useStatsState(poolAddress)
+    const [info, refetchManagerInfo] = useManagerInfo(
+        poolAddress,
+        managerAddress,
+    )
 
     const max = useMemo(() => {
         if (type === 'Stake') return undefined
@@ -108,7 +114,7 @@ function StakeAndUnstake({
 
     const isNotManager = managerAddress !== account
 
-    const { form } = useAmountForm({
+    const { form, value } = useAmountForm({
         type,
         onSumbit:
             type === 'Stake'
@@ -138,7 +144,13 @@ function StakeAndUnstake({
 
             {form}
 
-            <Alert style="warning-filled" title="TODO: Explain the risks" />
+            <EnterExitAlert
+                enter={type === 'Stake'}
+                value={value}
+                exitVerb="unstaking"
+                earlyExitDeadline={info ? info.earlyExitDeadline : 0}
+                earlyExitFeePercent={stats ? stats.earlyExitFeePercent : 0}
+            />
         </Box>
     )
 }
@@ -156,7 +168,6 @@ function Loans({
     )
     const account = useAccount()
     const getContract = useSigner(poolAddress)
-    const dispatch = useDispatch()
 
     const loading =
         !loansBlockNumber ||

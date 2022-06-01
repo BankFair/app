@@ -44,6 +44,7 @@ interface Stats {
 interface ManagerInfo {
     staked: string
     unstakable: string
+    earlyExitDeadline: number
     blockNumber: number
 }
 
@@ -196,21 +197,30 @@ export const { hook: useFetchIntervalAccountInfoAllPools } =
 
 const fetchManagerInfo = createAsyncThunk(
     'pools/fetchManagerInfo',
-    async (poolAddress: string) => {
+    async ({
+        poolAddress,
+        managerAddress,
+    }: {
+        poolAddress: string
+        managerAddress: string
+    }) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            3,
+            4,
             contract.attach(poolAddress),
         )
 
-        const [staked, unstakable, blockNumber] = await Promise.all([
-            connected.balanceStaked(),
-            connected.amountUnstakable(),
-            provider.getCurrentBlockNumber(),
-        ])
+        const [staked, unstakable, earlyExitDeadline, blockNumber] =
+            await Promise.all([
+                connected.balanceStaked(),
+                connected.amountUnstakable(),
+                connected.earlyExitDeadlines(managerAddress),
+                provider.getCurrentBlockNumber(),
+            ])
 
         const managerInfo: ManagerInfo = {
             staked: staked.toHexString(),
             unstakable: unstakable.toHexString(),
+            earlyExitDeadline: earlyExitDeadline.toNumber(),
             blockNumber,
         }
 
@@ -435,7 +445,15 @@ export const poolsSlice = createSlice({
             )
             .addCase(
                 fetchManagerInfo.fulfilled,
-                (state, { payload, meta: { arg: poolAddress } }) => {
+                (
+                    state,
+                    {
+                        payload,
+                        meta: {
+                            arg: { poolAddress },
+                        },
+                    },
+                ) => {
                     replaceIfHigherBlockNumber(
                         state[poolAddress],
                         'managerInfo',

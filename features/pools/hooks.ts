@@ -37,8 +37,8 @@ import {
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
 
-export function useManagerInfo(poolAddress: string) {
-    const refetch = useFetchIntervalManagerInfo(poolAddress)
+export function useManagerInfo(poolAddress: string, managerAddress: string) {
+    const refetch = useFetchIntervalManagerInfo({ poolAddress, managerAddress })
 
     const info = useSelector((state) => state.pools[poolAddress]?.managerInfo)
 
