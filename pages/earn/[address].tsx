@@ -52,28 +52,6 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
     return (
         <Page>
             {head}
-            <style jsx global>{`
-                .page > .section {
-                    max-width: 300px;
-                    margin: 10px auto;
-                    border: 1px solid grey;
-                    border-radius: 8px;
-                    text-align: center;
-                    padding: 20px 0;
-
-                    > h4 {
-                        margin: 0 0 10px;
-                    }
-
-                    table {
-                        margin: 0 auto;
-                    }
-
-                    h3 {
-                        text-align: center;
-                    }
-                }
-            `}</style>
 
             <h1>{name}</h1>
             <PoolStats pool={pool} poolAddress={address} />
@@ -308,7 +286,7 @@ function Earnings({
                     account,
                 })
             })
-    }, [account, setEarnings, poolAddress])
+    }, [account, poolAddress])
 
     if (!earnings || !provider) return null
 
@@ -333,23 +311,51 @@ function Earnings({
                               amount: BigNumber.from(0),
                           })
                       })
+                      .catch((error) => {
+                          console.error(error)
+                          setIsLoading(false)
+                      })
               }
 
     return (
-        <form className="section" onSubmit={handleSubmit}>
-            <h4>Earnings</h4>
+        <Box s>
+            <style jsx>{`
+                h4 {
+                    margin-top: 0;
+                    margin-bottom: 10px;
+                    text-align: center;
+                }
+                div {
+                    text-align: center;
+                    margin-bottom: 8px;
+                }
 
-            <div>
-                Your earnings:{' '}
-                {earnings &&
-                    earnings.account === account &&
-                    formatUnits(earnings.amount, tokenDecimals)}
-            </div>
-            <button
-                disabled={isLoading || earnings?.amount.lte(BigNumber.from(0))}
-            >
-                Withdraw
-            </button>
-        </form>
+                form > :global(button) {
+                    display: block;
+                    margin: 0 auto;
+                }
+            `}</style>
+            <form className="section" onSubmit={handleSubmit}>
+                <h4>Earnings</h4>
+
+                <div>
+                    Your earnings:{' '}
+                    {earnings &&
+                        earnings.account === account &&
+                        format(
+                            formatUnits(earnings.amount, tokenDecimals),
+                        )}{' '}
+                    USDC
+                </div>
+                <Button
+                    loading={isLoading}
+                    disabled={
+                        isLoading || earnings?.amount.lte(BigNumber.from(0))
+                    }
+                >
+                    Withdraw
+                </Button>
+            </form>
+        </Box>
     )
 }
