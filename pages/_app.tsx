@@ -107,6 +107,22 @@ export default function App({ Component, pageProps }: AppProps) {
                                 right 8px top 0.85em;
                         }
 
+                        &.xs {
+                            padding: 6px 24px 6px 8px;
+                            border-radius: 6px;
+                            background-position: right 13px top 0.85em,
+                                right 8px top 0.85em;
+                            font-size: 14px;
+                        }
+
+                        &.xxs {
+                            padding: 4px 22px 4px 6px;
+                            border-radius: 6px;
+                            background-position: right 13px top 0.85em,
+                                right 8px top 0.85em;
+                            font-size: 12px;
+                        }
+
                         > option {
                             background-color: ${inputNonTransparentLight};
                             color: var(--color);

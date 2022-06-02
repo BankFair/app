@@ -27,7 +27,7 @@ import {
     zero,
 } from '../app'
 
-import { LoanStatus, Loan, CoreContract } from '../features'
+import { LoanStatus, Loan, CoreContract, formatStatus } from '../features'
 
 import { ActionButton } from './ActionButton'
 import { EtherscanLink } from './EtherscanLink'
@@ -510,25 +510,6 @@ export function LoanViewOld({
             </tbody>
         </table>
     )
-}
-
-function formatStatus(status: LoanStatus) {
-    switch (status) {
-        case LoanStatus.APPLIED:
-            return 'Waiting for approval'
-        case LoanStatus.APPROVED:
-            return 'Approved'
-        case LoanStatus.DENIED:
-            return 'Rejected'
-        case LoanStatus.CANCELLED:
-            return 'Cancelled'
-        case LoanStatus.DEFAULTED:
-            return 'Defaulted'
-        case LoanStatus.FUNDS_WITHDRAWN:
-            return 'Withdrawn'
-        case LoanStatus.REPAID:
-            return 'Repaid'
-    }
 }
 
 function onlyPositive<T, R extends { [key in keyof T]?: number }>(

@@ -45,6 +45,7 @@ import {
     loanRequestedSignature,
     CoreContract,
     fetchLoan,
+    formatStatus,
 } from '../../features'
 import { useSelector, useDispatch } from '../../store'
 
@@ -69,7 +70,6 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
 
             <h1>{name}</h1>
             <RequestLoan pool={pool} poolAddress={address} />
-            <h2>Your loans</h2>
             <Loans pool={pool} poolAddress={address} />
         </Page>
     )
@@ -544,13 +544,44 @@ function RequestLoan({
     )
 }
 
+const options = (
+    <>
+        <option value={-1}>all loans</option>
+        <option value={LoanStatus.APPLIED}>
+            loans {formatStatus(LoanStatus.APPLIED).toLowerCase()}
+        </option>
+        <option value={LoanStatus.APPROVED}>
+            {formatStatus(LoanStatus.APPROVED).toLowerCase()} loans
+        </option>
+        <option value={LoanStatus.DENIED}>
+            {formatStatus(LoanStatus.DENIED).toLowerCase()} loans
+        </option>
+        <option value={LoanStatus.CANCELLED}>
+            {formatStatus(LoanStatus.CANCELLED).toLowerCase()} loans
+        </option>
+        <option value={LoanStatus.DEFAULTED}>
+            {formatStatus(LoanStatus.DEFAULTED).toLowerCase()} loans
+        </option>
+        <option value={LoanStatus.FUNDS_WITHDRAWN}>
+            {formatStatus(LoanStatus.FUNDS_WITHDRAWN).toLowerCase()} loans
+        </option>
+        <option value={LoanStatus.REPAID}>
+            {formatStatus(LoanStatus.REPAID).toLowerCase()} loans
+        </option>
+    </>
+)
 function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
     const account = useAccount()
     const provider = useProvider()
+    const [filter, setFilter] = useState<LoanStatus | -1>(-1)
     const loans = useLoans(poolAddress, account)
-    const sortedLoans = useMemo(
-        () => loans.sort((a, b) => b.id - a.id),
-        [loans],
+    const sortedAndFilteredLoans = useMemo(
+        () =>
+            (filter === -1
+                ? loans
+                : loans.filter((loan) => loan.status === filter)
+            ).sort((a, b) => b.id - a.id),
+        [filter, loans],
     )
     const dispatch = useDispatch()
     const [repay, setRepay] = useState<{ id: number; max: BigNumber } | null>(
@@ -575,8 +606,36 @@ function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
         [],
     )
 
-    if (!sortedLoans.length)
-        return (
+    const header = (
+        <div className="header">
+            <style jsx>{`
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .filter {
+                    font-size: 14px;
+                }
+            `}</style>
+            <h2>Your loans</h2>
+            <div className="filter">
+                Show{' '}
+                <select
+                    value={filter}
+                    className="xxs"
+                    onChange={(event) => setFilter(Number(event.target.value))}
+                >
+                    {options}
+                </select>
+            </div>
+        </div>
+    )
+
+    if (!sortedAndFilteredLoans.length) {
+        const filterApplied = filter !== -1
+        const emptyState = (
             <div>
                 <style jsx>{`
                     div {
@@ -587,11 +646,31 @@ function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
                         color: var(--disabled-80);
                     }
                 `}</style>
-                You haven&apos;t requested any loans yet
+                {filterApplied
+                    ? 'No loans match the filter'
+                    : "You haven't requested any loans yet"}
+                {filterApplied ? (
+                    <Button
+                        blue
+                        ghost
+                        onClick={() => setFilter(-1)}
+                        style={{ display: 'block', margin: '10px auto 0' }}
+                    >
+                        Clear filter
+                    </Button>
+                ) : null}
             </div>
         )
 
-    return (
+        return (
+            <>
+                {header}
+                {emptyState}
+            </>
+        )
+    }
+
+    const loansElement = (
         <div className="loans">
             <style jsx>{`
                 .loans {
@@ -619,7 +698,7 @@ function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
                 }
             `}</style>
 
-            {sortedLoans.map((loan) => (
+            {sortedAndFilteredLoans.map((loan) => (
                 <LoanView
                     key={loan.id}
                     loan={loan}
@@ -640,6 +719,13 @@ function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
                 />
             ) : null}
         </div>
+    )
+
+    return (
+        <>
+            {header}
+            {loansElement}
+        </>
     )
 }
 

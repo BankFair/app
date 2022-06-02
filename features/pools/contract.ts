@@ -190,6 +190,25 @@ export enum LoanStatus {
     DEFAULTED,
 }
 
+export function formatStatus(status: LoanStatus) {
+    switch (status) {
+        case LoanStatus.APPLIED:
+            return 'Waiting for approval'
+        case LoanStatus.APPROVED:
+            return 'Approved'
+        case LoanStatus.DENIED:
+            return 'Rejected'
+        case LoanStatus.CANCELLED:
+            return 'Canceled'
+        case LoanStatus.DEFAULTED:
+            return 'Defaulted'
+        case LoanStatus.FUNDS_WITHDRAWN:
+            return 'Withdrawn'
+        case LoanStatus.REPAID:
+            return 'Repaid'
+    }
+}
+
 export function getBatchProviderAndContract(
     count: number,
     contract: CoreContract,
