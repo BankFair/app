@@ -17,9 +17,9 @@ const BorrowPools: NextPage = () => {
     const pools = usePools()
     const dispatch = useDispatch()
     const poolsLoaded = Object.keys(pools).length === POOLS.length
-    const hookArg = poolsLoaded ? dispatch : null
+    const hookArg = poolsLoaded ? { dispatch } : null
     useFetchIntervalAllStats(hookArg)
-    useFetchIntervalAllBorrowInfo(hookArg)
+    useFetchIntervalAllBorrowInfo(hookArg && dispatch)
 
     return (
         <Page>

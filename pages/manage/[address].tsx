@@ -11,6 +11,7 @@ import {
     EnterExitAlert,
     LoanViewOld,
     Page,
+    PageLoading,
     Tabs,
     useAmountForm,
 } from '../../components'
@@ -34,12 +35,18 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
 
     useLoadManagerState(address, pool)
 
+    const head = (
+        <Head>
+            <title>{title}</title>
+            <link rel="icon" href="/favicon.ico" />
+        </Head>
+    )
+
+    if (!pool) return <PageLoading>{head}</PageLoading>
+
     return (
         <Page>
-            <Head>
-                <title>{title}</title>
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
+            {head}
 
             {pool ? (
                 pool.managerAddress === account ? (

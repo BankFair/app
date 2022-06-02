@@ -127,7 +127,7 @@ export function useAccountStats() {
     const dispatch = useDispatch()
     const account = useAccount()
     const poolsLoaded = Object.keys(pools).length === POOLS.length
-    useFetchIntervalAllStats(poolsLoaded ? dispatch : null)
+    useFetchIntervalAllStats(poolsLoaded ? { dispatch } : null)
     useFetchIntervalAccountInfoAllPools(
         poolsLoaded && account ? { dispatch, account } : null,
     )

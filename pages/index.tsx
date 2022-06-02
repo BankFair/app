@@ -13,7 +13,7 @@ const EarnPools: NextPage = () => {
     const pools = usePools()
     const dispatch = useDispatch()
     const poolsLoaded = Object.keys(pools).length === POOLS.length
-    useFetchIntervalAllStats(poolsLoaded ? dispatch : null)
+    useFetchIntervalAllStats(poolsLoaded ? { dispatch } : null)
 
     return (
         <Page>

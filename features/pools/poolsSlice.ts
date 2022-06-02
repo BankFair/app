@@ -67,6 +67,7 @@ type Loading = 'stats' | `accountInfo_${string}`
 
 export interface Pool {
     name: string
+    address: string
     managerAddress: string
     tokenAddress: string
     tokenDecimals: number
@@ -131,9 +132,15 @@ export const { fetch: fetchIntervalStats, hook: useFetchIntervalStats } =
 
 export const fetchAllStats = createAsyncThunk(
     'pools/fetchAllStats',
-    (dispatch: AppDispatch) => {
+    ({
+        dispatch,
+        pools = POOLS,
+    }: {
+        dispatch: AppDispatch
+        pools?: { address: string }[]
+    }) => {
         return Promise.all(
-            POOLS.map(({ address }) => fetchIntervalStats(dispatch, address)),
+            pools.map(({ address }) => fetchIntervalStats(dispatch, address)),
         )
     },
 )
@@ -336,6 +343,7 @@ export const poolsSlice = createSlice({
         ) {
             state[address] = {
                 name,
+                address,
                 managerAddress,
                 tokenAddress,
                 tokenDecimals,

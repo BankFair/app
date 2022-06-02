@@ -1,33 +1,94 @@
+import { formatUnits } from 'ethers/lib/utils'
 import { NextPage } from 'next'
-import Link from 'next/link'
+import Head from 'next/head'
 import { useMemo } from 'react'
-import { useSelector } from 'react-redux'
-import { useAccount } from '../../app'
-import { Page } from '../../components'
-import { selectPools } from '../../features'
+import { useDispatch } from 'react-redux'
+import { APP_NAME, formatNoDecimals, POOLS, useAccount } from '../../app'
+import { LinkList, Page, PageLoading, Skeleton } from '../../components'
+import { useFetchIntervalAllStats, usePools } from '../../features'
 
+const title = `Earn - ${APP_NAME}`
+const labels = ['Pool size', 'Manager funds', 'Avialable liquidity', 'Loans']
 const ManagePools: NextPage = () => {
     const account = useAccount()
-    const state = useSelector(selectPools)
+    const allPools = usePools()
+    const allPoolsLoaded = Object.keys(allPools).length === POOLS.length
     const pools = useMemo(
         () =>
-            Object.keys(state).filter(
-                (address) => state[address].managerAddress === account,
+            Object.values(allPools).filter(
+                (pool) => pool.managerAddress === account,
             ),
-        [state, account],
+        [allPools, account],
     )
+    const dispatch = useDispatch()
+    useFetchIntervalAllStats(pools.length ? { dispatch, pools } : null)
+
+    const head = (
+        <Head>
+            <title>{title}</title>
+            <link rel="icon" href="/favicon.ico" />
+        </Head>
+    )
+
+    if (!account) {
+        return (
+            <h3 style={{ textAlign: 'center' }}>
+                Connect your wallet to continue
+            </h3>
+        )
+    }
+
+    if (allPoolsLoaded && pools.length === 0) {
+        return (
+            <h3 style={{ textAlign: 'center' }}>
+                You&apos;re not the manager of any pools
+            </h3>
+        )
+    }
+
+    if (!allPoolsLoaded) return <PageLoading>{head}</PageLoading>
 
     return (
         <Page>
-            <ul>
-                {pools.map((address) => (
-                    <li key={address}>
-                        <Link href={`/manage/${address}`}>
-                            <a>{state[address].name}</a>
-                        </Link>
-                    </li>
-                ))}
-            </ul>
+            {head}
+
+            <LinkList
+                items={pools.map((pool) => {
+                    return {
+                        link: `/manage/${pool.address}`,
+                        name: pool.name,
+                        stats: pool.stats
+                            ? [
+                                  `$${formatNoDecimals(
+                                      formatUnits(
+                                          pool.stats.poolFunds,
+                                          pool.tokenDecimals,
+                                      ),
+                                  )}`,
+                                  `$${formatNoDecimals(
+                                      formatUnits(
+                                          pool.stats.balanceStaked,
+                                          pool.tokenDecimals,
+                                      ),
+                                  )}`,
+                                  `$${formatNoDecimals(
+                                      formatUnits(
+                                          pool.stats.poolLiquidity,
+                                          pool.tokenDecimals,
+                                      ),
+                                  )}`,
+                                  pool.stats.loans.toString(),
+                              ]
+                            : [
+                                  <Skeleton key="1" width={50} />,
+                                  <Skeleton key="2" width={50} />,
+                                  <Skeleton key="3" width={50} />,
+                                  <Skeleton key="4" width={30} />,
+                              ],
+                    }
+                })}
+                labels={labels}
+            />
         </Page>
     )
 }
