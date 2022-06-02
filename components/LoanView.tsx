@@ -13,7 +13,6 @@ import { useEffect, useMemo, useState } from 'react'
 import TimeAgo from 'timeago-react'
 
 import {
-    ERC20Contract,
     format,
     formatMaxDecimals,
     noop,
@@ -28,13 +27,7 @@ import {
     zero,
 } from '../app'
 
-import {
-    LoanStatus,
-    Loan,
-    CoreContract,
-    formatStatus,
-    useCanDefaultLoan,
-} from '../features'
+import { LoanStatus, Loan, formatStatus, useCanDefaultLoan } from '../features'
 
 import { ActionButton } from './ActionButton'
 import { EtherscanLink } from './EtherscanLink'
@@ -513,160 +506,6 @@ function countInterestDays(from: number, to: number) {
     }
 
     return days
-}
-
-export function LoanViewOld({
-    loan: { borrower, amount, duration, requestedTime, id, status, details },
-    tokenDecimals,
-    getContract,
-    manage,
-    borrow,
-    hideBorrower,
-}: {
-    loan: Loan
-    tokenDecimals: number
-    getContract?: () => CoreContract
-    manage?: boolean
-    borrow?: () => ERC20Contract
-    hideBorrower?: boolean
-}) {
-    if (process.env.NODE_ENV === 'development') {
-        if (manage && borrow) {
-            throw new Error(
-                '`manage` and `borrow` can not be enabled at the same time',
-            )
-        }
-    }
-
-    const humanReadableDuration = useMemo(
-        () => formatDuration(duration),
-        [duration],
-    )
-
-    return (
-        <table>
-            <tbody>
-                {!hideBorrower && (
-                    <tr>
-                        <td>Borrower</td>
-                        <td>
-                            <EtherscanLink address={borrower} />
-                        </td>
-                    </tr>
-                )}
-                <tr>
-                    <td>Amount</td>
-                    <td>
-                        {formatUnits(amount, tokenDecimals)} {TOKEN_SYMBOL}
-                    </td>
-                </tr>
-                <tr>
-                    <td>Requested</td>
-                    <td>
-                        <TimeAgo datetime={requestedTime * 1000} />
-                    </td>
-                </tr>
-                <tr>
-                    <td>Status</td>
-                    <td>{formatStatus(status)}</td>
-                </tr>
-                <tr>
-                    <td>Duration</td>
-                    <td>{humanReadableDuration}</td>
-                </tr>
-                {status !== LoanStatus.APPLIED &&
-                    status !== LoanStatus.DENIED &&
-                    status !== LoanStatus.CANCELLED && (
-                        <>
-                            <tr>
-                                <td>Approved</td>
-                                <td>
-                                    <TimeAgo
-                                        datetime={details.approvedTime * 1000}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Repaid</td>
-                                <td>
-                                    {formatUnits(
-                                        details.totalAmountRepaid,
-                                        tokenDecimals,
-                                    )}{' '}
-                                    {TOKEN_SYMBOL}
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Interest paid</td>
-                                <td>
-                                    {formatUnits(
-                                        details.interestPaid,
-                                        tokenDecimals,
-                                    )}{' '}
-                                    {TOKEN_SYMBOL}
-                                </td>
-                            </tr>
-                        </>
-                    )}
-                {manage && status === LoanStatus.APPLIED && getContract && (
-                    <tr>
-                        <td colSpan={2} style={{ paddingTop: 10 }}>
-                            <ActionButton
-                                action={() =>
-                                    getContract().approveLoan(
-                                        BigNumber.from(id),
-                                    )
-                                }
-                            >
-                                Approve
-                            </ActionButton>
-                            <ActionButton
-                                red
-                                action={() =>
-                                    getContract().denyLoan(BigNumber.from(id))
-                                }
-                            >
-                                Reject
-                            </ActionButton>
-                        </td>
-                    </tr>
-                )}
-                {manage && status === LoanStatus.APPROVED && getContract && (
-                    <tr>
-                        <td colSpan={2} style={{ paddingTop: 10 }}>
-                            <ActionButton
-                                red
-                                action={() =>
-                                    getContract().cancelLoan(BigNumber.from(id))
-                                }
-                            >
-                                Cancel
-                            </ActionButton>
-                        </td>
-                    </tr>
-                )}
-                {manage &&
-                    status === LoanStatus.FUNDS_WITHDRAWN &&
-                    getContract && (
-                        <tr>
-                            <td colSpan={2} style={{ paddingTop: 10 }}>
-                                <ActionButton
-                                    red
-                                    action={() =>
-                                        getContract().defaultLoan(
-                                            BigNumber.from(id),
-                                        )
-                                    }
-                                >
-                                    Default
-                                </ActionButton>
-                            </td>
-                        </tr>
-                    )}
-            </tbody>
-        </table>
-    )
 }
 
 function onlyPositive<T, R extends { [key in keyof T]?: number }>(

@@ -8,7 +8,6 @@ import {
     Box,
     EnterExitAlert,
     Loans,
-    LoanViewOld,
     Page,
     PageLoading,
     Tabs,
@@ -17,9 +16,7 @@ import {
 import {
     Pool,
     refetchStatsIfUsed,
-    useLoans,
     useManagerInfo,
-    useSigner,
     useStatsState,
 } from '../../features'
 import { useSelector } from '../../store'
@@ -49,7 +46,6 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
                     <>
                         <StakeAndUnstake pool={pool} poolAddress={address} />
                         <Loans pool={pool} poolAddress={address} />
-                        <OldLoans pool={pool} poolAddress={address} />
                     </>
                 ) : (
                     <h3>Login with manager wallet</h3>
@@ -57,29 +53,6 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
             ) : (
                 <h3>Loading…</h3>
             )}
-
-            <style jsx global>{`
-                .page > .section {
-                    max-width: 300px;
-                    margin: 10px auto;
-                    border: 1px solid grey;
-                    border-radius: 8px;
-                    text-align: center;
-                    padding: 20px 0;
-
-                    > h4 {
-                        margin: 0 0 10px;
-                    }
-
-                    > table {
-                        margin: 15px auto 0;
-                    }
-                }
-
-                h3 {
-                    text-align: center;
-                }
-            `}</style>
         </Page>
     )
 }
@@ -156,49 +129,5 @@ function StakeAndUnstake({
                 earlyExitFeePercent={stats ? stats.earlyExitFeePercent : 0}
             />
         </Box>
-    )
-}
-
-function OldLoans({
-    pool: { tokenDecimals },
-    poolAddress,
-}: {
-    pool: Pool
-    poolAddress: string
-}) {
-    const loans = useLoans(poolAddress)
-    const loansBlockNumber = useSelector(
-        (s) => s.pools[poolAddress].loansBlockNumber,
-    )
-    const account = useAccount()
-    const getContract = useSigner(poolAddress)
-
-    const loading =
-        !loansBlockNumber ||
-        !getContract ||
-        !account ||
-        tokenDecimals === undefined
-
-    const items = loading ? (
-        <h3>Loading…</h3>
-    ) : (
-        loans
-            .sort((a, b) => b.id - a.id)
-            .map((loan) => (
-                <LoanViewOld
-                    key={loan.id}
-                    loan={loan}
-                    tokenDecimals={tokenDecimals}
-                    getContract={getContract}
-                    manage
-                />
-            ))
-    )
-
-    return (
-        <div className="section">
-            <h4>Loans</h4>
-            {items}
-        </div>
     )
 }
