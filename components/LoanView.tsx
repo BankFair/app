@@ -15,6 +15,7 @@ import TimeAgo from 'timeago-react'
 import {
     ERC20Contract,
     format,
+    formatMaxDecimals,
     noop,
     oneHundredPercent,
     rgbBlue,
@@ -27,7 +28,13 @@ import {
     zero,
 } from '../app'
 
-import { LoanStatus, Loan, CoreContract, formatStatus } from '../features'
+import {
+    LoanStatus,
+    Loan,
+    CoreContract,
+    formatStatus,
+    useCanDefaultLoan,
+} from '../features'
 
 import { ActionButton } from './ActionButton'
 import { EtherscanLink } from './EtherscanLink'
@@ -47,13 +54,27 @@ export function LoanView({
         lateAPRDelta,
     },
     tokenDecimals,
+    showAll,
+    onApprove,
+    onReject,
+    onCancel,
+    onDefault,
     onBorrow,
     onRepay,
+    poolAddress,
+    account,
 }: {
     loan: Loan
     tokenDecimals: number
-    onBorrow(id: number): Promise<unknown>
-    onRepay(id: number, debt: BigNumber): void
+    showAll?: boolean
+    onBorrow?(id: number): Promise<unknown>
+    onRepay?(id: number, debt: BigNumber): void
+    onApprove?(id: number): Promise<unknown>
+    onReject?(id: number): Promise<unknown>
+    onCancel?(id: number): Promise<unknown>
+    onDefault?(id: number): Promise<unknown>
+    poolAddress: string
+    account: string | undefined
 }) {
     const formattedAmount = useMemo(
         () => format(formatUnits(amount, tokenDecimals)),
@@ -83,6 +104,12 @@ export function LoanView({
                     : 0,
         }
     }, [details, amountWithInterest])
+
+    const canDefaultLoan = useCanDefaultLoan(
+        poolAddress,
+        id,
+        onDefault && account,
+    )
 
     const hasDebt = status === LoanStatus.FUNDS_WITHDRAWN
     const wasRepaid = status === LoanStatus.REPAID
@@ -125,11 +152,13 @@ export function LoanView({
 
                 .stats {
                     display: flex;
+                    flex-wrap: wrap;
                     text-align: center;
-                    margin-top: 16px;
+                    margin-top: 8px;
 
                     > .item {
                         flex-basis: 50%;
+                        margin-top: 8px;
 
                         > .label {
                             font-size: 11px;
@@ -146,9 +175,13 @@ export function LoanView({
                     }
                 }
 
-                .action {
+                .actions {
                     text-align: center;
                     margin-top: 8px;
+
+                    > :global(button) {
+                        margin: 0 4px;
+                    }
                 }
             `}</style>
 
@@ -202,45 +235,169 @@ export function LoanView({
                     <div className="item">{formattedStatus}</div>
                 )}
             </div>
-            <div className="stats">
-                <div className="item">
-                    <div className="label">Remaining</div>
-                    <div className="value">
-                        <Remaining
-                            timestamp={
-                                status === LoanStatus.CANCELLED
-                                    ? 0
-                                    : details.approvedTime + duration
-                            }
-                        />
-                    </div>
-                </div>
-                {details.approvedTime ? (
-                    <div className="item">
-                        <div className="label">Approved</div>
-                        <div className="value">
-                            <TimeAgo datetime={details.approvedTime * 1000} />
-                        </div>
-                    </div>
-                ) : (
+            {showAll ? (
+                <div className="stats">
                     <div className="item">
                         <div className="label">Requested</div>
                         <div className="value">
                             <TimeAgo datetime={requestedTime * 1000} />
                         </div>
                     </div>
-                )}
-            </div>
-            {hasDebt ? (
-                <div className="action">
+                    <div className="item">
+                        <div className="label">Approved</div>
+                        <div className="value">
+                            {details.approvedTime ? (
+                                <TimeAgo
+                                    datetime={details.approvedTime * 1000}
+                                />
+                            ) : (
+                                '-'
+                            )}
+                        </div>
+                    </div>
+                    <div className="item">
+                        <div className="label">Duration</div>
+                        <div className="value">{formatDuration(duration)}</div>
+                    </div>
+                    <div className="item">
+                        <div className="label">Remaining</div>
+                        <div className="value">
+                            <Remaining
+                                timestamp={
+                                    status === LoanStatus.CANCELLED
+                                        ? 0
+                                        : details.approvedTime + duration
+                                }
+                            />
+                        </div>
+                    </div>
+                    <div className="item">
+                        <div className="label">Amount</div>
+                        <div className="value">
+                            {format(
+                                formatMaxDecimals(
+                                    formatUnits(amount, tokenDecimals),
+                                    tokenDecimals,
+                                ),
+                            )}{' '}
+                            {TOKEN_SYMBOL}
+                        </div>
+                    </div>
+                    <div className="item">
+                        <div className="label">Interest paid</div>
+                        <div className="value">
+                            {format(
+                                formatMaxDecimals(
+                                    formatUnits(
+                                        details.interestPaid,
+                                        tokenDecimals,
+                                    ),
+                                    tokenDecimals,
+                                ),
+                            )}{' '}
+                            {TOKEN_SYMBOL}
+                        </div>
+                    </div>
+                    <div className="item">
+                        <div className="label">Borrower</div>
+                        <div className="value">
+                            <EtherscanLink address={borrower} />
+                        </div>
+                    </div>
+                    <div className="item">
+                        <div className="label">Status</div>
+                        <div className="value">{formatStatus(status)}</div>
+                    </div>
+                </div>
+            ) : (
+                <div className="stats">
+                    <div className="item">
+                        <div className="label">Remaining</div>
+                        <div className="value">
+                            <Remaining
+                                timestamp={
+                                    status === LoanStatus.CANCELLED
+                                        ? 0
+                                        : details.approvedTime + duration
+                                }
+                            />
+                        </div>
+                    </div>
+                    {details.approvedTime ? (
+                        <div className="item">
+                            <div className="label">Approved</div>
+                            <div className="value">
+                                <TimeAgo
+                                    datetime={details.approvedTime * 1000}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="item">
+                            <div className="label">Requested</div>
+                            <div className="value">
+                                <TimeAgo datetime={requestedTime * 1000} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+            {onRepay && hasDebt ? (
+                <div className="actions">
                     <Button onClick={() => onRepay(id, debt)} blue>
                         Repay
                     </Button>
                 </div>
-            ) : status === LoanStatus.APPROVED ? (
-                <div className="action">
-                    <ActionButton action={() => onBorrow(id)}>
+            ) : onBorrow && status === LoanStatus.APPROVED ? (
+                <div className="actions">
+                    <ActionButton
+                        action={
+                            () => onBorrow(id).then(() => new Promise(noop)) // Event handler will unmount  button
+                        }
+                    >
                         Borrow
+                    </ActionButton>
+                </div>
+            ) : onApprove && onReject && status === LoanStatus.APPLIED ? (
+                <div className="actions">
+                    <ActionButton
+                        action={
+                            () => onApprove(id).then(() => new Promise(noop)) // Event handler will unmount  button
+                        }
+                    >
+                        Approve
+                    </ActionButton>
+                    <ActionButton
+                        red
+                        action={
+                            () => onReject(id).then(() => new Promise(noop)) // Event handler will unmount  button
+                        }
+                    >
+                        Reject
+                    </ActionButton>
+                </div>
+            ) : onCancel && status === LoanStatus.APPROVED ? (
+                <div className="actions">
+                    <ActionButton
+                        red
+                        action={
+                            () => onCancel(id).then(() => new Promise(noop)) // Event handler will unmount  button
+                        }
+                    >
+                        Cancel
+                    </ActionButton>
+                </div>
+            ) : onDefault &&
+              status === LoanStatus.FUNDS_WITHDRAWN &&
+              canDefaultLoan ? (
+                <div className="actions">
+                    <ActionButton
+                        red
+                        action={
+                            () => onDefault(id).then(() => new Promise(noop)) // Event handler will unmount  button
+                        }
+                    >
+                        Default
                     </ActionButton>
                 </div>
             ) : null}

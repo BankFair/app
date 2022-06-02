@@ -3,12 +3,11 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useMemo, useState } from 'react'
-import { useDispatch } from 'react-redux'
 import { APP_NAME, useAccount, getAddress } from '../../app'
 import {
-    Alert,
     Box,
     EnterExitAlert,
+    Loans,
     LoanViewOld,
     Page,
     PageLoading,
@@ -18,8 +17,6 @@ import {
 import {
     Pool,
     refetchStatsIfUsed,
-    useAmountDepositable,
-    useLoadManagerState,
     useLoans,
     useManagerInfo,
     useSigner,
@@ -32,8 +29,6 @@ const title = `Earn - ${APP_NAME}`
 const Manage: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
     const account = useAccount()
-
-    useLoadManagerState(address, pool)
 
     const head = (
         <Head>
@@ -48,11 +43,13 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
         <Page>
             {head}
 
+            <h1>{pool.name}</h1>
             {pool ? (
                 pool.managerAddress === account ? (
                     <>
                         <StakeAndUnstake pool={pool} poolAddress={address} />
                         <Loans pool={pool} poolAddress={address} />
+                        <OldLoans pool={pool} poolAddress={address} />
                     </>
                 ) : (
                     <h3>Login with manager wallet</h3>
@@ -162,7 +159,7 @@ function StakeAndUnstake({
     )
 }
 
-function Loans({
+function OldLoans({
     pool: { tokenDecimals },
     poolAddress,
 }: {

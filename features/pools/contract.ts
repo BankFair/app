@@ -45,15 +45,19 @@ export interface CoreContract
         ContractTransaction,
         [amount: BigNumber, loanDuration: BigNumber]
     >
-    cancelLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
+    cancelLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     borrow: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     repay: ContractFunction<
         ContractTransaction,
         [loanId: BigNumber, amount: BigNumber]
     >
-    approveLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
-    denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumber]>
-    defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumber]>
+    approveLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
+    denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumberish]>
+    defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
+    canDefault: ContractFunction<
+        boolean,
+        [loanId: BigNumberish, account: string]
+    >
 
     loans: ContractFunction<EVMLoan, [loanId: BigNumberish]>
     loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumberish]>

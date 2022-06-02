@@ -1,5 +1,5 @@
 import { formatUnits } from '@ethersproject/units'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AppDispatch, useSelector, AppState, useDispatch } from '../../store'
 import {
     getERC20Contract,
@@ -287,13 +287,16 @@ export function useLoadAccountLoans(
 }
 
 const loaded: Record<string, boolean> = {}
-export function useLoadManagerState(address: string, pool: Pool | undefined) {
-    const dispatch = useDispatch()
+export function useLoadManagerState(
+    poolAddress: string,
+    dispatch: AppDispatch,
+    pool: Pool | undefined,
+) {
     useEffect(() => {
-        if (typeof window !== 'object' || loaded[address] || !pool) return
-        loaded[address] = true
+        if (typeof window !== 'object' || loaded[poolAddress] || !pool) return
+        loaded[poolAddress] = true
 
-        const attached = contract.attach(address)
+        const attached = contract.attach(poolAddress)
         attached.loansCount().then(async (count) => {
             const length = count.toNumber()
 
@@ -304,7 +307,7 @@ export function useLoadManagerState(address: string, pool: Pool | undefined) {
 
             dispatch(
                 setLoans({
-                    poolAddress: address,
+                    poolAddress,
                     loans: transformToStateLoans(loans, details),
                     blockNumber,
                 }),
@@ -318,9 +321,9 @@ export function useLoadManagerState(address: string, pool: Pool | undefined) {
         attached.on(attached.filters.LoanRepaid(), handleLoanEvent)
         attached.on(attached.filters.LoanDefaulted(), handleLoanEvent)
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            dispatch(fetchLoan({ poolAddress: address, loanId }))
+            dispatch(fetchLoan({ poolAddress, loanId }))
         }
-    }, [address, dispatch, pool])
+    }, [poolAddress, dispatch, pool])
 }
 
 export function fetchLoans(
@@ -434,4 +437,31 @@ export function useRejectedLoans(address: string) {
         () => loans.filter((loan) => loan.status === LoanStatus.DENIED),
         [loans],
     )
+}
+
+export function useCanDefaultLoan(
+    poolAddress: string,
+    loanId: number,
+    account: string | undefined,
+) {
+    const [canDefaultId, setCanDefaultId] = useState('')
+    useEffect(() => {
+        if (!account) return
+        let canceled = false
+
+        contract
+            .attach(poolAddress)
+            .canDefault(loanId, account)
+            .then((canDefault) => {
+                if (!canDefault || canceled) return
+
+                setCanDefaultId(`${loanId}_${account}`)
+            })
+
+        return () => {
+            canceled = true
+        }
+    }, [account, loanId, poolAddress])
+
+    return `${loanId}_${account}` === canDefaultId
 }

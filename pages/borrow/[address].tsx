@@ -2,19 +2,12 @@ import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import {
-    FormEventHandler,
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react'
+import { FormEventHandler, useEffect, useMemo, useState } from 'react'
+
 import {
     APP_NAME,
-    disabledBackground,
     format,
     getAddress,
-    noop,
     oneHundredPercent,
     POOLS,
     useAccount,
@@ -28,30 +21,25 @@ import {
     Box,
     Button,
     ConnectModal,
-    LoanView,
-    Modal,
+    Loans,
     Page,
     PageLoading,
-    useAmountForm,
 } from '../../components'
 import {
     contract,
-    useLoadAccountLoans,
     LoanStatus,
     Pool,
     useLoans,
     usePoolLiquidity,
     useBorrowInfo,
     loanRequestedSignature,
-    CoreContract,
-    fetchLoan,
-    formatStatus,
 } from '../../features'
-import { useSelector, useDispatch } from '../../store'
+import { useSelector } from '../../store'
 
 const title = `Borrow - ${APP_NAME}`
 
 const Borrow: NextPage<{ address: string }> = ({ address }) => {
+    const account = useAccount()
     const pool = useSelector((s) => s.pools[address])
     const name = POOLS.find((pool) => pool.address === address)?.name
 
@@ -69,8 +57,8 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
             {head}
 
             <h1>{name}</h1>
-            <RequestLoan pool={pool} poolAddress={address} />
-            <Loans pool={pool} poolAddress={address} />
+            <RequestLoan pool={pool} poolAddress={address} account={account} />
+            <Loans pool={pool} poolAddress={address} account={account} />
         </Page>
     )
 }
@@ -92,11 +80,12 @@ const initialDisplayAlert = false
 function RequestLoan({
     pool: { managerAddress, tokenDecimals },
     poolAddress,
+    account,
 }: {
     pool: Pool
     poolAddress: string
+    account: string | undefined
 }) {
-    const account = useAccount()
     const provider = useProvider()
 
     const [isValidBorrower, setIsValidBorrower] = useState<
@@ -541,246 +530,5 @@ function RequestLoan({
                 <ConnectModal onClose={() => setShowConnectModal(false)} />
             ) : null}
         </Box>
-    )
-}
-
-const options = (
-    <>
-        <option value={-1}>all loans</option>
-        <option value={LoanStatus.APPLIED}>
-            loans {formatStatus(LoanStatus.APPLIED).toLowerCase()}
-        </option>
-        <option value={LoanStatus.APPROVED}>
-            {formatStatus(LoanStatus.APPROVED).toLowerCase()} loans
-        </option>
-        <option value={LoanStatus.DENIED}>
-            {formatStatus(LoanStatus.DENIED).toLowerCase()} loans
-        </option>
-        <option value={LoanStatus.CANCELLED}>
-            {formatStatus(LoanStatus.CANCELLED).toLowerCase()} loans
-        </option>
-        <option value={LoanStatus.DEFAULTED}>
-            {formatStatus(LoanStatus.DEFAULTED).toLowerCase()} loans
-        </option>
-        <option value={LoanStatus.FUNDS_WITHDRAWN}>
-            {formatStatus(LoanStatus.FUNDS_WITHDRAWN).toLowerCase()} loans
-        </option>
-        <option value={LoanStatus.REPAID}>
-            {formatStatus(LoanStatus.REPAID).toLowerCase()} loans
-        </option>
-    </>
-)
-function Loans({ pool, poolAddress }: { pool: Pool; poolAddress: string }) {
-    const account = useAccount()
-    const provider = useProvider()
-    const [filter, setFilter] = useState<LoanStatus | -1>(-1)
-    const loans = useLoans(poolAddress, account)
-    const sortedAndFilteredLoans = useMemo(
-        () =>
-            (filter === -1
-                ? loans
-                : loans.filter((loan) => loan.status === filter)
-            ).sort((a, b) => b.id - a.id),
-        [filter, loans],
-    )
-    const dispatch = useDispatch()
-    const [repay, setRepay] = useState<{ id: number; max: BigNumber } | null>(
-        null,
-    )
-
-    useLoadAccountLoans(poolAddress, account, dispatch, pool)
-
-    const handleBorrow = useCallback(
-        (loanId: number) => {
-            return contract
-                .attach(poolAddress)
-                .connect(provider!.getSigner())
-                .borrow(BigNumber.from(loanId))
-                .then(() => new Promise(noop)) // Event handler will unmount borrow button
-        },
-        [poolAddress, provider],
-    )
-
-    const handleRepay = useCallback(
-        (id: number, max: BigNumber) => setRepay({ id, max }),
-        [],
-    )
-
-    const header = (
-        <div className="header">
-            <style jsx>{`
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-
-                .filter {
-                    font-size: 14px;
-                }
-            `}</style>
-            <h2>Your loans</h2>
-            <div className="filter">
-                Show{' '}
-                <select
-                    value={filter}
-                    className="xxs"
-                    onChange={(event) => setFilter(Number(event.target.value))}
-                >
-                    {options}
-                </select>
-            </div>
-        </div>
-    )
-
-    if (!sortedAndFilteredLoans.length) {
-        const filterApplied = filter !== -1
-        const emptyState = (
-            <div>
-                <style jsx>{`
-                    div {
-                        text-align: center;
-                        border-radius: 16px;
-                        padding: 30px 0;
-                        background-color: ${disabledBackground};
-                        color: var(--disabled-80);
-                    }
-                `}</style>
-                {filterApplied
-                    ? 'No loans match the filter'
-                    : "You haven't requested any loans yet"}
-                {filterApplied ? (
-                    <Button
-                        blue
-                        ghost
-                        onClick={() => setFilter(-1)}
-                        style={{ display: 'block', margin: '10px auto 0' }}
-                    >
-                        Clear filter
-                    </Button>
-                ) : null}
-            </div>
-        )
-
-        return (
-            <>
-                {header}
-                {emptyState}
-            </>
-        )
-    }
-
-    const loansElement = (
-        <div className="loans">
-            <style jsx>{`
-                .loans {
-                    display: flex;
-                    flex-wrap: wrap;
-                    align-items: flex-start;
-
-                    > :global(.loan) {
-                        flex-basis: 100%;
-                    }
-
-                    @media screen and (min-width: 850px) {
-                        > :global(.loan) {
-                            flex-basis: calc(50% - 8px);
-
-                            &:nth-child(2n - 1) {
-                                margin-right: 8px;
-                            }
-
-                            &:nth-child(2n) {
-                                margin-left: 8px;
-                            }
-                        }
-                    }
-                }
-            `}</style>
-
-            {sortedAndFilteredLoans.map((loan) => (
-                <LoanView
-                    key={loan.id}
-                    loan={loan}
-                    tokenDecimals={pool.tokenDecimals}
-                    onBorrow={handleBorrow}
-                    onRepay={handleRepay}
-                />
-            ))}
-
-            {repay ? (
-                <RepayModal
-                    poolAddress={poolAddress}
-                    loanId={repay.id}
-                    tokenDecimals={pool.tokenDecimals}
-                    tokenAddress={pool.tokenAddress}
-                    max={repay.max}
-                    onClose={() => setRepay(null)}
-                />
-            ) : null}
-        </div>
-    )
-
-    return (
-        <>
-            {header}
-            {loansElement}
-        </>
-    )
-}
-
-function RepayModal({
-    poolAddress,
-    loanId,
-    tokenDecimals,
-    tokenAddress,
-    max,
-    onClose,
-}: {
-    poolAddress: string
-    loanId: number
-    tokenDecimals: number
-    tokenAddress: string
-    max: BigNumber
-    onClose(): void
-}) {
-    const dispatch = useDispatch()
-
-    const { form } = useAmountForm({
-        tokenAddress,
-        tokenDecimals,
-        poolAddress,
-        onSumbit: (contract: CoreContract, amount: string) =>
-            contract.repay(
-                BigNumber.from(loanId),
-                parseUnits(amount, tokenDecimals),
-            ),
-        refetch: () =>
-            dispatch(fetchLoan({ poolAddress, loanId })).then(onClose),
-        max,
-        disabled: false,
-        type: 'Repay',
-    })
-
-    return (
-        <Modal onClose={onClose} autoWidth>
-            <div>
-                <style jsx>{`
-                    div {
-                        padding: 16px 24px;
-
-                        > :global(form) {
-                            margin: 0;
-                        }
-                    }
-                    h3 {
-                        text-align: center;
-                        margin: 0 0 8px;
-                    }
-                `}</style>
-                <h3>Repay</h3>
-                {form}
-            </div>
-        </Modal>
     )
 }
