@@ -19,7 +19,11 @@ import {
     rgbWhite,
     useClickTabIndexElement,
 } from '../app'
-import { SwitchNetworkModal, Navigation } from '../components'
+import {
+    SwitchNetworkModal,
+    Navigation,
+    TransactionNotifications,
+} from '../components'
 import { useFetchPoolsPropertiesOnce, useConnectEagerly } from '../features'
 import { store } from '../store'
 
@@ -118,8 +122,8 @@ export default function App({ Component, pageProps }: AppProps) {
                         &.xxs {
                             padding: 4px 22px 4px 6px;
                             border-radius: 6px;
-                            background-position: right 13px top 0.85em,
-                                right 8px top 0.85em;
+                            background-position: right 13px top 0.95em,
+                                right 8px top 0.95em;
                             font-size: 12px;
                         }
 
@@ -147,6 +151,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <SwitchNetworkModal />
                 <Navigation />
                 <Component {...pageProps} />
+                <TransactionNotifications />
             </Web3ReactProvider>
         </Provider>
     )

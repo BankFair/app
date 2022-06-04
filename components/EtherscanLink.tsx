@@ -1,6 +1,7 @@
+import { ReactNode } from 'react'
 import { CHAIN, shortenAddress } from '../app'
 
-export function EtherscanLink({
+export function EtherscanAddress({
     address,
     primary,
 }: {
@@ -15,6 +16,24 @@ export function EtherscanLink({
             target="_blank"
         >
             {shortenAddress(address)}
+        </a>
+    )
+}
+
+export function EtherscanHash({
+    hash,
+    children,
+}: {
+    hash: string
+    children: ReactNode
+}) {
+    return (
+        <a
+            href={`${CHAIN.blockExplorerUrls[0]}tx/${hash}`}
+            rel="noreferrer noopener"
+            target="_blank"
+        >
+            {children}
         </a>
     )
 }

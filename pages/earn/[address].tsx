@@ -1,10 +1,9 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
-import { DateTime } from 'luxon'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { FormEventHandler, useEffect, useMemo, useState } from 'react'
-import { useSelector } from '../../store'
+import { useDispatch, useSelector } from '../../store'
 import {
     APP_NAME,
     useAccount,
@@ -13,13 +12,11 @@ import {
     zero,
     POOLS,
     format,
-    formatMaxDecimals,
 } from '../../app'
 import {
     Page,
     PoolStats,
     Box,
-    Alert,
     PageLoading,
     Skeleton,
     useAmountForm,
@@ -33,6 +30,7 @@ import {
     useFetchIntervalAccountInfo,
     useAccountInfo,
     useStatsState,
+    trackTransaction,
 } from '../../features'
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
@@ -257,6 +255,7 @@ function Earnings({
     } | null>(null)
     const account = useAccount()
     const provider = useProvider()
+    const dispatch = useDispatch()
 
     useEffect(() => {
         if (!account) return
@@ -285,9 +284,12 @@ function Earnings({
                       .attach(poolAddress)
                       .connect(provider.getSigner())
                       .withdrawProtocolEarnings()
-                      .then((tx) => {
-                          return tx.wait()
-                      })
+                      .then((tx) =>
+                          trackTransaction(dispatch, {
+                              name: 'Withdraw earnings',
+                              tx,
+                          }),
+                      )
                       .then(() => {
                           setIsLoading(false)
                           setEarnings({

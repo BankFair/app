@@ -1,4 +1,4 @@
-import { EtherscanLink } from './EtherscanLink'
+import { EtherscanAddress } from './EtherscanLink'
 import { Pool, useStats } from '../features'
 import { Box } from './Box'
 import { formatNoDecimals, prefix } from '../app'
@@ -115,7 +115,7 @@ export function PoolStats({
                 <div className="manager">
                     <span className="label">Pool Manager</span>
                     {managerAddress && (
-                        <EtherscanLink address={managerAddress} primary />
+                        <EtherscanAddress address={managerAddress} primary />
                     )}
                 </div>
             </div>

@@ -6,11 +6,18 @@ import {
     format,
     getERC20Contract,
     infiniteAllowance,
+    TOKEN_SYMBOL,
     useAccount,
     useProvider,
     zero,
 } from '../app'
-import { contract, CoreContract, useAllowanceAndBalance } from '../features'
+import {
+    contract,
+    CoreContract,
+    trackTransaction,
+    useAllowanceAndBalance,
+} from '../features'
+import { useDispatch } from '../store'
 import { AmountInput } from './AmountInput'
 import { Button } from './Button'
 import { ConnectModal } from './ConnectModal'
@@ -45,6 +52,8 @@ export function useAmountForm<T extends Types>({
 
     const account = useAccount()
     const provider = useProvider()
+
+    const dispatch = useDispatch()
 
     const {
         allowance,
@@ -119,7 +128,12 @@ export function useAmountForm<T extends Types>({
                     getERC20Contract(tokenAddress)
                         .connect(signer)
                         .approve(poolAddress, infiniteAllowance)
-                        .then((tx) => tx.wait())
+                        .then((tx) =>
+                            trackTransaction(dispatch, {
+                                name: `Approve ${TOKEN_SYMBOL}`,
+                                tx,
+                            }),
+                        )
                         .then(() => refetchAllowanceAndBalance())
                         .then(() => {
                             setLoading('')
@@ -133,7 +147,12 @@ export function useAmountForm<T extends Types>({
                 }
 
                 onSumbit(contract.attach(poolAddress).connect(signer), value)
-                    .then((tx) => tx.wait())
+                    .then((tx) =>
+                        trackTransaction(dispatch, {
+                            name: `${type} ${value} ${TOKEN_SYMBOL}`,
+                            tx,
+                        }),
+                    )
                     .then(() =>
                         // TODO: Optimize provider. Currently it will make 3 separate requests.
                         Promise.all([refetch(), refetchAllowanceAndBalance()]),

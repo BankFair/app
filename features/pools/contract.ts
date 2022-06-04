@@ -1,6 +1,5 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { Contract, ContractTransaction, Event } from '@ethersproject/contracts'
-import { id } from '@ethersproject/hash'
 import {
     provider,
     CustomBatchProvider,
@@ -19,7 +18,7 @@ type TypedEvent<
     K extends Record<keyof TupleToObject<T>, PropertyKey>,
 > = Omit<Event, 'args'> & { args: TupleToObjectWithPropNames<T, K> }
 
-export const loanRequestedSignature = id('LoanRequested(uint256,address)')
+export const loanRequestedSignature = 'LoanRequested(uint256,address)'
 
 export interface CoreContract
     extends Omit<

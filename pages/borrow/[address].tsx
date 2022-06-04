@@ -10,6 +10,7 @@ import {
     getAddress,
     oneHundredPercent,
     POOLS,
+    TOKEN_SYMBOL,
     useAccount,
     useProvider,
     withInterest,
@@ -33,8 +34,9 @@ import {
     usePoolLiquidity,
     useBorrowInfo,
     loanRequestedSignature,
+    trackTransaction,
 } from '../../features'
-import { useSelector } from '../../store'
+import { useDispatch, useSelector } from '../../store'
 
 const title = `Borrow - ${APP_NAME}`
 
@@ -88,6 +90,8 @@ function RequestLoan({
 }) {
     const provider = useProvider()
 
+    const dispatch = useDispatch()
+
     const [isValidBorrower, setIsValidBorrower] = useState<
         [string, boolean] | null
     >(null)
@@ -99,7 +103,6 @@ function RequestLoan({
             .isValidBorrower(account)
             .then((isValid) => {
                 if (canceled) return
-                console.log([account, isValid])
                 setIsValidBorrower([account, isValid])
             })
 
@@ -287,15 +290,28 @@ function RequestLoan({
                       .attach(poolAddress)
                       .connect(provider!.getSigner())
                       .requestLoan(parsedAmount, parsedDuration)
-                      .then((tx) => tx.wait())
-                      .then((receipt) => {
+                      .then((tx) =>
+                          trackTransaction(dispatch, {
+                              name: `Request loan for ${value} ${TOKEN_SYMBOL}`,
+                              tx,
+                          }),
+                      )
+                      .then(({ payload: { receipt } }) => {
+                          if (!receipt) {
+                              setLoading(0)
+                              reset()
+                              return
+                          }
+
                           let id = 0
                           for (const event of receipt.events || []) {
                               if (
                                   event.eventSignature ===
                                   loanRequestedSignature
                               ) {
-                                  id = (event.args![0] as BigNumber).toNumber()
+                                  id = BigNumber.from(
+                                      event.args!.array[0],
+                                  ).toNumber()
                                   break
                               }
                           }

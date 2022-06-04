@@ -13,6 +13,7 @@ import {
 import { web3Slice } from './features/web3/web3Slice'
 import { poolsSlice } from './features/pools/poolsSlice'
 import { erc20Slice } from './features/erc20/erc20Slice'
+import { transactionsSlice } from './features/transactions/transactionsSlice'
 
 export function makeStore() {
     return configureStore({
@@ -20,6 +21,7 @@ export function makeStore() {
             web3: web3Slice.reducer,
             pools: poolsSlice.reducer,
             erc20: erc20Slice.reducer,
+            transactions: transactionsSlice.reducer,
         },
     })
 }

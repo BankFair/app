@@ -11,6 +11,7 @@ import {
     formatStatus,
     LoanStatus,
     Pool,
+    trackTransaction,
     useLoadAccountLoans,
     useLoadManagerState,
     useLoans,
@@ -91,8 +92,14 @@ export function Loans(props: {
                           .attach(poolAddress)
                           .connect(provider!.getSigner())
                           .borrow(BigNumber.from(loanId))
+                          .then((tx) =>
+                              trackTransaction(dispatch, {
+                                  name: 'Borrow',
+                                  tx,
+                              }),
+                          )
                   },
-        [showAllLoans, poolAddress, provider],
+        [showAllLoans, poolAddress, provider, dispatch],
     )
 
     const handleRepay = useMemo(
@@ -112,28 +119,52 @@ export function Loans(props: {
                               .attach(poolAddress)
                               .connect(provider!.getSigner())
                               .approveLoan(loanId)
+                              .then((tx) =>
+                                  trackTransaction(dispatch, {
+                                      name: 'Approve loan',
+                                      tx,
+                                  }),
+                              )
                       },
                       (loanId: number) => {
                           return contract
                               .attach(poolAddress)
                               .connect(provider!.getSigner())
                               .denyLoan(loanId)
+                              .then((tx) =>
+                                  trackTransaction(dispatch, {
+                                      name: 'Reject loan',
+                                      tx,
+                                  }),
+                              )
                       },
                       (loanId: number) => {
                           return contract
                               .attach(poolAddress)
                               .connect(provider!.getSigner())
                               .cancelLoan(loanId)
+                              .then((tx) =>
+                                  trackTransaction(dispatch, {
+                                      name: 'Cancel loan',
+                                      tx,
+                                  }),
+                              )
                       },
                       (loanId: number) => {
                           return contract
                               .attach(poolAddress)
                               .connect(provider!.getSigner())
                               .defaultLoan(loanId)
+                              .then((tx) =>
+                                  trackTransaction(dispatch, {
+                                      name: 'Default loan',
+                                      tx,
+                                  }),
+                              )
                       },
                   ]
                 : [],
-        [showAllLoans, poolAddress, provider],
+        [showAllLoans, poolAddress, provider, dispatch],
     )
 
     const header = (
@@ -147,6 +178,12 @@ export function Loans(props: {
 
                 .filter {
                     font-size: 14px;
+                    display: flex;
+                    align-items: center;
+
+                    > :global(select) {
+                        margin-left: 4px;
+                    }
                 }
             `}</style>
             {showAllLoans ? <h2>Loans</h2> : <h2>Your loans</h2>}

@@ -27,10 +27,16 @@ import {
     zero,
 } from '../app'
 
-import { LoanStatus, Loan, formatStatus, useCanDefaultLoan } from '../features'
+import {
+    LoanStatus,
+    Loan,
+    formatStatus,
+    useCanDefaultLoan,
+    Transaction,
+} from '../features'
 
 import { ActionButton } from './ActionButton'
-import { EtherscanLink } from './EtherscanLink'
+import { EtherscanAddress } from './EtherscanLink'
 import { Button } from './Button'
 import { Progress } from './Progress'
 
@@ -294,7 +300,7 @@ export function LoanView({
                     <div className="item">
                         <div className="label">Borrower</div>
                         <div className="value">
-                            <EtherscanLink address={borrower} />
+                            <EtherscanAddress address={borrower} />
                         </div>
                     </div>
                     <div className="item">
@@ -344,9 +350,7 @@ export function LoanView({
             ) : onBorrow && status === LoanStatus.APPROVED ? (
                 <div className="actions">
                     <ActionButton
-                        action={
-                            () => onBorrow(id).then(() => new Promise(noop)) // Event handler will unmount  button
-                        }
+                        action={() => onBorrow(id).then(actionPromiseHandler)}
                     >
                         Borrow
                     </ActionButton>
@@ -354,17 +358,13 @@ export function LoanView({
             ) : onApprove && onReject && status === LoanStatus.APPLIED ? (
                 <div className="actions">
                     <ActionButton
-                        action={
-                            () => onApprove(id).then(() => new Promise(noop)) // Event handler will unmount  button
-                        }
+                        action={() => onApprove(id).then(actionPromiseHandler)}
                     >
                         Approve
                     </ActionButton>
                     <ActionButton
                         red
-                        action={
-                            () => onReject(id).then(() => new Promise(noop)) // Event handler will unmount  button
-                        }
+                        action={() => onReject(id).then(actionPromiseHandler)}
                     >
                         Reject
                     </ActionButton>
@@ -373,9 +373,7 @@ export function LoanView({
                 <div className="actions">
                     <ActionButton
                         red
-                        action={
-                            () => onCancel(id).then(() => new Promise(noop)) // Event handler will unmount  button
-                        }
+                        action={() => onCancel(id).then(actionPromiseHandler)}
                     >
                         Cancel
                     </ActionButton>
@@ -386,9 +384,7 @@ export function LoanView({
                 <div className="actions">
                     <ActionButton
                         red
-                        action={
-                            () => onDefault(id).then(() => new Promise(noop)) // Event handler will unmount  button
-                        }
+                        action={() => onDefault(id).then(actionPromiseHandler)}
                     >
                         Default
                     </ActionButton>
@@ -541,4 +537,8 @@ function formatDuration(duration: number, noSeconds?: boolean): string {
     return Duration.fromObject(result).toHuman({
         listStyle: 'long',
     })
+}
+
+function actionPromiseHandler() {
+    new Promise(noop) // Event handler will unmount button
 }
