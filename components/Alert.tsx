@@ -1,5 +1,5 @@
 import { AiFillInfoCircle } from 'react-icons/ai'
-import { RiAlertFill } from 'react-icons/ri'
+import { RiAlertLine } from 'react-icons/ri'
 import { BsExclamationCircleFill } from 'react-icons/bs'
 import {
     COLOR_BLUE_LIGHTER,
@@ -31,7 +31,7 @@ export function Alert({
     body?: string
 }) {
     const Icon = style.startsWith('warning')
-        ? RiAlertFill
+        ? RiAlertLine
         : style.startsWith('info')
         ? AiFillInfoCircle
         : BsExclamationCircleFill // error
