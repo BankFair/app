@@ -14,6 +14,10 @@ module.exports = {
                 name: 'Test Pool #2',
                 address: '0x9dAa37385F0DA29c742b4a248740bd86a240E853',
             },
+            {
+                name: 'Test Pool #3 (v0.4.3)',
+                address: '0x56A9833D46F103a147C2ab2a7C5a2511eC9caE4B',
+            },
         ]),
     },
     basePath: buildingForGitHubPages ? '/app' : '',
