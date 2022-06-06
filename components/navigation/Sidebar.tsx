@@ -15,11 +15,13 @@ import {
     SIDEBAR_MAX_WIDTH,
 } from './constants'
 import { GrClose } from 'react-icons/gr'
-import { TiChartAreaOutline } from 'react-icons/ti'
-import { AiFillBank } from 'react-icons/ai'
-import { RiAccountCircleFill } from 'react-icons/ri'
-import { MdOutlineAdminPanelSettings } from 'react-icons/md'
-import { FaFaucet } from 'react-icons/fa'
+import {
+    RiPercentLine,
+    RiHandCoinLine,
+    RiUserLine,
+    RiCoinLine,
+    RiVipDiamondLine,
+} from 'react-icons/ri'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
 import { useMemo } from 'react'
@@ -152,7 +154,7 @@ export function Sidebar({
                             )}
                             onClick={hideSidebar}
                         >
-                            <TiChartAreaOutline size={24} />
+                            <RiPercentLine size={24} />
                             Earn
                         </a>
                     </Link>
@@ -163,7 +165,7 @@ export function Sidebar({
                             className={getSidebarItemClass('/borrow', pathname)}
                             onClick={hideSidebar}
                         >
-                            <AiFillBank size={24} />
+                            <RiHandCoinLine size={24} />
                             Borrow
                         </a>
                     </Link>
@@ -178,7 +180,7 @@ export function Sidebar({
                                 )}
                                 onClick={hideSidebar}
                             >
-                                <MdOutlineAdminPanelSettings size={24} />
+                                <RiVipDiamondLine size={24} />
                                 Manage
                             </a>
                         </Link>
@@ -193,7 +195,7 @@ export function Sidebar({
                             rel="noopener noreferrer"
                             target="_blank"
                         >
-                            <FaFaucet size={24} style={{ padding: 4 }} />
+                            <RiCoinLine size={24} />
                             Faucet
                         </a>
                     </li>
@@ -207,7 +209,7 @@ export function Sidebar({
                             )}
                             onClick={hideSidebar}
                         >
-                            <RiAccountCircleFill size={24} />
+                            <RiUserLine size={24} />
                             Account
                         </a>
                     </Link>
