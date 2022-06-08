@@ -105,6 +105,7 @@ export function Sidebar({
                 @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
                     .sidebar {
                         display: block;
+                        background-color: transparent;
 
                         > .overlay {
                             display: none;
