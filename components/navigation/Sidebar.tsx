@@ -17,6 +17,7 @@ import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
 import { useMemo } from 'react'
 import { selectPools } from '../../features'
+import { FlexGrow } from '../FlexGrow'
 
 export function Sidebar({
     isVisible,
@@ -45,9 +46,9 @@ export function Sidebar({
                     top: 0;
                     left: 0;
                     width: 100%;
-                    height: 100vh;
-                    z-index: 3;
                     margin-top: ${NAV_HEIGHT}px;
+                    height: ${`calc(100vh - ${NAV_HEIGHT}px)`};
+                    z-index: 3;
                     display: ${isVisible ? 'block' : 'none'};
 
                     > .overlay {
@@ -64,15 +65,16 @@ export function Sidebar({
                     }
                 }
 
-                ul {
-                    list-style: none;
-                    margin: 32px;
-                    padding: 0;
+                .list {
+                    display: flex;
+                    flex-direction: column;
+                    padding: 24px 32px;
+                    height: 100%;
                 }
 
                 .sidebar-button {
                     display: flex;
-                    margin: 16px 0;
+                    margin: 8px 0;
                     padding: 8px 8px;
                     cursor: default;
                     border-radius: 8px;
@@ -118,78 +120,61 @@ export function Sidebar({
                 }
             `}</style>
 
-            <ul>
-                <li>
-                    <Link href="/">
-                        <a
-                            className={getSidebarItemClass(
-                                '/earn',
-                                pathname,
-                                true,
-                            )}
-                            onClick={hideSidebar}
-                        >
-                            <RiPercentLine size={24} />
-                            Earn
-                        </a>
-                    </Link>
-                </li>
-                <li>
-                    <Link href="/borrow">
-                        <a
-                            className={getSidebarItemClass('/borrow', pathname)}
-                            onClick={hideSidebar}
-                        >
-                            <RiHandCoinLine size={24} />
-                            Borrow
-                        </a>
-                    </Link>
-                </li>
+            <div className="list">
+                <Link href="/">
+                    <a
+                        className={getSidebarItemClass('/earn', pathname, true)}
+                        onClick={hideSidebar}
+                    >
+                        <RiPercentLine size={24} />
+                        Earn
+                    </a>
+                </Link>
+                <Link href="/borrow">
+                    <a
+                        className={getSidebarItemClass('/borrow', pathname)}
+                        onClick={hideSidebar}
+                    >
+                        <RiHandCoinLine size={24} />
+                        Borrow
+                    </a>
+                </Link>
                 {isManager && (
-                    <li>
-                        <Link href="/manage">
-                            <a
-                                className={getSidebarItemClass(
-                                    '/manage',
-                                    pathname,
-                                )}
-                                onClick={hideSidebar}
-                            >
-                                <RiVipDiamondLine size={24} />
-                                Manage
-                            </a>
-                        </Link>
-                    </li>
-                )}
-                {RPC_NETWORK_ID === networks.optimismKovan ? (
-                    <li>
+                    <Link href="/manage">
                         <a
-                            className={getSidebarItemClass('/faucet', pathname)}
-                            onClick={hideSidebar}
-                            href="https://kovan.optifaucet.com"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
-                            <RiCoinLine size={24} />
-                            Faucet
-                        </a>
-                    </li>
-                ) : null}
-                <li>
-                    <Link href="/account">
-                        <a
-                            className={getSidebarItemClass(
-                                '/account',
-                                pathname,
-                            )}
+                            className={getSidebarItemClass('/manage', pathname)}
                             onClick={hideSidebar}
                         >
-                            <RiUserLine size={24} />
-                            Account
+                            <RiVipDiamondLine size={24} />
+                            Manage
                         </a>
                     </Link>
-                </li>
-            </ul>
+                )}
+                <Link href="/account">
+                    <a
+                        className={getSidebarItemClass('/account', pathname)}
+                        onClick={hideSidebar}
+                    >
+                        <RiUserLine size={24} />
+                        Account
+                    </a>
+                </Link>
+
+                <FlexGrow />
+
+                {RPC_NETWORK_ID === networks.optimismKovan ? (
+                    <a
+                        className={getSidebarItemClass('/faucet', pathname)}
+                        onClick={hideSidebar}
+                        href="https://kovan.optifaucet.com"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                    >
+                        <RiCoinLine size={24} />
+                        Faucet
+                    </a>
+                ) : null}
+            </div>
 
             <div className="overlay" onClick={hideSidebar} />
         </div>
