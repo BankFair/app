@@ -21,7 +21,9 @@ jobs:
             - name: Install packages
               run: yarn install
             - name: Build project
-              run: yarn build
+              run: |
+                  yarn next telemetry disable
+                  yarn build
             - name: Export static files
               run: yarn next export
             - name: Add .nojekyll file
