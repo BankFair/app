@@ -471,6 +471,7 @@ export function Background() {
                     display: flex;
                     width: 100%;
                     overflow: hidden;
+                    pointer-events: none;
 
                     > :global(svg) {
                         width: 100%;
