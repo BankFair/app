@@ -24,6 +24,7 @@ import {
     SwitchNetworkModal,
     Navigation,
     TransactionNotifications,
+    Background,
 } from '../components'
 import { useFetchPoolsPropertiesOnce, useConnectEagerly } from '../features'
 import { store } from '../store'
@@ -172,6 +173,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 `}</style>
                 <SwitchNetworkModal />
                 <Navigation />
+                <Background />
                 <Component {...pageProps} />
                 <TransactionNotifications />
             </Web3ReactProvider>
