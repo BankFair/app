@@ -23,8 +23,8 @@ export function PoolStats({
 
                     > h3 {
                         margin: 0;
-                        font-weight: 400;
-                        font-size: 18px;
+                        font-weight: 700;
+                        font-size: 16px;
                     }
 
                     > .manager {
@@ -38,15 +38,16 @@ export function PoolStats({
                 }
                 .subtitle {
                     color: var(--color-secondary);
-                    font-size: 14px;
-                    margin: 4px 0 20px;
+                    font-size: 16px;
+                    font-weight: 400;
+                    margin: 6px 0 24px;
                     display: flex;
                     align-items: center;
 
                     > img {
-                        width: 16px;
-                        height: 16px;
-                        margin-right: 4px;
+                        width: 24px;
+                        height: 24px;
+                        margin-right: 8px;
                     }
                 }
                 .stats {
@@ -57,21 +58,20 @@ export function PoolStats({
                         flex-basis: 50%;
                         > .number {
                             color: var(--color);
+                            font-size: 16px;
+                            font-weight: 700;
                         }
 
                         > .label {
-                            color: var(--color-secondary);
-                            font-size: 11.6px;
+                            color: var(--color);
+                            font-size: 14px;
+                            font-weight: 400;
                         }
                     }
 
                     &.small {
                         > .stat {
                             margin-bottom: 10px;
-
-                            > .number {
-                                font-size: 18px;
-                            }
                         }
                     }
                     &.large {
@@ -89,21 +89,17 @@ export function PoolStats({
                     }
                 }
 
-                @media screen and (min-width: 760px) {
+                @media screen and (min-width: 860px) {
                     .stats {
                         > .stat {
-                            flex-basis: auto;
-                        }
-                        &.small {
-                            justify-content: center;
-                            > .stat {
-                                margin-left: 15px;
-                                margin-right: 15px;
-                            }
+                            flex-basis: 20%;
                         }
                         &.large {
-                            justify-content: center;
                             > .stat {
+                                &:last-child {
+                                    flex-basis: 30%;
+                                }
+
                                 width: 120px;
                             }
                         }
@@ -112,12 +108,12 @@ export function PoolStats({
             `}</style>
             <div className="title">
                 <h3>Pool Status</h3>
-                <div className="manager">
+                {/* <div className="manager">
                     <span className="label">Pool Manager</span>
                     {managerAddress && (
                         <EtherscanAddress address={managerAddress} primary />
                     )}
-                </div>
+                </div> */}
             </div>
             <div className="subtitle">
                 <img src={`${prefix}/usdc.svg`} alt="USDC logo" />

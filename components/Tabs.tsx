@@ -14,28 +14,28 @@ export function Tabs<T extends readonly string[]>({
             <style jsx>{`
                 .tabs {
                     display: flex;
-                    justify-content: space-evenly;
-                    height: 30px;
-                    font-size: 14px;
+                    font-size: 16px;
+                    font-weight: 600;
 
                     > div {
                         position: relative;
-                        color: var(--color-secondary);
-                        line-height: 30px;
+                        color: var(--color);
                         cursor: pointer;
+                        padding: 0 0 8px;
+                        width: 100px;
+                        text-align: center;
+                        margin-right: 16px;
 
                         &.selected {
-                            color: var(--color);
-
                             &:after {
                                 content: '';
                                 position: absolute;
                                 bottom: 0;
                                 left: 0;
                                 width: 100%;
-                                height: 2px;
-                                border-radius: 1px;
-                                background-color: ${rgbGreen};
+                                height: 4px;
+                                border-radius: 2px;
+                                background-color: var(--greenery);
                             }
                         }
                     }

@@ -40,7 +40,7 @@ export function Alert({
         <div className={`alert ${style}`}>
             <style jsx>{`
                 .alert {
-                    display: flex;
+                    display: inline-block;
                     padding: 12px 16px;
                     border-radius: 8px;
 
@@ -89,9 +89,6 @@ export function Alert({
                 }
 
                 .text-container {
-                    margin-left: 6px;
-                    align-self: center;
-
                     .title {
                         font-size: 15px;
                         font-weight: 400;

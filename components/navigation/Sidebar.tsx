@@ -1,20 +1,11 @@
 import Link from 'next/link'
 import {
-    COLOR_GREEN,
     networks,
-    rgba,
-    rgbGreen,
     RPC_NETWORK_ID,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
     useAccount,
 } from '../../app'
-import {
-    NAV_HEIGHT,
-    SIDEBAR_CLOSE_MARGIN,
-    SIDEBAR_CLOSE_SIZE,
-    SIDEBAR_MAX_WIDTH,
-} from './constants'
-import { GrClose } from 'react-icons/gr'
+import { NAV_HEIGHT, SIDEBAR_MAX_WIDTH } from './constants'
 import {
     RiPercentLine,
     RiHandCoinLine,
@@ -56,17 +47,8 @@ export function Sidebar({
                     width: 100%;
                     height: 100vh;
                     z-index: 2;
-                    padding-top: ${NAV_HEIGHT}px;
+                    margin-top: ${NAV_HEIGHT}px;
                     display: ${isVisible ? 'block' : 'none'};
-
-                    > :global(.close-button) {
-                        position: absolute;
-                        top: ${SIDEBAR_CLOSE_MARGIN}px;
-                        right: ${SIDEBAR_CLOSE_MARGIN}px;
-                        > :global(path) {
-                            stroke: var(--color-secondary);
-                        }
-                    }
 
                     > .overlay {
                         display: none;
@@ -74,6 +56,7 @@ export function Sidebar({
                         position: fixed;
                         top: 0;
                         bottom: 0;
+                        margin-top: ${NAV_HEIGHT}px;
                         margin-left: ${SIDEBAR_MAX_WIDTH}px;
                         width: 100%;
                         height: 100vh;
@@ -83,34 +66,35 @@ export function Sidebar({
 
                 ul {
                     list-style: none;
-                    margin: 20px 20px;
+                    margin: 32px;
                     padding: 0;
                 }
 
                 .sidebar-button {
                     display: flex;
-                    align-items: center;
-                    margin: 4px 0;
-                    padding: 8px 10px;
+                    margin: 16px 0;
+                    padding: 8px 8px;
                     cursor: default;
                     border-radius: 8px;
                     color: var(--color-secondary);
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 24px;
 
                     > :global(svg) {
-                        margin-right: 10px;
+                        margin-right: 8px;
                     }
 
                     &.current,
                     &:hover {
-                        color: ${rgbGreen};
-                        background-color: ${rgba(COLOR_GREEN, 0.08)};
+                        color: var(--greenery);
+                        background: var(--gradient-hover);
                     }
                 }
 
                 @media screen and (min-width: ${SIDEBAR_MAX_WIDTH}px) {
                     .sidebar {
                         width: ${SIDEBAR_MAX_WIDTH}px;
-                        border-right: 1px solid var(--divider);
 
                         > .overlay {
                             display: block;
@@ -122,10 +106,6 @@ export function Sidebar({
                     .sidebar {
                         display: block;
 
-                        > :global(.close-button) {
-                            display: none;
-                        }
-
                         > .overlay {
                             display: none;
                         }
@@ -136,12 +116,6 @@ export function Sidebar({
                     }
                 }
             `}</style>
-
-            <GrClose
-                className="close-button"
-                onClick={hideSidebar}
-                size={SIDEBAR_CLOSE_SIZE}
-            />
 
             <ul>
                 <li>

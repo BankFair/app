@@ -7,11 +7,16 @@ export function Page({ children, xl }: { children: ReactNode; xl?: boolean }) {
                 .page {
                     width: 100%;
                     max-width: 800px;
-                    margin: 0 auto;
-                    padding: 20px;
+                    margin: 32px 0;
+                    padding: 0 32px;
 
                     &.xl {
                         max-width: 1200px;
+                    }
+
+                    > :global(h1):first-child {
+                        margin-top: 0;
+                        font-size: 36px;
                     }
                 }
             `}</style>

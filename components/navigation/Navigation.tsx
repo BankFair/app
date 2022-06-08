@@ -1,39 +1,28 @@
 import { useCallback, useState } from 'react'
 import {
-    COLOR_GREY_900,
-    COLOR_WHITE,
-    prefix,
-    rgba,
+    rgbWhite,
     shortenAddress,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
     useAccount,
 } from '../../app'
 import { Button } from '../Button'
 import { FlexGrow } from '../FlexGrow'
-import {
-    LOGO_HEIGHT,
-    LOGO_WIDTH,
-    LOGO_WITH_TEXT_WIDTH,
-    NAV_HEIGHT,
-    NAV_PADDING,
-} from './constants'
+import { NAV_HEIGHT, NAV_PADDING } from './constants'
 import { Sidebar } from './Sidebar'
-import { RiMenuLine } from 'react-icons/ri'
+import { RiMenuLine, RiWallet3Line } from 'react-icons/ri'
 import { useRouter } from 'next/router'
+import { Logo } from '../Logo'
 
 export function Navigation() {
     const { pathname } = useRouter()
     const account = useAccount()
 
     const [isSidebarVisible, setIsSidebarVisible] = useState(false)
-    const showSidebar = useCallback(
-        () => setIsSidebarVisible(true),
-        [setIsSidebarVisible],
+    const toggleSidebar = useCallback(
+        () => setIsSidebarVisible((state) => !state),
+        [],
     )
-    const hideSidebar = useCallback(
-        () => setIsSidebarVisible(false),
-        [setIsSidebarVisible],
-    )
+    const hideSidebar = useCallback(() => setIsSidebarVisible(false), [])
 
     return (
         <nav>
@@ -48,54 +37,36 @@ export function Navigation() {
                     display: flex;
                     align-items: center;
                     height: ${NAV_HEIGHT}px;
-                    background-color: var(--bg-overlay);
+                    background: var(--gradient);
                     backdrop-filter: blur(5px);
 
-                    > .logo,
-                    > .logo-text {
-                        z-index: 3;
-                        position: relative;
-                        padding: 2px;
-                        height: ${LOGO_HEIGHT}px;
-                        object-fit: contain;
-                    }
+                    > :global(.logo) {
+                        margin-right: -120px;
 
-                    > .logo {
-                        width: ${LOGO_WIDTH}px;
-                        margin-left: 4px;
-                    }
-
-                    > .logo-text {
-                        filter: invert(1);
-                        display: none;
-                        width: ${LOGO_WITH_TEXT_WIDTH}px;
+                        > :global(g) {
+                            display: none;
+                        }
                     }
 
                     > :global(.menu-button) {
                         position: relative;
-                        margin-left: 8px;
                         width: 24px;
                         height: 24px;
-                        color: var(--color-secondary);
-                    }
-                }
-
-                @media (prefers-color-scheme: dark) {
-                    nav {
-                        > .logo-text {
-                            filter: none;
-                        }
+                        color: ${rgbWhite};
                     }
                 }
 
                 @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
                     nav {
+                        > :global(.logo) {
+                            margin-right: 0;
+
+                            > :global(g) {
+                                display: inline;
+                            }
+                        }
                         > :global(.menu-button) {
                             display: none;
-                        }
-
-                        > .logo-text {
-                            display: block;
                         }
                     }
                 }
@@ -104,30 +75,21 @@ export function Navigation() {
                     padding-top: ${NAV_HEIGHT}px;
                 }
             `}</style>
-            <img
-                className="logo"
-                src={`${prefix}/logo.png`}
-                alt="Sapling logo"
-            />
-            <img
-                className="logo-text"
-                src={`${prefix}/logo-text.png`}
-                alt="Sapling logo"
-                loading="lazy"
-            />
+            <Logo />
             <RiMenuLine
                 className="menu-button"
                 size={24}
-                onClick={showSidebar}
+                onClick={toggleSidebar}
             />
             <FlexGrow />
             {account ? (
-                <Button href="/account" blue ghost key="account">
+                <Button href="/account" key="account" whiteTransaprent>
+                    <RiWallet3Line />
                     {shortenAddress(account)}
                 </Button>
             ) : (
                 pathname !== '/account' && (
-                    <Button href="/account" key="connect">
+                    <Button href="/account" key="connect" whiteTransaprent>
                         Connect Wallet
                     </Button>
                 )

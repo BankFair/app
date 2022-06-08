@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
-import { SIDEBAR_ALWAYS_VISIBLE_WIDTH } from '../app'
+import { rgbaLimeGreen21, SIDEBAR_ALWAYS_VISIBLE_WIDTH } from '../app'
 
 export function LinkList({
     items,
@@ -21,7 +21,7 @@ export function LinkList({
                 a {
                     color: var(--color);
                     background-color: var(--bg-color);
-                    box-shadow: var(--shadow) 0 1px 2px 0;
+                    border: 1px solid ${rgbaLimeGreen21};
                     display: flex;
                     border-radius: 8px;
                     padding: 16px;
@@ -45,6 +45,11 @@ export function LinkList({
                     > .stat {
                         flex-basis: 50%;
                         margin-top: 8px;
+
+                        &:nth-child(1),
+                        &:nth-child(2) {
+                            margin-top: 0;
+                        }
 
                         > .label {
                             color: var(--color-secondary);

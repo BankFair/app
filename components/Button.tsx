@@ -3,19 +3,7 @@ import { useMemo } from 'react'
 import { ButtonHTMLAttributes } from 'react'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
 import { Oval } from 'react-loading-icons'
-import {
-    className,
-    COLOR_BLUE,
-    COLOR_GREEN,
-    COLOR_RED,
-    rgba,
-    rgbBlue,
-    rgbBlueDark,
-    rgbGreen,
-    rgbGreenDark,
-    rgbRed,
-    rgbRedDark,
-} from '../app'
+import { className, COLOR_WHITE, rgba, rgbGreen } from '../app'
 
 export function Button({
     href,
@@ -35,9 +23,7 @@ export function Button({
     style?: CSSProperties
     width?: number
     disabled?: boolean
-    ghost?: boolean
-    blue?: boolean
-    red?: boolean
+    whiteTransaprent?: boolean
 }) {
     const { disabled } = classModifiers
 
@@ -63,65 +49,47 @@ export function Button({
                 button {
                     cursor: default;
                     background-color: ${rgbGreen};
-                    border-color: ${rgba(COLOR_GREEN, 0.48)};
-                    padding: 8px 14px;
+                    padding: 0 16px;
                     border-radius: 8px;
+                    height: 40px;
                     color: white;
                     border: 0 none;
                     font-weight: 400;
                     font-size: 16px;
                     font-family: inherit;
                     display: inline-block;
-                    transition-property: background-color;
+                    transition-property: background-image;
                     transition-duration: 100ms;
                     transition-timing-function: linear;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    background-image: var(--gradient);
 
-                    &:not(.disabled):not(.ghost):hover {
-                        background-color: ${rgbGreenDark};
-                    }
-
-                    &.red {
-                        background-color: ${rgbRed};
-                        border-color: ${rgba(COLOR_RED, 0.48)};
-
-                        &:not(.disabled):not(.ghost):hover {
-                            background-color: ${rgbRedDark};
-                        }
-                    }
-
-                    &.blue {
-                        background-color: ${rgbBlue};
-                        border-color: ${rgba(COLOR_BLUE, 0.48)};
-
-                        &:not(.disabled):not(.ghost):hover {
-                            background-color: ${rgbBlueDark};
-                        }
+                    &:not(.disabled):hover {
+                        background-image: var(--gradient-hover);
                     }
 
                     &.disabled {
-                        opacity: 0.7;
+                        filter: grayscale(100%);
                         cursor: not-allowed;
                     }
 
-                    &.ghost {
-                        border-width: 1px;
-                        border-style: solid;
-                        background-color: transparent;
-                        color: ${rgbGreen};
+                    &.whiteTransaprent {
+                        background-image: none;
+                        background-color: ${rgba(COLOR_WHITE, 0.2)};
+                        transition-property: background-color;
 
-                        &.red {
-                            color: ${rgbRed};
-                        }
-                        &.blue {
-                            color: ${rgbBlue};
+                        &:not(.disabled):hover {
+                            background-image: none;
+                            background-color: ${rgba(COLOR_WHITE, 0.4)};
                         }
                     }
 
                     > :global(svg) {
-                        width: 16px;
-                        height: 16px;
-                        margin-right: 4px;
-                        margin-bottom: -3px;
+                        width: 24px;
+                        height: 24px;
+                        margin-right: 16px;
                     }
                 }
             `}</style>

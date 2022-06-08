@@ -9,13 +9,20 @@ import {
     input,
     inputNonTransparentDark,
     inputNonTransparentLight,
+    NEW_COLOR_VAMPIRE_BLACK,
     rgba,
     rgbBlue,
+    rgbChineseSilver,
+    rgbGreeneryDark,
+    rgbGreeneryLight,
     rgbGrey500,
     rgbGrey600,
     rgbGrey900,
+    rgbGround,
+    rgbStone,
     rgbTextPrimaryDark,
     rgbTextPrimaryLight,
+    rgbVampireBlack,
     rgbWhite,
     useClickTabIndexElement,
 } from '../app'
@@ -36,13 +43,24 @@ export default function App({ Component, pageProps }: AppProps) {
                     :root {
                         --bg-color: ${rgbWhite};
                         --bg-overlay: ${rgba(COLOR_WHITE, 0.9)};
-                        --color: ${rgbTextPrimaryLight};
-                        --color-secondary: ${rgbGrey600};
+                        --color: ${rgbGround};
+                        --color-secondary: ${rgbStone};
                         --color-disabled: ${rgbGrey500};
                         --disabled-24: ${rgba(COLOR_GREY_500, 0.24)};
                         --disabled-80: ${rgba(COLOR_GREY_500, 0.8)};
                         --divider: ${rgba(COLOR_GREY_500, 0.24)};
                         --shadow: ${rgba(COLOR_GREY_500, 0.16)};
+                        --greenery: ${rgbGreeneryLight};
+                        --gradient: linear-gradient(
+                            90.05deg,
+                            #47cc4c 3.95%,
+                            #35b5d1 104.32%
+                        );
+                        --gradient-hover: linear-gradient(
+                            90deg,
+                            #d1ffda 0%,
+                            #baf7e1 111.89%
+                        );
                     }
 
                     html,
@@ -88,7 +106,8 @@ export default function App({ Component, pageProps }: AppProps) {
                         color: var(--color);
                         border: 0 none;
                         border-radius: 8px;
-                        background-color: ${input};
+                        border: 2px solid ${rgbStone};
+                        background-color: ${rgbWhite};
                         background-image: linear-gradient(
                                 45deg,
                                 transparent 50%,
@@ -128,23 +147,32 @@ export default function App({ Component, pageProps }: AppProps) {
                         }
 
                         > option {
-                            background-color: ${inputNonTransparentLight};
+                            background-color: ${rgbGround};
                             color: var(--color);
                         }
                     }
 
                     @media (prefers-color-scheme: dark) {
                         :root {
-                            --bg-color: ${rgbGrey900};
-                            --bg-overlay: ${rgba(COLOR_GREY_900, 0.9)};
-                            --color: ${rgbTextPrimaryDark};
-                            --color-secondary: ${rgbGrey500};
+                            --bg-color: ${rgbVampireBlack};
+                            --bg-overlay: ${rgba(NEW_COLOR_VAMPIRE_BLACK, 0.9)};
+                            --color: ${rgbChineseSilver};
                             --color-disabled: ${rgbGrey600};
                             --shadow: rgba(0, 0, 0, 0.16);
+                            --greenery: ${rgbGreeneryDark};
+                            --gradient-hover: linear-gradient(
+                                90deg,
+                                #183f20 0%,
+                                #002f39 111.89%
+                            );
                         }
 
-                        select > option {
-                            background-color: ${inputNonTransparentDark};
+                        select {
+                            background-color: ${rgbGround};
+
+                            > option {
+                                background-color: ${rgbGround};
+                            }
                         }
                     }
                 `}</style>
