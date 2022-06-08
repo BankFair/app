@@ -3,13 +3,9 @@ import { Provider } from 'react-redux'
 import type { AppProps } from 'next/app'
 import {
     COLOR_GREY_500,
-    COLOR_GREY_900,
-    COLOR_WHITE,
     connectors,
-    input,
-    inputNonTransparentDark,
-    inputNonTransparentLight,
-    NEW_COLOR_VAMPIRE_BLACK,
+    NEW_COLOR_RICH_BLACK,
+    NEW_COLOR_WHITE,
     rgba,
     rgbBlue,
     rgbChineseSilver,
@@ -17,12 +13,10 @@ import {
     rgbGreeneryLight,
     rgbGrey500,
     rgbGrey600,
-    rgbGrey900,
     rgbGround,
+    rgbNewWhite,
+    rgbRichBlack,
     rgbStone,
-    rgbTextPrimaryDark,
-    rgbTextPrimaryLight,
-    rgbVampireBlack,
     rgbWhite,
     useClickTabIndexElement,
 } from '../app'
@@ -41,8 +35,8 @@ export default function App({ Component, pageProps }: AppProps) {
             <Web3ReactProvider connectors={connectors}>
                 <style jsx global>{`
                     :root {
-                        --bg-color: ${rgbWhite};
-                        --bg-overlay: ${rgba(COLOR_WHITE, 0.9)};
+                        --bg-color: ${rgbNewWhite};
+                        --bg-overlay: ${rgba(NEW_COLOR_WHITE, 0.9)};
                         --color: ${rgbGround};
                         --color-secondary: ${rgbStone};
                         --color-disabled: ${rgbGrey500};
@@ -154,8 +148,8 @@ export default function App({ Component, pageProps }: AppProps) {
 
                     @media (prefers-color-scheme: dark) {
                         :root {
-                            --bg-color: ${rgbVampireBlack};
-                            --bg-overlay: ${rgba(NEW_COLOR_VAMPIRE_BLACK, 0.9)};
+                            --bg-color: ${rgbRichBlack};
+                            --bg-overlay: ${rgba(NEW_COLOR_RICH_BLACK, 0.9)};
                             --color: ${rgbChineseSilver};
                             --color-disabled: ${rgbGrey600};
                             --shadow: rgba(0, 0, 0, 0.16);
