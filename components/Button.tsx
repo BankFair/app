@@ -48,7 +48,7 @@ export function Button({
                 a,
                 button {
                     cursor: default;
-                    background-color: ${rgbGreen};
+                    background-color: transparent;
                     padding: 0 16px;
                     border-radius: 8px;
                     height: 40px;
