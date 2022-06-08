@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { rgbaLimeGreen21, rgbGreen } from '../app'
+import { rgbaBlack5, rgbaLimeGreen21, rgbaWhite5, rgbGreen } from '../app'
 import { Oval } from 'react-loading-icons'
 
 const commonBoxShadow = '0px 28px 32px -16px rgba(66, 117, 48, 0.19)'
@@ -23,7 +23,8 @@ export function Box({
                 .box {
                     border-radius: 8px;
                     border: 1px solid ${rgbaLimeGreen21};
-                    background-color: var(--bg-color);
+                    background-color: ${rgbaWhite5};
+                    backdrop-filter: blur(16px);
                     box-shadow: ${commonBoxShadow};
                     margin: 24px auto;
                     padding: 24px;
@@ -32,6 +33,7 @@ export function Box({
                     @media (prefers-color-scheme: dark) {
                         box-shadow: 0px 28px 32px -16px #000000,
                             ${commonBoxShadow};
+                        background-color: ${rgbaBlack5};
                     }
 
                     &.s {

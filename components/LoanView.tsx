@@ -17,7 +17,9 @@ import {
     formatMaxDecimals,
     noop,
     oneHundredPercent,
+    rgbaBlack5,
     rgbaLimeGreen21,
+    rgbaWhite5,
     rgbBlue,
     rgbGreen,
     rgbRed,
@@ -118,11 +120,16 @@ export function LoanView({
         <div className="loan">
             <style jsx>{`
                 .loan {
-                    background-color: var(--bg-color);
+                    background-color: ${rgbaWhite5};
+                    backdrop-filter: blur(16px);
                     border: 1px solid ${rgbaLimeGreen21};
                     border-radius: 8px;
                     padding: 18px 24px;
                     margin: 8px 0;
+
+                    @media (prefers-color-scheme: dark) {
+                        background-color: ${rgbaBlack5};
+                    }
                 }
 
                 .amount {

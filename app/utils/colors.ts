@@ -10,6 +10,7 @@ export const rgba = (color: Color, opacity: number) =>
     `rgba(${color.r},${color.g},${color.b},${opacity})`
 
 export const COLOR_WHITE: Color = { r: 255, g: 255, b: 255 }
+export const COLOR_BLACK: Color = { r: 0, g: 0, b: 0 }
 export const COLOR_BLUE_LIGHTER: Color = { r: 208, g: 242, b: 255 }
 export const COLOR_BLUE_LIGHT: Color = { r: 116, g: 202, b: 255 }
 export const COLOR_BLUE: Color = { r: 24, g: 144, b: 255 }
@@ -98,4 +99,7 @@ export const rgbGreeneryDark = rgb(NEW_COLOR_GREENERY_DARK)
 export const rgbGround = rgb(NEW_COLOR_GROUND)
 export const rgbStone = rgb(NEW_COLOR_STONE)
 export const rgbaLimeGreen21 = rgba(NEW_COLOR_LIME_GREEN, 0.21)
+
+export const rgbaWhite5 = rgba(COLOR_WHITE, 0.05)
+export const rgbaBlack5 = rgba(COLOR_BLACK, 0.05)
 // #endregion
