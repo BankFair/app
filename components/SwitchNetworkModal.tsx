@@ -29,7 +29,7 @@ export function SwitchNetworkModal() {
                     margin-bottom: 8px;
                     justify-content: center;
 
-                    > :global(a:first-child) {
+                    > :global(button:first-child) {
                         margin-right: 10px;
                     }
                 }
