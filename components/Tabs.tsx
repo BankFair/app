@@ -38,6 +38,15 @@ export function Tabs<T extends readonly string[]>({
                                 background-color: var(--greenery);
                             }
                         }
+                        
+                        &.notSelected {
+                            @media not all and (min-resolution:.001dpcm) { 
+                                @supports (-webkit-appearance:none) {
+                                    display: inline-block;
+                                }
+                            }
+                        }
+                        
                     }
                 }
             `}</style>
@@ -45,7 +54,7 @@ export function Tabs<T extends readonly string[]>({
                 <div
                     tabIndex={0}
                     key={tab}
-                    className={currentTab === tab ? 'selected' : ''}
+                    className={currentTab === tab ? 'selected' : 'notSelected'}
                     onClick={() => setCurrentTab(tab)}
                 >
                     {tab}
