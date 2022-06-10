@@ -360,12 +360,10 @@ function RequestLoan({
                     }
 
                     .max {
-                        text-align: right;
-                        font-size: 12px;
-                        height: 14px;
-                        line-height: 14px;
-                        margin-bottom: 2px;
-                        margin-right: 4px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        height: 16px;
+                        line-height: 16px;
                         color: var(--color-secondary);
 
                         > :global(span) {
@@ -373,12 +371,15 @@ function RequestLoan({
                         }
                     }
 
+                    td {
+                        padding: 3px 0;
+                    }
+
                     .amount-label {
-                        padding-top: 17px;
+                        padding-right: 6px;
                     }
 
                     .duration-label {
-                        padding-top: 6px;
                         padding-right: 6px;
                     }
 
@@ -460,7 +461,6 @@ function RequestLoan({
                         <tr>
                             <td className="amount-label">Amount</td>
                             <td>
-                                <div className="max">{maxElement}</div>
                                 <AmountInput
                                     decimals={tokenDecimals}
                                     value={value}
@@ -473,6 +473,11 @@ function RequestLoan({
                                             : undefined
                                     }
                                 />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan={2}>
+                                <div className="max">{maxElement}</div>
                             </td>
                         </tr>
                         <tr>
