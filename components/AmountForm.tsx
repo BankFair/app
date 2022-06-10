@@ -172,45 +172,36 @@ export function useAmountForm<T extends Types>({
                 form {
                     display: flex;
                     flex-direction: column;
-                    align-items: center;
                     margin: 12px 0;
 
-                    > .input-container {
-                        display: flex;
-                        flex-direction: column;
-                        margin-bottom: 8px;
+                    > .max {
+                        font-size: 14px;
+                        font-weight: 500;
+                        margin: 8px 0;
+                        height: 16px;
+                        line-height: 14px;
+                        color: var(--color-secondary);
 
-                        > .max {
-                            text-align: right;
-                            font-size: 12px;
-                            height: 14px;
-                            line-height: 14px;
-                            margin-bottom: 2px;
-                            margin-right: 4px;
-                            color: var(--color-secondary);
-
-                            > span {
-                                cursor: pointer;
-                            }
+                        > span {
+                            cursor: pointer;
                         }
                     }
                 }
             `}</style>
 
-            <div className="input-container">
-                <div className="max">
-                    {max ? (
-                        <span tabIndex={0} onClick={handleClickMax}>
-                            Max: {formattedMax}
-                        </span>
-                    ) : null}
-                </div>
-                <AmountInput
-                    decimals={6}
-                    disabled={inputDisabled}
-                    value={value}
-                    onChange={setAmount}
-                />
+            <AmountInput
+                decimals={6}
+                disabled={inputDisabled}
+                value={value}
+                onChange={setAmount}
+            />
+
+            <div className="max">
+                {max ? (
+                    <span tabIndex={0} onClick={handleClickMax}>
+                        Maximum: {formattedMax}
+                    </span>
+                ) : null}
             </div>
 
             <Button
@@ -221,7 +212,6 @@ export function useAmountForm<T extends Types>({
                 type="submit"
                 width={170}
                 loading={Boolean(loading)}
-                blue={isWithdraw || isRepay}
             >
                 {account
                     ? needsApproval

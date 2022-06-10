@@ -133,8 +133,6 @@ export function Account() {
                     dispatch(clearLastConnectorName())
                     connector.deactivate()
                 }}
-                blue
-                ghost
                 style={{
                     margin: '0 auto',
                     width: 'max-content',

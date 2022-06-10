@@ -4,7 +4,7 @@ import {
     KeyboardEventHandler,
     useMemo,
 } from 'react'
-import { className, input, prefix } from '../app'
+import { className, input, prefix, rgbGround, rgbStone, rgbWhite } from '../app'
 
 export function AmountInput({
     decimals,
@@ -89,17 +89,22 @@ export function AmountInput({
                 }
 
                 input {
-                    font-size: 18px;
+                    font-size: 16px;
+                    font-weight: 600;
                     line-height: 21px;
                     width: 100%;
-                    padding: 10px 84px 10px 12px;
-                    border: 0 none;
+                    padding: 10px 84px 10px 8px;
+                    border: 2px solid ${rgbStone};
                     border-radius: 8px;
-                    background-color: ${input};
+                    background-color: ${rgbWhite};
                     color: var(--color);
 
                     &:disabled {
                         cursor: not-allowed;
+                    }
+
+                    @media (prefers-color-scheme: dark) {
+                        background-color: ${rgbGround};
                     }
                 }
 

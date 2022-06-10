@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
-import { SIDEBAR_ALWAYS_VISIBLE_WIDTH } from '../app'
+import {
+    rgbaBlack5,
+    rgbaLimeGreen21,
+    rgbaWhite5,
+    SIDEBAR_ALWAYS_VISIBLE_WIDTH,
+} from '../app'
 
 export function LinkList({
     items,
@@ -20,14 +25,19 @@ export function LinkList({
 
                 a {
                     color: var(--color);
-                    background-color: var(--bg-color);
-                    box-shadow: var(--shadow) 0 1px 2px 0;
+                    background-color: ${rgbaWhite5};
+                    backdrop-filter: blur(16px);
+                    border: 1px solid ${rgbaLimeGreen21};
                     display: flex;
                     border-radius: 8px;
                     padding: 16px;
                     margin: 10px 0;
                     justify-content: space-between;
                     flex-direction: column;
+
+                    @media (prefers-color-scheme: dark) {
+                        background-color: ${rgbaBlack5};
+                    }
                 }
 
                 h4 {
@@ -45,6 +55,11 @@ export function LinkList({
                     > .stat {
                         flex-basis: 50%;
                         margin-top: 8px;
+
+                        &:nth-child(1),
+                        &:nth-child(2) {
+                            margin-top: 0;
+                        }
 
                         > .label {
                             color: var(--color-secondary);

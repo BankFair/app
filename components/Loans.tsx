@@ -220,8 +220,6 @@ export function Loans(props: {
                     : "You haven't requested any loans yet"}
                 {filterApplied ? (
                     <Button
-                        blue
-                        ghost
                         onClick={() => setFilter(-1)}
                         style={{ display: 'block', margin: '10px auto 0' }}
                     >

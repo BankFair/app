@@ -113,7 +113,6 @@ function StakeAndUnstake({
 
     return (
         <Box
-            s
             loading={Boolean(type === 'Unstake' && account ? !info : false)}
             overlay={isNotManager ? 'Only manager can stake' : undefined}
         >
@@ -124,6 +123,7 @@ function StakeAndUnstake({
             <EnterExitAlert
                 enter={type === 'Stake'}
                 value={value}
+                enterVerb="stake"
                 exitVerb="unstaking"
                 earlyExitDeadline={info ? info.earlyExitDeadline : 0}
                 earlyExitFeePercent={stats ? stats.earlyExitFeePercent : 0}

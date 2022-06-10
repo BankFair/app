@@ -7,18 +7,23 @@ import { Alert } from './Alert'
 export function EnterExitAlert({
     enter,
     value,
+    enterVerb,
     exitVerb,
     earlyExitFeePercent,
     earlyExitDeadline,
 }: {
     enter: boolean
     value: string
+    enterVerb: 'deposit' | 'stake'
     exitVerb: 'withdrawing' | 'unstaking'
     earlyExitFeePercent: number
     earlyExitDeadline: number
 }) {
     return enter ? (
-        <Alert style="warning-filled" title="TODO: Explain the risks" />
+        <Alert
+            style="warning-filled"
+            title={`You should not ${enterVerb} unless you are prepared to sustain a total loss of the money you have invested plus any commission or other transaction charges`}
+        />
     ) : earlyExitFeePercent &&
       earlyExitDeadline &&
       earlyExitDeadline > Date.now() / 1000 ? (
@@ -34,7 +39,7 @@ export function EnterExitAlert({
                           6,
                       )} USDC) `
                     : ''
-            }when withdrawing before ${DateTime.fromSeconds(earlyExitDeadline)
+            }when ${exitVerb} before ${DateTime.fromSeconds(earlyExitDeadline)
                 .toLocal()
                 .toLocaleString(DateTime.DATETIME_SHORT)}`}
         />

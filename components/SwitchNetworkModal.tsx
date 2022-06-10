@@ -51,8 +51,6 @@ export function SwitchNetworkModal() {
                     Switch network
                 </Button>
                 <Button
-                    blue
-                    ghost
                     onClick={() => {
                         dispatch(clearLastConnectorName())
                         web3.connector.deactivate()

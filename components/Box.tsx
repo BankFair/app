@@ -1,6 +1,8 @@
 import { ReactNode } from 'react'
-import { rgbGreen } from '../app'
+import { rgbaBlack5, rgbaLimeGreen21, rgbaWhite5, rgbGreen } from '../app'
 import { Oval } from 'react-loading-icons'
+
+const commonBoxShadow = '0px 28px 32px -16px rgba(66, 117, 48, 0.19)'
 
 export function Box({
     children,
@@ -19,12 +21,20 @@ export function Box({
         <div className={`box ${s ? 's' : ''} ${className || ''}`}>
             <style jsx>{`
                 .box {
-                    border-radius: 16px;
-                    background-color: var(--bg-color);
-                    box-shadow: var(--shadow) 0 16px 32px -4px;
-                    margin: 40px auto;
-                    padding: 26px 30px;
+                    border-radius: 8px;
+                    border: 1px solid ${rgbaLimeGreen21};
+                    background-color: ${rgbaWhite5};
+                    backdrop-filter: blur(16px);
+                    box-shadow: ${commonBoxShadow};
+                    margin: 24px auto;
+                    padding: 24px;
                     position: relative;
+
+                    @media (prefers-color-scheme: dark) {
+                        box-shadow: 0px 28px 32px -16px #000000,
+                            ${commonBoxShadow};
+                        background-color: ${rgbaBlack5};
+                    }
 
                     &.s {
                         max-width: 400px;

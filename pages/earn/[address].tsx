@@ -107,11 +107,12 @@ function DepositAndWithdraw({
 
     const { max, cannotDeposit } = useMemo(() => {
         if (type === 'Withdraw') {
-            if (info)
+            if (info) {
                 return {
                     max: BigNumber.from(info.withdrawable),
                     cannotDeposit: false,
                 }
+            }
 
             return { max: undefined, cannotDeposit: false }
         }
@@ -158,7 +159,6 @@ function DepositAndWithdraw({
 
     return (
         <Box
-            s
             loading={Boolean(
                 type === 'Deposit'
                     ? (account && !cannotDeposit
@@ -174,11 +174,7 @@ function DepositAndWithdraw({
                         {overlay}
                         {info && zero.lt(info.withdrawable) ? (
                             <div style={{ textAlign: 'center', marginTop: 8 }}>
-                                <Button
-                                    onClick={() => setType('Withdraw')}
-                                    ghost
-                                    blue
-                                >
+                                <Button onClick={() => setType('Withdraw')}>
                                     Withdraw
                                 </Button>
                             </div>
@@ -194,6 +190,7 @@ function DepositAndWithdraw({
             <EnterExitAlert
                 enter={type === 'Deposit'}
                 value={value}
+                enterVerb="deposit"
                 exitVerb="withdrawing"
                 earlyExitDeadline={info ? info.earlyExitDeadline : 0}
                 earlyExitFeePercent={stats ? stats.earlyExitFeePercent : 0}
@@ -220,7 +217,7 @@ function YourSupply({
     if (!account || account === managerAddress) return null
 
     return (
-        <Box s>
+        <Box>
             <div>
                 Your deposit:{' '}
                 {info ? (
@@ -304,7 +301,7 @@ function Earnings({
               }
 
     return (
-        <Box s>
+        <Box>
             <style jsx>{`
                 h4 {
                     margin-top: 0;

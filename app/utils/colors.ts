@@ -10,6 +10,7 @@ export const rgba = (color: Color, opacity: number) =>
     `rgba(${color.r},${color.g},${color.b},${opacity})`
 
 export const COLOR_WHITE: Color = { r: 255, g: 255, b: 255 }
+export const COLOR_BLACK: Color = { r: 0, g: 0, b: 0 }
 export const COLOR_BLUE_LIGHTER: Color = { r: 208, g: 242, b: 255 }
 export const COLOR_BLUE_LIGHT: Color = { r: 116, g: 202, b: 255 }
 export const COLOR_BLUE: Color = { r: 24, g: 144, b: 255 }
@@ -78,4 +79,27 @@ export const inputNonTransparentDark = color(rgbGrey900).mix(
 export const COLOR_TEXT_PRIMARY_DARK: Color = COLOR_GREY_800
 export const rgbTextPrimaryLight = rgbGrey800
 export const rgbTextPrimaryDark = rgbWhite
+// #endregion
+
+// #region New colors
+export const NEW_COLOR_WHITE: Color = { r: 250, g: 255, b: 251 }
+export const NEW_COLOR_LIME_GREEN: Color = { r: 57, g: 229, b: 64 }
+export const NEW_COLOR_RICH_BLACK: Color = { r: 5, g: 2, b: 0 }
+export const NEW_COLOR_CHINESE_SILVER: Color = { r: 205, g: 205, b: 205 }
+export const NEW_COLOR_GREENERY_LIGHT: Color = { r: 71, g: 205, b: 76 }
+export const NEW_COLOR_GREENERY_DARK: Color = { r: 4, g: 192, b: 0 }
+export const NEW_COLOR_GROUND: Color = { r: 15, g: 7, b: 0 }
+export const NEW_COLOR_STONE: Color = { r: 104, g: 104, b: 104 }
+
+export const rgbNewWhite = rgb(NEW_COLOR_WHITE)
+export const rgbRichBlack = rgb(NEW_COLOR_RICH_BLACK)
+export const rgbChineseSilver = rgb(NEW_COLOR_CHINESE_SILVER)
+export const rgbGreeneryLight = rgb(NEW_COLOR_GREENERY_LIGHT)
+export const rgbGreeneryDark = rgb(NEW_COLOR_GREENERY_DARK)
+export const rgbGround = rgb(NEW_COLOR_GROUND)
+export const rgbStone = rgb(NEW_COLOR_STONE)
+export const rgbaLimeGreen21 = rgba(NEW_COLOR_LIME_GREEN, 0.21)
+
+export const rgbaWhite5 = rgba(COLOR_WHITE, 0.05)
+export const rgbaBlack5 = rgba(COLOR_BLACK, 0.05)
 // #endregion

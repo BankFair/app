@@ -336,7 +336,6 @@ function RequestLoan({
 
     return (
         <Box
-            s
             loading={componentIsLoading}
             overlay={
                 isManager
@@ -353,22 +352,18 @@ function RequestLoan({
             <style jsx>{`
                 form {
                     > h3 {
-                        text-align: center;
                         margin: 0 0 8px;
                     }
 
                     > table {
-                        margin: 0 auto;
                         border-collapse: collapse;
                     }
 
                     .max {
-                        text-align: right;
-                        font-size: 12px;
-                        height: 14px;
-                        line-height: 14px;
-                        margin-bottom: 2px;
-                        margin-right: 4px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        height: 16px;
+                        line-height: 16px;
                         color: var(--color-secondary);
 
                         > :global(span) {
@@ -376,12 +371,15 @@ function RequestLoan({
                         }
                     }
 
+                    td {
+                        padding: 3px 0;
+                    }
+
                     .amount-label {
-                        padding-top: 17px;
+                        padding-right: 6px;
                     }
 
                     .duration-label {
-                        padding-top: 6px;
                         padding-right: 6px;
                     }
 
@@ -399,21 +397,18 @@ function RequestLoan({
                         display: flex;
                         position: relative;
                         padding: 16px 0;
-                        text-align: center;
 
                         > .item {
                             flex-basis: 50%;
-
                             > .label {
-                                font-size: 11px;
-                                text-transform: uppercase;
-                                font-weight: 300;
-                                color: var(--color-secondary);
+                                font-size: 15px;
+                                font-weight: 400;
+                                color: var(--color);
                             }
                             > .value {
                                 font-size: 18px;
                                 padding-top: 2px;
-                                font-weight: 400;
+                                font-weight: 700;
                             }
                         }
 
@@ -434,7 +429,6 @@ function RequestLoan({
                     > .button-container {
                         position: relative;
                         display: table;
-                        margin: 0 auto;
 
                         > .clickable {
                             position: absolute;
@@ -443,6 +437,18 @@ function RequestLoan({
                             width: 100%;
                             height: 100%;
                             cursor: not-allowed;
+                        }
+                    }
+                }
+
+                @media screen and (min-width: 800px) {
+                    form {
+                        .info > .item {
+                            flex-basis: 60%;
+
+                            &:first-child {
+                                flex-basis: 25%;
+                            }
                         }
                     }
                 }
@@ -455,7 +461,6 @@ function RequestLoan({
                         <tr>
                             <td className="amount-label">Amount</td>
                             <td>
-                                <div className="max">{maxElement}</div>
                                 <AmountInput
                                     decimals={tokenDecimals}
                                     value={value}
@@ -468,6 +473,11 @@ function RequestLoan({
                                             : undefined
                                     }
                                 />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan={2}>
+                                <div className="max">{maxElement}</div>
                             </td>
                         </tr>
                         <tr>
@@ -508,16 +518,16 @@ function RequestLoan({
 
                 <div className="info">
                     <div className="item">
-                        <div className="label">Interest rate</div>
                         <div className="value">
                             {borrowInfo ? borrowInfo.apr : '0'}%
                         </div>
+                        <div className="label">Interest rate</div>
                     </div>
                     <div className="item">
-                        <div className="label">Owed after duration</div>
                         <div className="value">
                             {borrowInfo ? willOwe : '0'}
                         </div>
+                        <div className="label">Owed after duration</div>
                     </div>
 
                     {alert ? (

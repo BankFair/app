@@ -1,29 +1,23 @@
 import Link from 'next/link'
 import {
-    COLOR_GREEN,
     networks,
-    rgba,
-    rgbGreen,
     RPC_NETWORK_ID,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
     useAccount,
 } from '../../app'
+import { NAV_HEIGHT, SIDEBAR_MAX_WIDTH } from './constants'
 import {
-    NAV_HEIGHT,
-    SIDEBAR_CLOSE_MARGIN,
-    SIDEBAR_CLOSE_SIZE,
-    SIDEBAR_MAX_WIDTH,
-} from './constants'
-import { GrClose } from 'react-icons/gr'
-import { TiChartAreaOutline } from 'react-icons/ti'
-import { AiFillBank } from 'react-icons/ai'
-import { RiAccountCircleFill } from 'react-icons/ri'
-import { MdOutlineAdminPanelSettings } from 'react-icons/md'
-import { FaFaucet } from 'react-icons/fa'
+    RiPercentLine,
+    RiHandCoinLine,
+    RiUserLine,
+    RiCoinLine,
+    RiVipDiamondLine,
+} from 'react-icons/ri'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
 import { useMemo } from 'react'
 import { selectPools } from '../../features'
+import { FlexGrow } from '../FlexGrow'
 
 export function Sidebar({
     isVisible,
@@ -52,26 +46,18 @@ export function Sidebar({
                     top: 0;
                     left: 0;
                     width: 100%;
-                    height: 100vh;
-                    z-index: 2;
-                    padding-top: ${NAV_HEIGHT}px;
+                    margin-top: ${NAV_HEIGHT}px;
+                    height: ${`calc(100vh - ${NAV_HEIGHT}px)`};
+                    z-index: 3;
                     display: ${isVisible ? 'block' : 'none'};
-
-                    > :global(.close-button) {
-                        position: absolute;
-                        top: ${SIDEBAR_CLOSE_MARGIN}px;
-                        right: ${SIDEBAR_CLOSE_MARGIN}px;
-                        > :global(path) {
-                            stroke: var(--color-secondary);
-                        }
-                    }
 
                     > .overlay {
                         display: none;
-                        z-index: 1;
+                        z-index: 2;
                         position: fixed;
                         top: 0;
                         bottom: 0;
+                        margin-top: ${NAV_HEIGHT}px;
                         margin-left: ${SIDEBAR_MAX_WIDTH}px;
                         width: 100%;
                         height: 100vh;
@@ -79,36 +65,38 @@ export function Sidebar({
                     }
                 }
 
-                ul {
-                    list-style: none;
-                    margin: 20px 20px;
-                    padding: 0;
+                .list {
+                    display: flex;
+                    flex-direction: column;
+                    padding: 24px 32px;
+                    height: 100%;
                 }
 
                 .sidebar-button {
                     display: flex;
-                    align-items: center;
-                    margin: 4px 0;
-                    padding: 8px 10px;
+                    margin: 8px 0;
+                    padding: 8px 8px;
                     cursor: default;
                     border-radius: 8px;
                     color: var(--color-secondary);
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 24px;
 
                     > :global(svg) {
-                        margin-right: 10px;
+                        margin-right: 8px;
                     }
 
                     &.current,
                     &:hover {
-                        color: ${rgbGreen};
-                        background-color: ${rgba(COLOR_GREEN, 0.08)};
+                        color: var(--greenery);
+                        background: var(--gradient-hover);
                     }
                 }
 
                 @media screen and (min-width: ${SIDEBAR_MAX_WIDTH}px) {
                     .sidebar {
                         width: ${SIDEBAR_MAX_WIDTH}px;
-                        border-right: 1px solid var(--divider);
 
                         > .overlay {
                             display: block;
@@ -119,10 +107,7 @@ export function Sidebar({
                 @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
                     .sidebar {
                         display: block;
-
-                        > :global(.close-button) {
-                            display: none;
-                        }
+                        background-color: transparent;
 
                         > .overlay {
                             display: none;
@@ -135,84 +120,61 @@ export function Sidebar({
                 }
             `}</style>
 
-            <GrClose
-                className="close-button"
-                onClick={hideSidebar}
-                size={SIDEBAR_CLOSE_SIZE}
-            />
-
-            <ul>
-                <li>
-                    <Link href="/">
-                        <a
-                            className={getSidebarItemClass(
-                                '/earn',
-                                pathname,
-                                true,
-                            )}
-                            onClick={hideSidebar}
-                        >
-                            <TiChartAreaOutline size={24} />
-                            Earn
-                        </a>
-                    </Link>
-                </li>
-                <li>
-                    <Link href="/borrow">
-                        <a
-                            className={getSidebarItemClass('/borrow', pathname)}
-                            onClick={hideSidebar}
-                        >
-                            <AiFillBank size={24} />
-                            Borrow
-                        </a>
-                    </Link>
-                </li>
+            <div className="list">
+                <Link href="/">
+                    <a
+                        className={getSidebarItemClass('/earn', pathname, true)}
+                        onClick={hideSidebar}
+                    >
+                        <RiPercentLine size={24} />
+                        Earn
+                    </a>
+                </Link>
+                <Link href="/borrow">
+                    <a
+                        className={getSidebarItemClass('/borrow', pathname)}
+                        onClick={hideSidebar}
+                    >
+                        <RiHandCoinLine size={24} />
+                        Borrow
+                    </a>
+                </Link>
                 {isManager && (
-                    <li>
-                        <Link href="/manage">
-                            <a
-                                className={getSidebarItemClass(
-                                    '/manage',
-                                    pathname,
-                                )}
-                                onClick={hideSidebar}
-                            >
-                                <MdOutlineAdminPanelSettings size={24} />
-                                Manage
-                            </a>
-                        </Link>
-                    </li>
-                )}
-                {RPC_NETWORK_ID === networks.optimismKovan ? (
-                    <li>
+                    <Link href="/manage">
                         <a
-                            className={getSidebarItemClass('/faucet', pathname)}
-                            onClick={hideSidebar}
-                            href="https://kovan.optifaucet.com"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
-                            <FaFaucet size={24} style={{ padding: 4 }} />
-                            Faucet
-                        </a>
-                    </li>
-                ) : null}
-                <li>
-                    <Link href="/account">
-                        <a
-                            className={getSidebarItemClass(
-                                '/account',
-                                pathname,
-                            )}
+                            className={getSidebarItemClass('/manage', pathname)}
                             onClick={hideSidebar}
                         >
-                            <RiAccountCircleFill size={24} />
-                            Account
+                            <RiVipDiamondLine size={24} />
+                            Manage
                         </a>
                     </Link>
-                </li>
-            </ul>
+                )}
+                <Link href="/account">
+                    <a
+                        className={getSidebarItemClass('/account', pathname)}
+                        onClick={hideSidebar}
+                    >
+                        <RiUserLine size={24} />
+                        Account
+                    </a>
+                </Link>
+
+                <FlexGrow />
+
+                {RPC_NETWORK_ID === networks.optimismKovan ? (
+                    <a
+                        className={getSidebarItemClass('/faucet', pathname)}
+                        onClick={hideSidebar}
+                        href="https://kovan.optifaucet.com"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                    >
+                        <RiCoinLine size={24} />
+                        Faucet
+                    </a>
+                ) : null}
+            </div>
 
             <div className="overlay" onClick={hideSidebar} />
         </div>
