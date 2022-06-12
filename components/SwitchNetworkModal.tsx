@@ -55,6 +55,7 @@ export function SwitchNetworkModal() {
                         dispatch(clearLastConnectorName())
                         web3.connector.deactivate()
                     }}
+                    stone
                 >
                     Disconnect
                 </Button>
