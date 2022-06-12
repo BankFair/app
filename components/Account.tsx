@@ -138,6 +138,7 @@ export function Account() {
                     width: 'max-content',
                     display: 'block',
                 }}
+                stone
             >
                 Disconnect
             </Button>

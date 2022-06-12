@@ -3,7 +3,14 @@ import { useMemo } from 'react'
 import { ButtonHTMLAttributes } from 'react'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
 import { Oval } from 'react-loading-icons'
-import { className, COLOR_WHITE, rgba, rgbGreen } from '../app'
+import {
+    className,
+    COLOR_WHITE,
+    rgba,
+    rgbGreen,
+    rgbStone,
+    rgbStoneDarker,
+} from '../app'
 
 export function Button({
     href,
@@ -24,6 +31,7 @@ export function Button({
     width?: number
     disabled?: boolean
     whiteTransaprent?: boolean
+    stone?: boolean
 }) {
     const { disabled } = classModifiers
 
@@ -86,6 +94,16 @@ export function Button({
                         }
                     }
 
+                    &.stone {
+                        background-image: none;
+                        background-color: ${rgbStone};
+                        transition-property: background-color;
+
+                        &:not(.disabled):hover {
+                            background-image: none;
+                            background-color: ${rgbStoneDarker};
+                        }
+                    }
                     > :global(svg) {
                         width: 24px;
                         height: 24px;

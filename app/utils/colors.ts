@@ -66,14 +66,6 @@ export const COLOR_DISABLED: Color = COLOR_GREY_500
 export const disabledContent = rgba(COLOR_DISABLED, 0.8)
 export const disabledBackground = rgba(COLOR_DISABLED, 0.1)
 export const input = rgba(COLOR_DISABLED, 0.12)
-export const inputNonTransparentLight = color(rgbWhite).mix(
-    color(rgbGrey500),
-    0.12,
-)
-export const inputNonTransparentDark = color(rgbGrey900).mix(
-    color(rgbGrey500),
-    0.12,
-)
 
 // #region Text
 export const COLOR_TEXT_PRIMARY_DARK: Color = COLOR_GREY_800
@@ -98,6 +90,7 @@ export const rgbGreeneryLight = rgb(NEW_COLOR_GREENERY_LIGHT)
 export const rgbGreeneryDark = rgb(NEW_COLOR_GREENERY_DARK)
 export const rgbGround = rgb(NEW_COLOR_GROUND)
 export const rgbStone = rgb(NEW_COLOR_STONE)
+export const rgbStoneDarker = color(rgbStone).darken(0.5).hex()
 export const rgbaLimeGreen21 = rgba(NEW_COLOR_LIME_GREEN, 0.21)
 
 export const rgbaWhite5 = rgba(COLOR_WHITE, 0.05)
