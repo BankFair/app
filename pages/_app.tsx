@@ -7,6 +7,8 @@ import {
     NEW_COLOR_RICH_BLACK,
     NEW_COLOR_WHITE,
     rgba,
+    rgbaBlack5,
+    rgbaWhite5,
     rgbBlue,
     rgbChineseSilver,
     rgbGreeneryDark,
@@ -38,6 +40,7 @@ export default function App({ Component, pageProps }: AppProps) {
                     :root {
                         --bg-color: ${rgbNewWhite};
                         --bg-overlay: ${rgba(NEW_COLOR_WHITE, 0.9)};
+                        --bg-section: ${rgbaWhite5};
                         --color: ${rgbGround};
                         --color-secondary: ${rgbStone};
                         --color-disabled: ${rgbGrey500};
@@ -155,6 +158,7 @@ export default function App({ Component, pageProps }: AppProps) {
                         :root {
                             --bg-color: ${rgbRichBlack};
                             --bg-overlay: ${rgba(NEW_COLOR_RICH_BLACK, 0.9)};
+                            --bg-section: ${rgbaBlack5};
                             --color: ${rgbChineseSilver};
                             --color-disabled: ${rgbGrey600};
                             --shadow: rgba(0, 0, 0, 0.16);

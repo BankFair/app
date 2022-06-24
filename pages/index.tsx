@@ -3,11 +3,16 @@ import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
 import { APP_NAME, formatNoDecimals, POOLS } from '../app'
-import { LinkList, Page, Skeleton } from '../components'
+import { Page, Skeleton, PoolsListNew } from '../components'
 import { useFetchIntervalAllStats, usePools } from '../features'
 
 const title = `Earn - ${APP_NAME}`
-const labels = ['Pool Size', 'Available for deposits', 'Projected APY', 'Loans']
+const labels = [
+    'Total Pool Size',
+    'Available for deposits',
+    'Projected APY',
+    'Loans',
+]
 
 const EarnPools: NextPage = () => {
     const pools = usePools()
@@ -23,7 +28,7 @@ const EarnPools: NextPage = () => {
             </Head>
 
             <h1>Pools</h1>
-            <LinkList
+            <PoolsListNew
                 items={POOLS.map(({ address, name }) => {
                     const pool = pools[address]
                     return {

@@ -1,13 +1,8 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
-import {
-    rgbaBlack5,
-    rgbaLimeGreen21,
-    rgbaWhite5,
-    SIDEBAR_ALWAYS_VISIBLE_WIDTH,
-} from '../app'
+import { rgbaLimeGreen21, SIDEBAR_ALWAYS_VISIBLE_WIDTH } from '../app'
 
-export function LinkList({
+export function PoolsList({
     items,
     labels,
 }: {
@@ -25,7 +20,7 @@ export function LinkList({
 
                 a {
                     color: var(--color);
-                    background-color: ${rgbaWhite5};
+                    background-color: var(--bg-section);
                     backdrop-filter: blur(16px);
                     border: 1px solid ${rgbaLimeGreen21};
                     display: flex;
@@ -34,10 +29,6 @@ export function LinkList({
                     margin: 10px 0;
                     justify-content: space-between;
                     flex-direction: column;
-
-                    @media (prefers-color-scheme: dark) {
-                        background-color: ${rgbaBlack5};
-                    }
                 }
 
                 h4 {

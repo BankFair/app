@@ -4,7 +4,7 @@ import Head from 'next/head'
 import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { APP_NAME, formatNoDecimals, POOLS, useAccount } from '../../app'
-import { LinkList, Page, PageLoading, Skeleton } from '../../components'
+import { PoolsList, Page, PageLoading, Skeleton } from '../../components'
 import { useFetchIntervalAllStats, usePools } from '../../features'
 
 const title = `Earn - ${APP_NAME}`
@@ -53,7 +53,7 @@ const ManagePools: NextPage = () => {
             {head}
 
             <h1>Pools</h1>
-            <LinkList
+            <PoolsList
                 items={pools.map((pool) => {
                     return {
                         link: `/manage/${pool.address}`,

@@ -1,7 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-export function PoolDescription() {
-    const [showMore, setShowMore] = useState(false)
+let nextMountShowMoreState = false
+export function PoolDescription({
+    showMoreInNextMount,
+}: {
+    showMoreInNextMount?: boolean
+}) {
+    const [showMore, setShowMore] = useState(nextMountShowMoreState)
+
+    useEffect(() => {
+        nextMountShowMoreState = false
+    }, [])
+
     return (
         <div>
             <style jsx>{`
@@ -20,7 +30,7 @@ export function PoolDescription() {
                     }
                 }
 
-                a {
+                span {
                     margin-top: 8px;
                     color: var(--greenery);
                     font-weight: 600;
@@ -42,9 +52,21 @@ export function PoolDescription() {
                 be objective features of the world, but imposed by us as part of
                 a framework for organizing experience.
             </div>
-            <a onClick={() => setShowMore(!showMore)}>
-                {showMore ? 'Show less' : 'Show more'}
-            </a>
+            <span
+                onClick={() => {
+                    if (showMoreInNextMount) {
+                        nextMountShowMoreState = true
+                    } else {
+                        setShowMore(!showMore)
+                    }
+                }}
+            >
+                {showMoreInNextMount
+                    ? 'Go to pool to read more'
+                    : showMore
+                    ? 'Show less'
+                    : 'Show more'}
+            </span>
         </div>
     )
 }

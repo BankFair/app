@@ -1,9 +1,9 @@
-import { ReactNode, useLayoutEffect } from 'react'
+import { ReactNode, useEffect, useLayoutEffect } from 'react'
 import { Oval } from 'react-loading-icons'
 import { rgbGreen } from '../app'
 
 export function PageLoading({ children }: { children?: ReactNode }) {
-    useLayoutEffect(() => {
+    useEffect(() => {
         const rootElement = document.getElementById('__next')
 
         rootElement!.style.height = '100vh'
