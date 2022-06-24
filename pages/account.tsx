@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { APP_NAME, useAccount } from '../app'
+import { APP_NAME, prefix, useAccount } from '../app'
 import { Connect, Account, Page } from '../components'
 
 const AccountPage: NextPage = () => {
@@ -16,7 +16,7 @@ const AccountPage: NextPage = () => {
                     name="description"
                     content="Connect your Ethereum wallet"
                 />
-                <link rel="icon" href="/favicon.svg" />
+                <link rel="icon" href={`${prefix}/favicon.svg`} />
             </Head>
 
             {account ? <Account /> : <Connect />}

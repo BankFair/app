@@ -2,7 +2,7 @@ import { formatUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatNoDecimals, POOLS } from '../app'
+import { APP_NAME, formatNoDecimals, POOLS, prefix } from '../app'
 import { Page, Skeleton, PoolsListNew } from '../components'
 import { useFetchIntervalAllStats, usePools } from '../features'
 
@@ -24,7 +24,7 @@ const EarnPools: NextPage = () => {
         <Page>
             <Head>
                 <title>{title}</title>
-                <link rel="icon" href="/favicon.svg" />
+                <link rel="icon" href={`${prefix}/favicon.svg`} />
             </Head>
 
             <h1>Pools</h1>

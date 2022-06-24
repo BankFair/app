@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useMemo, useState } from 'react'
-import { APP_NAME, useAccount, getAddress } from '../../app'
+import { APP_NAME, useAccount, getAddress, prefix } from '../../app'
 import {
     BackToPools,
     Box,
@@ -31,7 +31,7 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
     const head = (
         <Head>
             <title>{title}</title>
-            <link rel="icon" href="/favicon.svg" />
+            <link rel="icon" href={`${prefix}/favicon.svg`} />
         </Head>
     )
 

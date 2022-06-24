@@ -12,6 +12,7 @@ import {
     zero,
     POOLS,
     format,
+    prefix,
 } from '../../app'
 import {
     Page,
@@ -43,7 +44,7 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
     const head = (
         <Head>
             <title>{title}</title>
-            <link rel="icon" href="/favicon.svg" />
+            <link rel="icon" href={`${prefix}/favicon.svg`} />
         </Head>
     )
 
