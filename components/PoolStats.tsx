@@ -63,7 +63,8 @@ export function PoolStats({
                         }
 
                         > .label {
-                            color: var(--color);
+                            color: var(--color-secondary);
+                            margin-bottom: 8px;
                             font-size: 14px;
                             font-weight: 400;
                         }
@@ -71,9 +72,10 @@ export function PoolStats({
 
                     &.small {
                         margin-top: 24px;
+                        margin-bottom: 16px;
 
                         > .stat {
-                            margin-bottom: 10px;
+                            margin-bottom: 8px;
                         }
                     }
                     &.large {
@@ -124,6 +126,7 @@ export function PoolStats({
             <PoolDescription />
             <div className="stats small">
                 <div className="stat">
+                    <div className="label">Total Pool Size</div>
                     <div className="number">
                         {stats ? (
                             `$${formatNoDecimals(stats.totalPoolSize)}`
@@ -131,9 +134,9 @@ export function PoolStats({
                             <Skeleton width={50} />
                         )}
                     </div>
-                    <div className="label">Total Pool Size</div>
                 </div>
                 <div className="stat">
+                    <div className="label">Loans Outstanding</div>
                     <div className="number">
                         {stats ? (
                             `$${formatNoDecimals(stats.loansOutstanding)}`
@@ -141,9 +144,9 @@ export function PoolStats({
                             <Skeleton width={50} />
                         )}
                     </div>
-                    <div className="label">Loans Outstanding</div>
                 </div>
                 <div className="stat">
+                    <div className="label">Manager Funds</div>
                     <div className="number">
                         {stats ? (
                             `$${formatNoDecimals(stats.managerFunds)}`
@@ -151,9 +154,9 @@ export function PoolStats({
                             <Skeleton width={50} />
                         )}
                     </div>
-                    <div className="label">Manager Funds</div>
                 </div>
                 <div className="stat">
+                    <div className="label">Max Pool Size</div>
                     <div className="number">
                         {stats ? (
                             `$${formatNoDecimals(stats.maxPoolSize)}`
@@ -161,23 +164,23 @@ export function PoolStats({
                             <Skeleton width={50} />
                         )}
                     </div>
-                    <div className="label">Max Pool Size</div>
                 </div>
                 <div className="stat">
+                    <div className="label">Loans</div>
                     <div className="number">
                         {stats ? stats.loans : <Skeleton width={30} />}
                     </div>
-                    <div className="label">Loans</div>
                 </div>
             </div>
             <div className="stats large">
                 <div className="stat">
+                    <div className="label">Projected APY</div>
                     <div className="number">
                         {stats ? `${stats.apy}%` : <Skeleton width={70} />}
                     </div>
-                    <div className="label">Projected APY</div>
                 </div>
                 <div className="stat">
+                    <div className="label">Available for deposits</div>
                     <div className="number">
                         {stats ? (
                             `$${formatNoDecimals(stats.availableForDeposits)}`
@@ -185,7 +188,6 @@ export function PoolStats({
                             <Skeleton width={70} />
                         )}
                     </div>
-                    <div className="label">Available for deposits</div>
                 </div>
             </div>
         </Box>
