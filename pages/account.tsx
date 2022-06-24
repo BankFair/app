@@ -16,7 +16,7 @@ const AccountPage: NextPage = () => {
                     name="description"
                     content="Connect your Ethereum wallet"
                 />
-                <link rel="icon" href="/favicon.ico" />
+                <link rel="icon" href="/favicon.svg" />
             </Head>
 
             {account ? <Account /> : <Connect />}

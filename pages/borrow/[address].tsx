@@ -49,7 +49,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
     const head = (
         <Head>
             <title>{title}</title>
-            <link rel="icon" href="/favicon.ico" />
+            <link rel="icon" href="/favicon.svg" />
         </Head>
     )
 
