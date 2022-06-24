@@ -1,8 +1,11 @@
 import { ReactNode } from 'react'
-import { rgbaLimeGreen21, rgbGreen } from '../app'
+import {
+    commonBoxShadow,
+    commonDarkBoxShadow,
+    rgbaLimeGreen21,
+    rgbGreen,
+} from '../app'
 import { Oval } from 'react-loading-icons'
-
-const commonBoxShadow = '0px 28px 32px -16px rgba(66, 117, 48, 0.19)'
 
 export function Box({
     children,
@@ -31,8 +34,7 @@ export function Box({
                     position: relative;
 
                     @media (prefers-color-scheme: dark) {
-                        box-shadow: 0px 28px 32px -16px #000000,
-                            ${commonBoxShadow};
+                        box-shadow: ${commonDarkBoxShadow};
                     }
 
                     &.s {

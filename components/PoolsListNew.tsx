@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
-import { rgbaLimeGreen21 } from '../app'
+import { commonBoxShadow, commonDarkBoxShadow, rgbaLimeGreen21 } from '../app'
 import { PoolDescription } from './PoolDescription'
 
 export function PoolsListNew({
@@ -28,6 +28,11 @@ export function PoolsListNew({
                     border-radius: 8px;
                     padding: 16px;
                     margin: 24px 0;
+                    box-shadow: ${commonBoxShadow};
+
+                    @media (prefers-color-scheme: dark) {
+                        box-shadow: ${commonDarkBoxShadow};
+                    }
                 }
 
                 h2 {
