@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { APP_NAME } from '../app'
+import { APP_NAME, prefix } from '../app'
 
 const About: NextPage = () => {
     return (
@@ -8,7 +8,7 @@ const About: NextPage = () => {
             <Head>
                 <title>About - {APP_NAME}</title>
                 <meta name="description" content={`About ${APP_NAME}`} />
-                <link rel="icon" href="/favicon.svg" />
+                <link rel="icon" href={`${prefix}/favicon.svg`} />
             </Head>
         </div>
     )

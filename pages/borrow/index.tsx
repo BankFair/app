@@ -2,7 +2,7 @@ import { formatUnits } from 'ethers/lib/utils'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatNoDecimals, POOLS } from '../../app'
+import { APP_NAME, formatNoDecimals, POOLS, prefix } from '../../app'
 import { PoolsList, Page, Skeleton, PoolsListNew } from '../../components'
 import {
     useFetchIntervalAllBorrowInfo,
@@ -25,7 +25,7 @@ const BorrowPools: NextPage = () => {
         <Page>
             <Head>
                 <title>{title}</title>
-                <link rel="icon" href="/favicon.svg" />
+                <link rel="icon" href={`${prefix}/favicon.svg`} />
             </Head>
 
             <h1>Pools</h1>

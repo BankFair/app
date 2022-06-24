@@ -10,6 +10,7 @@ import {
     getAddress,
     oneHundredPercent,
     POOLS,
+    prefix,
     TOKEN_SYMBOL,
     useAccount,
     useProvider,
@@ -49,7 +50,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
     const head = (
         <Head>
             <title>{title}</title>
-            <link rel="icon" href="/favicon.svg" />
+                <link rel="icon" href={`${prefix}/favicon.svg`} />
         </Head>
     )
 

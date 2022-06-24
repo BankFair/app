@@ -3,7 +3,13 @@ import { NextPage } from 'next'
 import Head from 'next/head'
 import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatNoDecimals, POOLS, useAccount } from '../../app'
+import {
+    APP_NAME,
+    formatNoDecimals,
+    POOLS,
+    prefix,
+    useAccount,
+} from '../../app'
 import { PoolsList, Page, PageLoading, Skeleton } from '../../components'
 import { useFetchIntervalAllStats, usePools } from '../../features'
 
@@ -26,7 +32,7 @@ const ManagePools: NextPage = () => {
     const head = (
         <Head>
             <title>{title}</title>
-            <link rel="icon" href="/favicon.svg" />
+            <link rel="icon" href={`${prefix}/favicon.svg`} />
         </Head>
     )
 
