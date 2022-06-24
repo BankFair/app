@@ -450,6 +450,7 @@ export function Background() {
                     display: flex;
                     width: 100%;
                     z-index: 1;
+                    pointer-events: none;
 
                     > :global(svg) {
                         :global(rect) {

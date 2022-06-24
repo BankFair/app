@@ -1,8 +1,8 @@
-import { EtherscanAddress } from './EtherscanLink'
 import { Pool, useStats } from '../features'
 import { Box } from './Box'
 import { formatNoDecimals, prefix } from '../app'
 import { Skeleton } from './Skeleton'
+import { PoolDescription } from './PoolDescription'
 
 export function PoolStats({
     pool: { managerAddress, tokenDecimals },
@@ -70,6 +70,8 @@ export function PoolStats({
                     }
 
                     &.small {
+                        margin-top: 24px;
+
                         > .stat {
                             margin-bottom: 10px;
                         }
@@ -119,6 +121,7 @@ export function PoolStats({
                 <img src={`${prefix}/usdc.svg`} alt="USDC logo" />
                 USDC
             </div>
+            <PoolDescription />
             <div className="stats small">
                 <div className="stat">
                     <div className="number">
