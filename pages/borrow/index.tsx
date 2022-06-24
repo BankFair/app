@@ -25,7 +25,7 @@ const BorrowPools: NextPage = () => {
         <Page>
             <Head>
                 <title>{title}</title>
-                <link rel="icon" href="/favicon.ico" />
+                <link rel="icon" href="/favicon.svg" />
             </Head>
 
             <h1>Pools</h1>

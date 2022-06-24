@@ -8,7 +8,7 @@ const About: NextPage = () => {
             <Head>
                 <title>About - {APP_NAME}</title>
                 <meta name="description" content={`About ${APP_NAME}`} />
-                <link rel="icon" href="/favicon.ico" />
+                <link rel="icon" href="/favicon.svg" />
             </Head>
         </div>
     )
