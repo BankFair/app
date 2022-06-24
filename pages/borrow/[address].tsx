@@ -19,6 +19,7 @@ import {
 import {
     Alert,
     AmountInput,
+    BackToPools,
     Box,
     Button,
     ConnectModal,
@@ -58,6 +59,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
         <Page>
             {head}
 
+            <BackToPools href='/borrow' />
             <h1>{name}</h1>
             <RequestLoan pool={pool} poolAddress={address} account={account} />
             <Loans pool={pool} poolAddress={address} account={account} />

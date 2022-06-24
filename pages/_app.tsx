@@ -87,6 +87,10 @@ export default function App({ Component, pageProps }: AppProps) {
                         box-sizing: border-box;
                     }
 
+                    h1 {
+                        margin: 24px 0;
+                    }
+
                     input {
                         font-size: 16px;
                     }

@@ -23,6 +23,7 @@ import {
     Tabs,
     Button,
     EnterExitAlert,
+    BackToPools,
 } from '../../components'
 import {
     contract,
@@ -52,6 +53,7 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
         <Page>
             {head}
 
+            <BackToPools href="/" />
             <h1>{name}</h1>
             <PoolStats pool={pool} poolAddress={address} />
             <DepositAndWithdraw pool={pool} poolAddress={address} />

@@ -5,6 +5,7 @@ import Head from 'next/head'
 import { useMemo, useState } from 'react'
 import { APP_NAME, useAccount, getAddress } from '../../app'
 import {
+    BackToPools,
     Box,
     EnterExitAlert,
     Loans,
@@ -40,6 +41,7 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
         <Page>
             {head}
 
+            <BackToPools href="/manage" />
             <h1>{pool.name}</h1>
             {pool ? (
                 pool.managerAddress === account ? (

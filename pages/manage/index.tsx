@@ -52,6 +52,7 @@ const ManagePools: NextPage = () => {
         <Page>
             {head}
 
+            <h1>Pools</h1>
             <LinkList
                 items={pools.map((pool) => {
                     return {

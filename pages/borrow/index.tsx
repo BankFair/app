@@ -28,6 +28,7 @@ const BorrowPools: NextPage = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
+            <h1>Pools</h1>
             <LinkList
                 items={POOLS.map(({ address, name }) => {
                     const pool = pools[address]
