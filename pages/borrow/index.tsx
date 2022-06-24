@@ -3,7 +3,7 @@ import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
 import { APP_NAME, formatNoDecimals, POOLS } from '../../app'
-import { PoolsList, Page, Skeleton } from '../../components'
+import { PoolsList, Page, Skeleton, PoolsListNew } from '../../components'
 import {
     useFetchIntervalAllBorrowInfo,
     useFetchIntervalAllStats,
@@ -29,7 +29,7 @@ const BorrowPools: NextPage = () => {
             </Head>
 
             <h1>Pools</h1>
-            <PoolsList
+            <PoolsListNew
                 items={POOLS.map(({ address, name }) => {
                     const pool = pools[address]
                     return {

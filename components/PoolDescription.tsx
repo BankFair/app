@@ -53,10 +53,12 @@ export function PoolDescription({
                 a framework for organizing experience.
             </div>
             <span
-                onClick={() => {
+                onClick={(event) => {
                     if (showMoreInNextMount) {
                         nextMountShowMoreState = true
                     } else {
+                        event.stopPropagation()
+                        event.preventDefault()
                         setShowMore(!showMore)
                     }
                 }}

@@ -6,9 +6,11 @@ import { PoolDescription } from './PoolDescription'
 export function PoolsListNew({
     items,
     labels,
+    showMoreAndOpenPage,
 }: {
     items: { name: string; link: string; stats: ReactNode[] }[]
     labels: string[]
+    showMoreAndOpenPage?: boolean
 }) {
     return (
         <ul>
@@ -73,7 +75,9 @@ export function PoolsListNew({
                     <Link href={link}>
                         <a>
                             <h2>{name}</h2>
-                            <PoolDescription showMoreInNextMount />
+                            <PoolDescription
+                                showMoreInNextMount={showMoreAndOpenPage}
+                            />
                             <div className="stats">
                                 {labels.map((label, index) => (
                                     <div key={label} className="stat">

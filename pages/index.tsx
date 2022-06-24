@@ -29,6 +29,7 @@ const EarnPools: NextPage = () => {
 
             <h1>Pools</h1>
             <PoolsListNew
+                showMoreAndOpenPage
                 items={POOLS.map(({ address, name }) => {
                     const pool = pools[address]
                     return {
