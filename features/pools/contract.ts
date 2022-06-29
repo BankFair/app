@@ -65,10 +65,10 @@ export interface CoreContract
     poolLiquidity: ContractFunction<BigNumber>
     currentLenderAPY: ContractFunction<number>
 
-    defaultAPR: ContractFunction<number>
-    maxDuration: ContractFunction<BigNumber>
-    minAmount: ContractFunction<BigNumber>
-    minDuration: ContractFunction<BigNumber>
+    templateLoanAPR: ContractFunction<number>
+    maxLoanDuration: ContractFunction<BigNumber>
+    minLoanAmount: ContractFunction<BigNumber>
+    minLoanDuration: ContractFunction<BigNumber>
 
     protocolEarningsOf: ContractFunction<BigNumber, [account: string]>
     withdrawProtocolEarnings: ContractFunction<ContractTransaction>
@@ -77,7 +77,7 @@ export interface CoreContract
     isValidBorrower: ContractFunction<boolean, [account: string]>
 
     earlyExitDeadlines: ContractFunction<BigNumber, [account: string]>
-    earlyExitFeePercent: ContractFunction<BigNumber>
+    exitFeePercent: ContractFunction<BigNumber>
 
     filters: {
         /**

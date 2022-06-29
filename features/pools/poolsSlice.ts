@@ -37,7 +37,7 @@ interface Stats {
     poolFunds: string
     poolLiquidity: string
     apy: number
-    earlyExitFeePercent: number
+    exitFeePercent: number
     blockNumber: number
 }
 
@@ -56,9 +56,9 @@ interface AccountInfo {
 }
 
 interface BorrowInfo {
-    minAmount: string
-    minDuration: number
-    maxDuration: number
+    minLoanAmount: string
+    minLoanDuration: number
+    maxLoanDuration: number
     apr: number
     blockNumber: number
 }
@@ -98,7 +98,7 @@ export const fetchStats = createAsyncThunk(
             poolFunds,
             poolLiquidity,
             apy,
-            earlyExitFeePercent,
+            exitFeePercent,
             blockNumber,
         ] = await Promise.all([
             connected.loansCount(),
@@ -107,7 +107,7 @@ export const fetchStats = createAsyncThunk(
             connected.poolFunds(),
             connected.poolLiquidity(),
             connected.currentLenderAPY(),
-            connected.earlyExitFeePercent(),
+            connected.exitFeePercent(),
             provider.getCurrentBlockNumber(),
         ])
 
@@ -118,8 +118,8 @@ export const fetchStats = createAsyncThunk(
             poolFunds: poolFunds.toHexString(),
             poolLiquidity: poolLiquidity.toHexString(),
             apy: (apy * 100) / oneHundredPercent,
-            earlyExitFeePercent:
-                (earlyExitFeePercent.toNumber() * 100) / oneHundredPercent,
+            exitFeePercent:
+                (exitFeePercent.toNumber() * 100) / oneHundredPercent,
             blockNumber,
         }
 
@@ -248,19 +248,19 @@ const fetchBorrowInfo = createAsyncThunk(
             contract.attach(poolAddress),
         )
 
-        const [minAmount, minDuration, maxDuration, apr, blockNumber] =
+        const [minLoanAmount, minLoanDuration, maxLoanDuration, apr, blockNumber] =
             await Promise.all([
-                connected.minAmount(),
-                connected.minDuration(),
-                connected.maxDuration(),
-                connected.defaultAPR(),
+                connected.minLoanAmount(),
+                connected.minLoanDuration(),
+                connected.maxLoanDuration(),
+                connected.templateLoanAPR(),
                 provider.getCurrentBlockNumber(),
             ])
 
         const info: BorrowInfo = {
-            minAmount: minAmount.toHexString(),
-            minDuration: minDuration.toNumber(),
-            maxDuration: maxDuration.toNumber(),
+            minLoanAmount: minLoanAmount.toHexString(),
+            minLoanDuration: minLoanDuration.toNumber(),
+            maxLoanDuration: maxLoanDuration.toNumber(),
             apr: (apr / oneHundredPercent) * 100,
             blockNumber,
         }

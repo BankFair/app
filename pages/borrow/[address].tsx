@@ -158,7 +158,7 @@ function RequestLoan({
                     Max: {maxFormatted}
                 </span>
             ) : null,
-            canRequest: maxBigNumber.gte(borrowInfo.minAmount),
+            canRequest: maxBigNumber.gte(borrowInfo.minLoanAmount),
         }
     }, [borrowInfo, max, tokenDecimals])
     const value = useMemo(() => {
@@ -175,7 +175,7 @@ function RequestLoan({
         () =>
             borrowInfo &&
             value &&
-            parseUnits(value, tokenDecimals).lt(borrowInfo.minAmount),
+            parseUnits(value, tokenDecimals).lt(borrowInfo.minLoanAmount),
         [borrowInfo, tokenDecimals, value],
     )
 
@@ -186,9 +186,9 @@ function RequestLoan({
 
     const durationInSeconds = Number(duration) * Number(durationMultiplier)
     const isDurationTooLow =
-        borrowInfo && durationInSeconds < borrowInfo.minDuration
+        borrowInfo && durationInSeconds < borrowInfo.minLoanDuration
     const isDurationTooHigh =
-        borrowInfo && durationInSeconds > borrowInfo.maxDuration
+        borrowInfo && durationInSeconds > borrowInfo.maxLoanDuration
 
     function reset() {
         setAmount(initialAmount)
@@ -215,17 +215,17 @@ function RequestLoan({
                     : isAmountTooLow && displayAlert
                     ? `Minimum amount is ${format(
                           formatUnits(
-                              BigNumber.from(borrowInfo!.minAmount),
+                              BigNumber.from(borrowInfo!.minLoanAmount),
                               tokenDecimals,
                           ),
                       )}`
                     : isDurationTooLow
                     ? `Minimum duration is ${
-                          borrowInfo.minDuration / oneDay
+                          borrowInfo.minLoanDuration / oneDay
                       } day`
                     : isDurationTooHigh
                     ? `Maximum duration is ${
-                          borrowInfo.maxDuration / oneYear
+                          borrowInfo.maxLoanDuration / oneYear
                       } years`
                     : null,
         }),
