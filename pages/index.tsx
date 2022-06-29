@@ -30,11 +30,12 @@ const EarnPools: NextPage = () => {
             <h1>Pools</h1>
             <PoolsListNew
                 showMoreAndOpenPage
-                items={POOLS.map(({ address, name }) => {
+                items={POOLS.map(({ address, name, description }) => {
                     const pool = pools[address]
                     return {
                         link: `/earn/${address}`,
                         name: name,
+                        description,
                         stats:
                             pool && pool.stats
                                 ? [

@@ -7,9 +7,11 @@ import { PoolDescription } from './PoolDescription'
 export function PoolStats({
     pool: { managerAddress, tokenDecimals },
     poolAddress,
+    description,
 }: {
     pool: Pool
     poolAddress: string
+    description: string
 }) {
     const stats = useStats(poolAddress, tokenDecimals)
 
@@ -123,7 +125,7 @@ export function PoolStats({
                 <img src={`${prefix}/usdc.svg`} alt="USDC logo" />
                 USDC
             </div>
-            <PoolDescription />
+            {description && <PoolDescription text={description} />}
             <div className="stats small">
                 <div className="stat">
                     <div className="label">Total Pool Size</div>

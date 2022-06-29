@@ -49,11 +49,12 @@ export const LOCAL_STORAGE_LAST_CONNECTOR_KEY = 'sapling_lastConnector'
 export const LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT = 'WalletConnect'
 export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'
 
-type PoolsEnv = { name: string; address: string }[]
+type PoolsEnv = { name: string; address: string; description: string }[]
 export const POOLS = (JSON.parse(process.env.POOLS!) as PoolsEnv).map(
-    ({ name, address }) => ({
+    ({ name, address, description }) => ({
         name,
         address: getAddress(address),
+        description,
     }),
 )
 
