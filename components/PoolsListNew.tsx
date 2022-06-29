@@ -8,7 +8,12 @@ export function PoolsListNew({
     labels,
     showMoreAndOpenPage,
 }: {
-    items: { name: string; link: string; stats: ReactNode[] }[]
+    items: {
+        name: string
+        link: string
+        description: string
+        stats: ReactNode[]
+    }[]
     labels: string[]
     showMoreAndOpenPage?: boolean
 }) {
@@ -70,14 +75,17 @@ export function PoolsListNew({
                     }
                 }
             `}</style>
-            {items.map(({ link, name, stats }) => (
+            {items.map(({ link, name, stats, description }) => (
                 <li key={link}>
                     <Link href={link}>
                         <a>
                             <h2>{name}</h2>
-                            <PoolDescription
-                                showMoreInNextMount={showMoreAndOpenPage}
-                            />
+                            {description && (
+                                <PoolDescription
+                                    text={description}
+                                    showMoreInNextMount={showMoreAndOpenPage}
+                                />
+                            )}
                             <div className="stats">
                                 {labels.map((label, index) => (
                                     <div key={label} className="stat">
