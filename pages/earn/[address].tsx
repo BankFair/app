@@ -196,7 +196,7 @@ function DepositAndWithdraw({
                 enterVerb="deposit"
                 exitVerb="withdrawing"
                 earlyExitDeadline={info ? info.earlyExitDeadline : 0}
-                earlyExitFeePercent={stats ? stats.earlyExitFeePercent : 0}
+                exitFeePercent={stats ? stats.exitFeePercent : 0}
             />
         </Box>
     )

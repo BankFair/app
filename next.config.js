@@ -7,16 +7,8 @@ module.exports = {
         BUILDING_FOR_GITHUB_PAGES: process.env.BUILDING_FOR_GITHUB_PAGES,
         POOLS: JSON.stringify([
             {
-                name: 'Test Pool #1',
-                address: '0xB7C871b52d127b5c8354AC5E90Eb108DA673A040',
-            },
-            {
-                name: 'Test Pool #2',
-                address: '0x9dAa37385F0DA29c742b4a248740bd86a240E853',
-            },
-            {
-                name: 'Test Pool #3 (v0.4.4)',
-                address: '0xDC225D509a1Eb93077b94e41265d3eD0D413BE40',
+                name: 'Test Pool #4 (v0.5.0)',
+                address: '0xB2E690B4B8BdBA1573E5a02DC7D1570bF2B7E9A0',
             },
         ]),
     },

@@ -1,7 +1,11 @@
 [
     {
         "inputs": [
-            { "internalType": "address", "name": "_token", "type": "address" },
+            {
+                "internalType": "address",
+                "name": "_token",
+                "type": "address"
+            },
             {
                 "internalType": "address",
                 "name": "_governance",
@@ -13,9 +17,9 @@
                 "type": "address"
             },
             {
-                "internalType": "uint256",
-                "name": "_minAmount",
-                "type": "uint256"
+                "internalType": "address",
+                "name": "_manager",
+                "type": "address"
             }
         ],
         "stateMutability": "nonpayable",
@@ -172,10 +176,49 @@
         "name": "LoanRequested",
         "type": "event"
     },
-    { "anonymous": false, "inputs": [], "name": "Paused", "type": "event" },
-    { "anonymous": false, "inputs": [], "name": "PoolClosed", "type": "event" },
-    { "anonymous": false, "inputs": [], "name": "PoolOpened", "type": "event" },
-    { "anonymous": false, "inputs": [], "name": "Resumed", "type": "event" },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "Paused",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "PoolClosed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "PoolOpened",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            }
+        ],
+        "name": "ProtocolWalletTransferred",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "Resumed",
+        "type": "event"
+    },
     {
         "anonymous": false,
         "inputs": [],
@@ -199,7 +242,11 @@
         "inputs": [],
         "name": "EARLY_EXIT_COOLDOWN",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -208,7 +255,11 @@
         "inputs": [],
         "name": "MANAGER_INACTIVITY_GRACE_PERIOD",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -217,7 +268,11 @@
         "inputs": [],
         "name": "MAX_LOAN_GRACE_PERIOD",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -225,7 +280,13 @@
     {
         "inputs": [],
         "name": "MAX_PROTOCOL_EARNING_PERCENT",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -233,7 +294,11 @@
         "inputs": [],
         "name": "MIN_LOAN_GRACE_PERIOD",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -241,7 +306,13 @@
     {
         "inputs": [],
         "name": "ONE_HUNDRED_PERCENT",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -249,7 +320,11 @@
         "inputs": [],
         "name": "ONE_TOKEN",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -258,7 +333,11 @@
         "inputs": [],
         "name": "PAUSE_MAX_COOLDOWN",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -267,7 +346,11 @@
         "inputs": [],
         "name": "PAUSE_TIMEOUT",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -275,14 +358,26 @@
     {
         "inputs": [],
         "name": "PERCENT_DECIMALS",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
         "name": "SAFE_MAX_APR",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -290,7 +385,11 @@
         "inputs": [],
         "name": "SAFE_MAX_DURATION",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -299,7 +398,11 @@
         "inputs": [],
         "name": "SAFE_MIN_AMOUNT",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -307,7 +410,13 @@
     {
         "inputs": [],
         "name": "SAFE_MIN_APR",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -315,7 +424,11 @@
         "inputs": [],
         "name": "SAFE_MIN_DURATION",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -324,7 +437,11 @@
         "inputs": [],
         "name": "amountDepositable",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -333,25 +450,41 @@
         "inputs": [],
         "name": "amountUnstakable",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "wallet", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
         ],
         "name": "amountWithdrawable",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "_loanId", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "_loanId",
+                "type": "uint256"
+            }
         ],
         "name": "approveLoan",
         "outputs": [],
@@ -360,11 +493,19 @@
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "wallet", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
         ],
         "name": "balanceOf",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -373,14 +514,22 @@
         "inputs": [],
         "name": "balanceStaked",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            }
         ],
         "name": "borrow",
         "outputs": [],
@@ -391,14 +540,22 @@
         "inputs": [],
         "name": "borrowedFunds",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "name": "borrowerStats",
         "outputs": [
@@ -473,36 +630,78 @@
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            }
         ],
         "name": "canApprove",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" },
-            { "internalType": "address", "name": "caller", "type": "address" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "caller",
+                "type": "address"
+            }
         ],
         "name": "canCancel",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" },
-            { "internalType": "address", "name": "caller", "type": "address" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "caller",
+                "type": "address"
+            }
         ],
         "name": "canDefault",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
         ],
         "name": "cancelLiquidityRequest",
         "outputs": [],
@@ -511,7 +710,11 @@
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            }
         ],
         "name": "cancelLoan",
         "outputs": [],
@@ -528,27 +731,23 @@
     {
         "inputs": [],
         "name": "currentLenderAPY",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "defaultAPR",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "defaultLateAPRDelta",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            }
         ],
         "name": "defaultLoan",
         "outputs": [],
@@ -557,7 +756,11 @@
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            }
         ],
         "name": "denyLoan",
         "outputs": [],
@@ -566,7 +769,11 @@
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
         ],
         "name": "deposit",
         "outputs": [],
@@ -575,20 +782,32 @@
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "name": "earlyExitDeadlines",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
-        "name": "earlyExitFeePercent",
+        "name": "exitFeePercent",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -597,7 +816,11 @@
         "inputs": [],
         "name": "governance",
         "outputs": [
-            { "internalType": "address", "name": "", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -605,39 +828,77 @@
     {
         "inputs": [],
         "name": "isClosed",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
         "name": "isLendingPaused",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
         "name": "isPaused",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "wallet", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
         ],
         "name": "isValidBorrower",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "wallet", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
         ],
         "name": "isValidLender",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -645,29 +906,49 @@
         "inputs": [],
         "name": "lastPausedTime",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            }
         ],
         "name": "loanBalanceDue",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "name": "loanDetails",
         "outputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" },
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
             {
                 "internalType": "uint256",
                 "name": "totalAmountRepaid",
@@ -701,33 +982,40 @@
         "inputs": [],
         "name": "loanFundsPendingWithdrawal",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "loanGracePeriod",
-        "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "name": "loans",
         "outputs": [
-            { "internalType": "uint256", "name": "id", "type": "uint256" },
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            },
             {
                 "internalType": "address",
                 "name": "borrower",
                 "type": "address"
             },
-            { "internalType": "uint256", "name": "amount", "type": "uint256" },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
             {
                 "internalType": "uint256",
                 "name": "duration",
@@ -738,7 +1026,11 @@
                 "name": "gracePeriod",
                 "type": "uint256"
             },
-            { "internalType": "uint16", "name": "apr", "type": "uint16" },
+            {
+                "internalType": "uint16",
+                "name": "apr",
+                "type": "uint16"
+            },
             {
                 "internalType": "uint16",
                 "name": "lateAPRDelta",
@@ -762,7 +1054,11 @@
         "inputs": [],
         "name": "loansCount",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -771,7 +1067,11 @@
         "inputs": [],
         "name": "manager",
         "outputs": [
-            { "internalType": "address", "name": "", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -779,42 +1079,95 @@
     {
         "inputs": [],
         "name": "managerEarnFactor",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
         "name": "managerEarnFactorMax",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "maxDuration",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
-        "name": "minAmount",
+        "name": "maxLoanDuration",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
-        "name": "minDuration",
+        "name": "minLoanAmount",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "minLoanDuration",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "a",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "b",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "c",
+                "type": "uint256"
+            }
+        ],
+        "name": "multiplyByFraction",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -835,7 +1188,11 @@
         "inputs": [],
         "name": "pauseCooldownTime",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -850,7 +1207,13 @@
     {
         "inputs": [],
         "name": "poolCanLend",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -858,7 +1221,11 @@
         "inputs": [],
         "name": "poolFunds",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -867,7 +1234,11 @@
         "inputs": [],
         "name": "poolFundsLimit",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -876,17 +1247,31 @@
         "inputs": [],
         "name": "poolLiquidity",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint16", "name": "borrowRate", "type": "uint16" }
+            {
+                "internalType": "uint16",
+                "name": "borrowRate",
+                "type": "uint16"
+            }
         ],
         "name": "projectedLenderAPY",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -894,7 +1279,11 @@
         "inputs": [],
         "name": "protocol",
         "outputs": [
-            { "internalType": "address", "name": "", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -902,48 +1291,124 @@
     {
         "inputs": [],
         "name": "protocolEarningPercent",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "wallet", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
         ],
         "name": "protocolEarningsOf",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "borrower", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+            }
         ],
         "name": "recentLoanIdOf",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "loanId", "type": "uint256" },
-            { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
         ],
         "name": "repay",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" },
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+            }
+        ],
+        "name": "repayOnBehalf",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
         ],
         "name": "requestLiquidity",
         "outputs": [],
@@ -965,9 +1430,32 @@
         ],
         "name": "requestLoan",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "requestedLiquidity",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -980,59 +1468,6 @@
     {
         "inputs": [],
         "name": "resumeLending",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "uint16", "name": "apr", "type": "uint16" }
-        ],
-        "name": "setDefaultAPR",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16",
-                "name": "lateAPRDelta",
-                "type": "uint16"
-            }
-        ],
-        "name": "setDefaultLateAPRDelta",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "gracePeriod",
-                "type": "uint256"
-            }
-        ],
-        "name": "setLoanGracePeriod",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "uint256", "name": "duration", "type": "uint256" }
-        ],
-        "name": "setLoanMaxDuration",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "uint256", "name": "duration", "type": "uint256" }
-        ],
-        "name": "setLoanMinDuration",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -1067,11 +1502,37 @@
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "minLoanAmount",
+                "name": "duration",
+                "type": "uint256"
+            }
+        ],
+        "name": "setMaxLoanDuration",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_minLoanAmount",
                 "type": "uint256"
             }
         ],
         "name": "setMinLoanAmount",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "duration",
+                "type": "uint256"
+            }
+        ],
+        "name": "setMinLoanDuration",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -1117,7 +1578,50 @@
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            {
+                "internalType": "uint16",
+                "name": "lateAPRDelta",
+                "type": "uint16"
+            }
+        ],
+        "name": "setTemplateLateLoanAPRDelta",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "apr",
+                "type": "uint16"
+            }
+        ],
+        "name": "setTemplateLoanAPR",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gracePeriod",
+                "type": "uint256"
+            }
+        ],
+        "name": "setTemplateLoanGracePeriod",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
         ],
         "name": "stake",
         "outputs": [],
@@ -1128,7 +1632,11 @@
         "inputs": [],
         "name": "stakedShares",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -1136,14 +1644,65 @@
     {
         "inputs": [],
         "name": "targetLiquidityPercent",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [],
         "name": "targetStakePercent",
-        "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "templateLateLoanAPRDelta",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "templateLoanAPR",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "templateLoanGracePeriod",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -1151,7 +1710,11 @@
         "inputs": [],
         "name": "token",
         "outputs": [
-            { "internalType": "address", "name": "", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -1160,7 +1723,11 @@
         "inputs": [],
         "name": "tokenBalance",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -1168,7 +1735,13 @@
     {
         "inputs": [],
         "name": "tokenDecimals",
-        "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
         "stateMutability": "view",
         "type": "function"
     },
@@ -1176,7 +1749,24 @@
         "inputs": [],
         "name": "totalPoolShares",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalRequestedLiquidity",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
@@ -1196,18 +1786,43 @@
     },
     {
         "inputs": [
-            { "internalType": "address", "name": "wallet", "type": "address" }
+            {
+                "internalType": "address",
+                "name": "_protocol",
+                "type": "address"
+            }
+        ],
+        "name": "transferProtocolWallet",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
         ],
         "name": "unlockedBalanceOf",
         "outputs": [
-            { "internalType": "uint256", "name": "", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
         ],
         "stateMutability": "view",
         "type": "function"
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
         ],
         "name": "unstake",
         "outputs": [],
@@ -1216,7 +1831,11 @@
     },
     {
         "inputs": [
-            { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
         ],
         "name": "withdraw",
         "outputs": [],

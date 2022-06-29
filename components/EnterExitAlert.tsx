@@ -9,14 +9,14 @@ export function EnterExitAlert({
     value,
     enterVerb,
     exitVerb,
-    earlyExitFeePercent,
+    exitFeePercent,
     earlyExitDeadline,
 }: {
     enter: boolean
     value: string
     enterVerb: 'deposit' | 'stake'
     exitVerb: 'withdrawing' | 'unstaking'
-    earlyExitFeePercent: number
+    exitFeePercent: number
     earlyExitDeadline: number
 }) {
     return enter ? (
@@ -24,17 +24,17 @@ export function EnterExitAlert({
             style="warning-filled"
             title={`You should not ${enterVerb} unless you are prepared to sustain a total loss of the money you have invested plus any commission or other transaction charges`}
         />
-    ) : earlyExitFeePercent &&
+    ) : exitFeePercent &&
       earlyExitDeadline &&
       earlyExitDeadline > Date.now() / 1000 ? (
         <Alert
             style="warning"
-            title={`Exit fee of ${earlyExitFeePercent}% ${
+            title={`Exit fee of ${exitFeePercent}% ${
                 value
                     ? `(${formatMaxDecimals(
                           (
                               Number(value) *
-                              (earlyExitFeePercent / 100)
+                              (exitFeePercent / 100)
                           ).toString(),
                           6,
                       )} USDC) `
