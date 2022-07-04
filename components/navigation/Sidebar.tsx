@@ -163,16 +163,28 @@ export function Sidebar({
                 <FlexGrow />
 
                 {RPC_NETWORK_ID === networks.optimismKovan ? (
-                    <a
-                        className={getSidebarItemClass('/faucet', pathname)}
-                        onClick={hideSidebar}
-                        href="https://kovan.optifaucet.com"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                    >
-                        <RiCoinLine size={24} />
-                        Faucet
-                    </a>
+                    <>
+                        <a
+                            className={getSidebarItemClass('/faucet', pathname)}
+                            onClick={hideSidebar}
+                            href="https://kovan.optifaucet.com"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                        >
+                            <RiCoinLine size={24} />
+                            oETH Faucet
+                        </a>
+                        <a
+                            className={getSidebarItemClass('/okfaucet', pathname)}
+                            onClick={hideSidebar}
+                            href="https://okfaucet.pages.dev"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                        >
+                            <RiCoinLine size={24} />
+                            USDC Faucet
+                        </a>
+                    </>
                 ) : null}
             </div>
 
@@ -186,9 +198,8 @@ function getSidebarItemClass(
     currentPath: string,
     home?: boolean,
 ) {
-    return `sidebar-button${
-        currentPath.startsWith(href) || (home && currentPath === '/')
+    return `sidebar-button${currentPath.startsWith(href) || (home && currentPath === '/')
             ? ' current'
             : ''
-    }`
+        }`
 }
