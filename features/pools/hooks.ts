@@ -1,4 +1,4 @@
-import { formatUnits } from '@ethersproject/units'
+import { formatUnits, parseUnits } from '@ethersproject/units'
 import { useEffect, useMemo, useState } from 'react'
 import { AppDispatch, useSelector, AppState, useDispatch } from '../../store'
 import {
@@ -94,11 +94,15 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
     const stats = useSelector((state) => state.pools[poolAddress]?.stats)
     if (!stats) return null
 
+    // TODO: Memoize
+
     const poolFunds = BigNumber.from(stats.poolFunds)
+    const balanceStaked = BigNumber.from(stats.balanceStaked)
 
     return {
         loans: stats.loans,
-        managerFunds: formatUnits(stats.balanceStaked, tokenDecimals),
+        lossBuffer: balanceStaked.mul(100_000).div(poolFunds).toNumber() / 1000,
+        managerFunds: formatUnits(balanceStaked, tokenDecimals),
         availableForDeposits: formatUnits(
             stats.amountDepositable,
             tokenDecimals,
@@ -112,7 +116,7 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
             poolFunds.add(stats.amountDepositable),
             tokenDecimals,
         ),
-        apy: stats.apy,
+        poolLiquidity: formatUnits(stats.poolLiquidity, tokenDecimals),
     }
 }
 

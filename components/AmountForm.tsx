@@ -207,7 +207,7 @@ export function useAmountForm<T extends Types>({
             <Button
                 key={type}
                 disabled={Boolean(
-                    inputDisabled || (!isValueBiggerThanZero && account),
+                    account && (inputDisabled || !isValueBiggerThanZero),
                 )}
                 type="submit"
                 width={170}

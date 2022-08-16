@@ -2,7 +2,13 @@ import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useEffect, useMemo, useState } from 'react'
+import {
+    FormEventHandler,
+    ReactNode,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { useDispatch, useSelector } from '../../store'
 import {
     APP_NAME,
@@ -23,8 +29,10 @@ import {
     useAmountForm,
     Tabs,
     Button,
-    EnterExitAlert,
+    ExitAlert,
     BackToPools,
+    PoolInfo,
+    Alert,
 } from '../../components'
 import {
     contract,
@@ -33,6 +41,7 @@ import {
     useAccountInfo,
     useStatsState,
     trackTransaction,
+    useStats,
 } from '../../features'
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
@@ -57,14 +66,16 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             {head}
 
             <BackToPools href="/" />
-            <h1>{name}</h1>
-            <PoolStats
-                pool={pool}
+            <PoolInfo
                 poolAddress={address}
+                name={name}
                 description={description}
             />
-            <DepositAndWithdraw pool={pool} poolAddress={address} />
-            <YourSupply pool={pool} poolAddress={address} />
+            <PoolStats pool={pool} poolAddress={address} />
+            <Main>
+                <AddFunds pool={pool} poolAddress={address} />
+                <YourMoney pool={pool} poolAddress={address} />
+            </Main>
             <Earnings pool={pool} poolAddress={address} />
             {/* <div>
                 Pool address: <EtherscanLink address={address} />
@@ -79,16 +90,74 @@ Earn.getInitialProps = (context) => {
 
 export default Earn
 
-const types = ['Deposit', 'Withdraw'] as const
-function DepositAndWithdraw({
+function Main({ children }: { children: ReactNode }) {
+    return (
+        <div>
+            <style jsx>{`
+                div {
+                    :global(h2) {
+                        font-size: 16px;
+                        margin: 0 0 16px;
+                    }
+
+                    > :global(.box) {
+                        flex-basis: 50%;
+
+                        > :global(.stats) {
+                            > :global(.stat) {
+                                margin-top: 8px;
+
+                                > :global(.label) {
+                                    color: var(--color-secondary);
+                                    margin-bottom: 8px;
+                                    font-size: 16px;
+                                    font-weight: 400;
+                                }
+                                > :global(.value) {
+                                    color: var(--color);
+                                    font-size: 24px;
+                                    font-weight: 700;
+                                }
+                            }
+                        }
+                    }
+
+                    @media screen and (min-width: 800px) {
+                        display: flex;
+
+                        > :global(:first-child) {
+                            margin-right: 8px;
+                        }
+
+                        > :global(:last-child) {
+                            margin-left: 8px;
+                        }
+                    }
+                    @media screen and (min-width: 950px) {
+                        > :global(.box) {
+                            > :global(.stats) {
+                                display: flex;
+
+                                > :global(.stat) {
+                                    flex: 1 1 0;
+                                }
+                            }
+                        }
+                    }
+                }
+            `}</style>
+            {children}
+        </div>
+    )
+}
+
+function AddFunds({
     pool: { managerAddress, tokenAddress, tokenDecimals },
     poolAddress,
 }: {
     pool: Pool
     poolAddress: string
 }) {
-    const [type, setType] = useState<typeof types[number]>('Deposit')
-
     const account = useAccount()
 
     const [isValidLender, setIsValidLender] = useState<
@@ -115,16 +184,6 @@ function DepositAndWithdraw({
     const [info, refetchAccountInfo] = useAccountInfo(poolAddress, account)
 
     const { max, cannotDeposit } = useMemo(() => {
-        if (type === 'Withdraw') {
-            if (info) {
-                return {
-                    max: BigNumber.from(info.withdrawable),
-                    cannotDeposit: false,
-                }
-            }
-
-            return { max: undefined, cannotDeposit: false }
-        }
         if (!stats) return { max: undefined, cannotDeposit: false }
 
         const amountDepositableBigNumber = BigNumber.from(
@@ -133,21 +192,17 @@ function DepositAndWithdraw({
         const cannotDeposit = amountDepositableBigNumber.eq(zero)
 
         return { max: amountDepositableBigNumber, cannotDeposit }
-    }, [stats, type, info])
+    }, [stats])
 
     const isManager = managerAddress === account
 
     const invalidLender =
         !isValidLender || isValidLender[0] !== account || !isValidLender[1]
 
-    const { form, allowance, balance, value } = useAmountForm({
-        type,
-        onSumbit:
-            type === 'Deposit'
-                ? (contract, amount) =>
-                      contract.deposit(parseUnits(amount, tokenDecimals))
-                : (contract, amount) =>
-                      contract.withdraw(parseUnits(amount, tokenDecimals)),
+    const { form, allowance, balance } = useAmountForm({
+        type: 'Deposit',
+        onSumbit: (contract, amount) =>
+            contract.deposit(parseUnits(amount, tokenDecimals)),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,
         tokenAddress,
@@ -169,13 +224,8 @@ function DepositAndWithdraw({
     return (
         <Box
             loading={Boolean(
-                type === 'Deposit'
-                    ? (account && !cannotDeposit
-                          ? !allowance || !balance
-                          : false) || stats === undefined
-                    : account
-                    ? !info
-                    : false,
+                (account && !cannotDeposit ? !allowance || !balance : false) ||
+                    stats === undefined,
             )}
             overlay={
                 overlay ? (
@@ -183,33 +233,36 @@ function DepositAndWithdraw({
                         {overlay}
                         {info && zero.lt(info.withdrawable) ? (
                             <div style={{ textAlign: 'center', marginTop: 8 }}>
-                                <Button onClick={() => setType('Withdraw')}>
-                                    Withdraw
-                                </Button>
+                                <Button>Withdraw</Button>
                             </div>
                         ) : null}
                     </div>
                 ) : null
             }
         >
-            <Tabs tabs={types} currentTab={type} setCurrentTab={setType}></Tabs>
+            <h2>Add money</h2>
+
+            <div className="stats">
+                <div className="stat">
+                    <div className="label">APY</div>
+                    <div className="value">
+                        {stats ? `${stats.apy}%` : <Skeleton width={50} />}
+                    </div>
+                </div>
+            </div>
 
             {form}
 
-            <EnterExitAlert
-                enter={type === 'Deposit'}
-                value={value}
-                enterVerb="deposit"
-                exitVerb="withdrawing"
-                earlyExitDeadline={info ? info.earlyExitDeadline : 0}
-                exitFeePercent={stats ? stats.exitFeePercent : 0}
+            <Alert
+                style="warning-filled"
+                title="You should not deposit unless you are prepared to sustain a total loss of the money you have invested plus any commission or other transaction charges"
             />
         </Box>
     )
 }
 
-function YourSupply({
-    pool: { managerAddress, tokenDecimals },
+function YourMoney({
+    pool: { managerAddress, tokenAddress, tokenDecimals },
     poolAddress,
 }: {
     pool: Pool
@@ -217,32 +270,120 @@ function YourSupply({
 }) {
     const account = useAccount()
 
-    useFetchIntervalAccountInfo(account ? { poolAddress, account } : null)
+    const [isValidLender, setIsValidLender] = useState<
+        [string, boolean] | null
+    >(null)
+    useEffect(() => {
+        if (!account) return
+        let canceled = false
+        contract
+            .attach(poolAddress)
+            .isValidLender(account)
+            .then((isValid) => {
+                if (canceled) return
+                setIsValidLender([account, isValid])
+            })
 
-    const info = useSelector((state) =>
-        account ? state.pools[poolAddress]?.accountInfo[account] : null,
+        return () => {
+            canceled = true
+        }
+    }, [account, poolAddress])
+
+    const [stats, refetchStats] = useStatsState(poolAddress)
+
+    const [info, refetchAccountInfo] = useAccountInfo(poolAddress, account)
+
+    const max = useMemo(
+        () => (info ? BigNumber.from(info.withdrawable) : undefined),
+        [info],
     )
 
-    if (!account || account === managerAddress) return null
+    const isManager = managerAddress === account
+
+    const invalidLender =
+        !isValidLender || isValidLender[0] !== account || !isValidLender[1]
+
+    const { form, value } = useAmountForm({
+        type: 'Withdraw',
+        onSumbit: (contract, amount) =>
+            contract.withdraw(parseUnits(amount, tokenDecimals)),
+        refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
+        poolAddress,
+        tokenAddress,
+        tokenDecimals,
+        disabled: Boolean(isManager || !stats || invalidLender),
+        max,
+    })
+
+    const overlay =
+        isValidLender && isValidLender[0] === account && invalidLender
+            ? `Borrowers can't lend`
+            : undefined
 
     return (
-        <Box>
-            <div>
-                Your deposit:{' '}
-                {info ? (
-                    `$${format(formatUnits(info.balance, tokenDecimals))}`
-                ) : (
-                    <Skeleton width={35} />
-                )}
+        <Box
+            loading={Boolean(account ? !info : false)}
+            overlay={
+                overlay ? (
+                    <div>
+                        {overlay}
+                        {info && zero.lt(info.withdrawable) ? (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <Button>Withdraw</Button>
+                            </div>
+                        ) : null}
+                    </div>
+                ) : null
+            }
+        >
+            <h2>Your money</h2>
+
+            <div className="stats">
+                <div className="stat">
+                    <div className="label">Balance</div>
+                    <div className="value">
+                        {account ? (
+                            info ? (
+                                `$${format(
+                                    formatUnits(info.balance, tokenDecimals),
+                                )}`
+                            ) : (
+                                <Skeleton width={50} />
+                            )
+                        ) : (
+                            '-'
+                        )}
+                    </div>
+                </div>
+                <div className="stat">
+                    <div className="label">Withdrawable</div>
+                    <div className="value">
+                        {account ? (
+                            info ? (
+                                `$${format(
+                                    formatUnits(
+                                        info.withdrawable,
+                                        tokenDecimals,
+                                    ),
+                                )}`
+                            ) : (
+                                <Skeleton width={50} />
+                            )
+                        ) : (
+                            '-'
+                        )}
+                    </div>
+                </div>
             </div>
-            <div>
-                Withdrawable:{' '}
-                {info ? (
-                    `$${format(formatUnits(info.withdrawable, tokenDecimals))}`
-                ) : (
-                    <Skeleton width={35} />
-                )}
-            </div>
+
+            {form}
+
+            <ExitAlert
+                value={account ? value : '-'}
+                verb="withdrawing"
+                deadline={info ? info.earlyExitDeadline : 0}
+                feePercent={stats ? stats.exitFeePercent : 0}
+            />
         </Box>
     )
 }

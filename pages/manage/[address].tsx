@@ -5,9 +5,10 @@ import Head from 'next/head'
 import { useMemo, useState } from 'react'
 import { APP_NAME, useAccount, getAddress, prefix } from '../../app'
 import {
+    Alert,
     BackToPools,
     Box,
-    EnterExitAlert,
+    ExitAlert,
     Loans,
     Page,
     PageLoading,
@@ -122,14 +123,19 @@ function StakeAndUnstake({
 
             {form}
 
-            <EnterExitAlert
-                enter={type === 'Stake'}
-                value={value}
-                enterVerb="stake"
-                exitVerb="unstaking"
-                earlyExitDeadline={info ? info.earlyExitDeadline : 0}
-                exitFeePercent={stats ? stats.exitFeePercent : 0}
-            />
+            {type === 'Stake' ? (
+                <Alert
+                    style="warning-filled"
+                    title="You should not stake unless you are prepared to sustain a total loss of the money you have invested plus any commission or other transaction charges"
+                />
+            ) : (
+                <ExitAlert
+                    value={value}
+                    verb="unstaking"
+                    deadline={info ? info.earlyExitDeadline : 0}
+                    feePercent={stats ? stats.exitFeePercent : 0}
+                />
+            )}
         </Box>
     )
 }

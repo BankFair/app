@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { FormEventHandler, ReactNode, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { GrClose } from 'react-icons/gr'
 import { stopPropagation } from '../app'
 
@@ -31,7 +32,7 @@ export function Modal({
         [],
     )
 
-    return (
+    const node = (
         <div
             ref={backgroundRef}
             className="background"
@@ -94,4 +95,6 @@ export function Modal({
             </Element>
         </div>
     )
+
+    return createPortal(node, document.body)
 }

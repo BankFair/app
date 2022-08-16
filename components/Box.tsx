@@ -29,7 +29,7 @@ export function Box({
                     background-color: var(--bg-section);
                     backdrop-filter: blur(16px);
                     box-shadow: ${commonBoxShadow};
-                    margin: 24px auto;
+                    margin: 16px auto;
                     padding: 24px;
                     position: relative;
 
