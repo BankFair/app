@@ -101,7 +101,9 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
 
     return {
         loans: stats.loans,
-        lossBuffer: balanceStaked.mul(100_000).div(poolFunds).toNumber() / 1000,
+        lossBuffer: poolFunds.eq(zero)
+            ? 0
+            : balanceStaked.mul(100_000).div(poolFunds).toNumber() / 1000,
         managerFunds: formatUnits(balanceStaked, tokenDecimals),
         availableForDeposits: formatUnits(
             stats.amountDepositable,
