@@ -53,7 +53,7 @@ export function LoanView({
         apr,
         lateAPRDelta,
     },
-    tokenDecimals,
+    liquidityTokenDecimals,
     showAll,
     onApprove,
     onReject,
@@ -65,7 +65,7 @@ export function LoanView({
     account,
 }: {
     loan: Loan
-    tokenDecimals: number
+    liquidityTokenDecimals: number
     showAll?: boolean
     onBorrow?(id: number): Promise<unknown>
     onRepay?(id: number, debt: BigNumber): void
@@ -77,8 +77,8 @@ export function LoanView({
     account: string | undefined
 }) {
     const formattedAmount = useMemo(
-        () => format(formatUnits(amount, tokenDecimals)),
-        [amount, tokenDecimals],
+        () => format(formatUnits(amount, liquidityTokenDecimals)),
+        [amount, liquidityTokenDecimals],
     )
     const formattedStatus = useMemo(() => formatStatus(status), [status])
 
@@ -188,13 +188,17 @@ export function LoanView({
 
             <h4 className="amount">
                 {hasDebt
-                    ? `Debt: ${format(formatUnits(debt, tokenDecimals))}`
+                    ? `Debt: ${format(
+                          formatUnits(debt, liquidityTokenDecimals),
+                      )}`
                     : `Amount: ${
                           wasRepaid
-                              ? format(formatUnits(repaid, tokenDecimals))
+                              ? format(
+                                    formatUnits(repaid, liquidityTokenDecimals),
+                                )
                               : formattedAmount
                       }`}{' '}
-                USDC
+                {TOKEN_SYMBOL}
             </h4>
             <Progress
                 l
@@ -277,8 +281,8 @@ export function LoanView({
                         <div className="value">
                             {format(
                                 formatMaxDecimals(
-                                    formatUnits(amount, tokenDecimals),
-                                    tokenDecimals,
+                                    formatUnits(amount, liquidityTokenDecimals),
+                                    liquidityTokenDecimals,
                                 ),
                             )}{' '}
                             {TOKEN_SYMBOL}
@@ -291,9 +295,9 @@ export function LoanView({
                                 formatMaxDecimals(
                                     formatUnits(
                                         details.interestPaid,
-                                        tokenDecimals,
+                                        liquidityTokenDecimals,
                                     ),
-                                    tokenDecimals,
+                                    liquidityTokenDecimals,
                                 ),
                             )}{' '}
                             {TOKEN_SYMBOL}

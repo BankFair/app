@@ -5,12 +5,13 @@ export const networks = {
     optimism: 10,
     kovan: 42,
     optimismKovan: 69,
+    hardhat: 31337,
 }
 
 export const APP_NAME = 'Sapling'
 export const SIDEBAR_ALWAYS_VISIBLE_WIDTH = '700'
 
-export const RPC_NETWORK_ID = networks.optimismKovan
+export const RPC_NETWORK_ID = networks.hardhat
 export const RPC_URL =
     (RPC_NETWORK_ID as number) === networks.optimism
         ? 'https://mainnet.optimism.io/'
@@ -18,6 +19,8 @@ export const RPC_URL =
         ? 'https://kovan.optimism.io/'
         : RPC_NETWORK_ID === networks.kovan
         ? 'https://kovan.poa.network/'
+        : RPC_NETWORK_ID === networks.hardhat
+        ? 'http://127.0.0.1:8545/'
         : ''
 export const CHAIN = {
     chainId: `0x${RPC_NETWORK_ID.toString(16)}`,
@@ -28,6 +31,8 @@ export const CHAIN = {
             ? 'Optimism Kovan'
             : RPC_NETWORK_ID === networks.kovan
             ? 'Kovan'
+            : RPC_NETWORK_ID === networks.hardhat
+            ? 'Hardhat'
             : 'Unknown Network',
     nativeCurrency: {
         name: 'Ether',
@@ -42,6 +47,8 @@ export const CHAIN = {
             ? ['https://kovan-optimistic.etherscan.io/']
             : RPC_NETWORK_ID === networks.kovan
             ? ['https://kovan.etherscan.io/']
+            : RPC_NETWORK_ID === networks.hardhat
+            ? ['http://invalid/']
             : [],
 }
 
@@ -58,10 +65,14 @@ export const POOLS = (JSON.parse(process.env.POOLS!) as PoolsEnv).map(
     }),
 )
 
-export const TOKEN_SYMBOL = 'USDC'
-export const USDC_DECIMALS = 6
+export const TOKEN_SYMBOL = 'USDT'
+export const USDT_DECIMALS = 6
 export const oneHundredPercent = 1000
 export const ONE_HUNDRED_PERCENT = BigNumber.from(oneHundredPercent)
+
+// export const BORROWER_SERVICE_URL =
+//     'https://test-borrower-api.sapling.workers.dev'
+export const BORROWER_SERVICE_URL = 'http://localhost:8787'
 
 export const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
 

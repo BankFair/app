@@ -42,13 +42,6 @@ export function Box({
                     }
                 }
 
-                .loading-container {
-                    background-color: inherit;
-                }
-                .overlay-container {
-                    background-color: var(--bg-overlay);
-                    backdrop-filter: blur(5px);
-                }
                 .loading-container,
                 .overlay-container {
                     border-radius: inherit;
@@ -62,6 +55,8 @@ export function Box({
                     justify-content: center;
                     padding: inherit;
                     text-align: center;
+                    background-color: var(--bg-overlay);
+                    backdrop-filter: blur(5px);
                 }
             `}</style>
 

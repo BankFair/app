@@ -19,6 +19,7 @@ import {
     POOLS,
     format,
     prefix,
+    TOKEN_SYMBOL,
 } from '../../app'
 import {
     Page,
@@ -27,7 +28,6 @@ import {
     PageLoading,
     Skeleton,
     useAmountForm,
-    Tabs,
     Button,
     ExitAlert,
     BackToPools,
@@ -37,11 +37,9 @@ import {
 import {
     contract,
     Pool,
-    useFetchIntervalAccountInfo,
     useAccountInfo,
     useStatsState,
     trackTransaction,
-    useStats,
 } from '../../features'
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
@@ -152,32 +150,13 @@ function Main({ children }: { children: ReactNode }) {
 }
 
 function AddFunds({
-    pool: { managerAddress, tokenAddress, tokenDecimals },
+    pool: { managerAddress, liquidityTokenAddress, liquidityTokenDecimals },
     poolAddress,
 }: {
     pool: Pool
     poolAddress: string
 }) {
     const account = useAccount()
-
-    const [isValidLender, setIsValidLender] = useState<
-        [string, boolean] | null
-    >(null)
-    useEffect(() => {
-        if (!account) return
-        let canceled = false
-        contract
-            .attach(poolAddress)
-            .isValidLender(account)
-            .then((isValid) => {
-                if (canceled) return
-                setIsValidLender([account, isValid])
-            })
-
-        return () => {
-            canceled = true
-        }
-    }, [account, poolAddress])
 
     const [stats, refetchStats] = useStatsState(poolAddress)
 
@@ -196,27 +175,20 @@ function AddFunds({
 
     const isManager = managerAddress === account
 
-    const invalidLender =
-        !isValidLender || isValidLender[0] !== account || !isValidLender[1]
-
     const { form, allowance, balance } = useAmountForm({
         type: 'Deposit',
         onSumbit: (contract, amount) =>
-            contract.deposit(parseUnits(amount, tokenDecimals)),
+            contract.deposit(parseUnits(amount, liquidityTokenDecimals)),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,
-        tokenAddress,
-        tokenDecimals,
-        disabled: Boolean(
-            isManager || !stats || cannotDeposit || invalidLender,
-        ),
+        liquidityTokenAddress,
+        liquidityTokenDecimals,
+        disabled: Boolean(isManager || !stats || cannotDeposit),
         max,
     })
 
     const overlay = isManager
         ? "Manager can't deposit"
-        : isValidLender && isValidLender[0] === account && invalidLender
-        ? `Borrowers can't lend`
         : cannotDeposit
         ? "This pool doesn't accept deposits"
         : undefined
@@ -262,32 +234,13 @@ function AddFunds({
 }
 
 function YourMoney({
-    pool: { managerAddress, tokenAddress, tokenDecimals },
+    pool: { managerAddress, liquidityTokenAddress, liquidityTokenDecimals },
     poolAddress,
 }: {
     pool: Pool
     poolAddress: string
 }) {
     const account = useAccount()
-
-    const [isValidLender, setIsValidLender] = useState<
-        [string, boolean] | null
-    >(null)
-    useEffect(() => {
-        if (!account) return
-        let canceled = false
-        contract
-            .attach(poolAddress)
-            .isValidLender(account)
-            .then((isValid) => {
-                if (canceled) return
-                setIsValidLender([account, isValid])
-            })
-
-        return () => {
-            canceled = true
-        }
-    }, [account, poolAddress])
 
     const [stats, refetchStats] = useStatsState(poolAddress)
 
@@ -300,42 +253,20 @@ function YourMoney({
 
     const isManager = managerAddress === account
 
-    const invalidLender =
-        !isValidLender || isValidLender[0] !== account || !isValidLender[1]
-
     const { form, value } = useAmountForm({
         type: 'Withdraw',
         onSumbit: (contract, amount) =>
-            contract.withdraw(parseUnits(amount, tokenDecimals)),
+            contract.withdraw(parseUnits(amount, liquidityTokenDecimals)),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,
-        tokenAddress,
-        tokenDecimals,
-        disabled: Boolean(isManager || !stats || invalidLender),
+        liquidityTokenAddress,
+        liquidityTokenDecimals,
+        disabled: Boolean(isManager || !stats),
         max,
     })
 
-    const overlay =
-        isValidLender && isValidLender[0] === account && invalidLender
-            ? `Borrowers can't lend`
-            : undefined
-
     return (
-        <Box
-            loading={Boolean(account ? !info : false)}
-            overlay={
-                overlay ? (
-                    <div>
-                        {overlay}
-                        {info && zero.lt(info.withdrawable) ? (
-                            <div style={{ textAlign: 'center', marginTop: 8 }}>
-                                <Button>Withdraw</Button>
-                            </div>
-                        ) : null}
-                    </div>
-                ) : null
-            }
-        >
+        <Box loading={Boolean(account ? !info : false)}>
             <h2>Your money</h2>
 
             <div className="stats">
@@ -345,7 +276,10 @@ function YourMoney({
                         {account ? (
                             info ? (
                                 `$${format(
-                                    formatUnits(info.balance, tokenDecimals),
+                                    formatUnits(
+                                        info.balance,
+                                        liquidityTokenDecimals,
+                                    ),
                                 )}`
                             ) : (
                                 <Skeleton width={50} />
@@ -363,7 +297,7 @@ function YourMoney({
                                 `$${format(
                                     formatUnits(
                                         info.withdrawable,
-                                        tokenDecimals,
+                                        liquidityTokenDecimals,
                                     ),
                                 )}`
                             ) : (
@@ -379,9 +313,8 @@ function YourMoney({
             {form}
 
             <ExitAlert
-                value={account ? value : '-'}
+                value={value}
                 verb="withdrawing"
-                deadline={info ? info.earlyExitDeadline : 0}
                 feePercent={stats ? stats.exitFeePercent : 0}
             />
         </Box>
@@ -389,7 +322,7 @@ function YourMoney({
 }
 
 function Earnings({
-    pool: { tokenDecimals },
+    pool: { liquidityTokenDecimals },
     poolAddress,
 }: {
     pool: Pool
@@ -476,9 +409,12 @@ function Earnings({
                     {earnings &&
                         earnings.account === account &&
                         format(
-                            formatUnits(earnings.amount, tokenDecimals),
+                            formatUnits(
+                                earnings.amount,
+                                liquidityTokenDecimals,
+                            ),
                         )}{' '}
-                    USDC
+                    {TOKEN_SYMBOL}
                 </div>
                 <Button
                     loading={isLoading}

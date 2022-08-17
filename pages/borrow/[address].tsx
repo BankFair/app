@@ -1,21 +1,29 @@
+import 'isomorphic-fetch'
+
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { FormEventHandler, useEffect, useMemo, useState } from 'react'
+import {
+    FormEventHandler,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 
 import {
     APP_NAME,
+    BORROWER_SERVICE_URL,
     format,
     getAddress,
-    oneHundredPercent,
     POOLS,
     prefix,
+    shortenAddress,
     TOKEN_SYMBOL,
     useAccount,
     useProvider,
-    withInterest,
-    zero,
 } from '../../app'
 import {
     Alert,
@@ -29,14 +37,13 @@ import {
     PageLoading,
 } from '../../components'
 import {
-    contract,
     LoanStatus,
     Pool,
     useLoans,
-    usePoolLiquidity,
     useBorrowInfo,
     loanRequestedSignature,
     trackTransaction,
+    loanDeskContract,
 } from '../../features'
 import { useDispatch, useSelector } from '../../store'
 
@@ -50,7 +57,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
     const head = (
         <Head>
             <title>{title}</title>
-                <link rel="icon" href={`${prefix}/favicon.svg`} />
+            <link rel="icon" href={`${prefix}/favicon.svg`} />
         </Head>
     )
 
@@ -60,7 +67,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
         <Page>
             {head}
 
-            <BackToPools href='/borrow' />
+            <BackToPools href="/borrow" />
             <h1>{name}</h1>
             <RequestLoan pool={pool} poolAddress={address} account={account} />
             <Loans pool={pool} poolAddress={address} account={account} />
@@ -76,14 +83,13 @@ export default Borrow
 
 const oneDay = 86400
 const oneWeek = oneDay * 7
+const thirtyDays = oneDay * 30
 const oneYear = oneWeek * 52 + oneDay
-const multipliers = [oneDay.toString(), oneWeek.toString(), oneYear.toString()]
-const initialAmount = ''
-const initialDuration = '4'
-const initialDurationMultiplier = multipliers[1]
+const initialValue = ''
+const initialDuration = ''
 const initialDisplayAlert = false
 function RequestLoan({
-    pool: { managerAddress, tokenDecimals },
+    pool: { managerAddress, loanDeskAddress, liquidityTokenDecimals },
     poolAddress,
     account,
 }: {
@@ -95,341 +101,269 @@ function RequestLoan({
 
     const dispatch = useDispatch()
 
-    const [isValidBorrower, setIsValidBorrower] = useState<
-        [string, boolean] | null
-    >(null)
-    useEffect(() => {
-        if (!account) return
-        let canceled = false
-        contract
-            .attach(poolAddress)
-            .isValidBorrower(account)
-            .then((isValid) => {
-                if (canceled) return
-                setIsValidBorrower([account, isValid])
-            })
-
-        return () => {
-            canceled = true
-        }
-    }, [account, poolAddress])
-
     const [displayAlert, setDisplayAlert] = useState(initialDisplayAlert)
+    const showDisplayAlert = useCallback(() => setDisplayAlert(true), [])
 
     const [showConnectModal, setShowConnectModal] = useState(false)
     useEffect(() => {
         if (account) setShowConnectModal(false)
     }, [account])
 
-    const loans = useLoans(poolAddress)
-    const [loading, setLoading] = useState(0)
+    const [loading, setLoading] = useState(false)
+    const [isSubmitted, setIsSubmitted] = useState(false)
 
-    const isLoanPendingApproval = useMemo(
-        () =>
-            account &&
-            loading === 0 &&
-            loans.filter(
-                (loan) =>
-                    loan.borrower === account &&
-                    loan.status === LoanStatus.APPLIED,
-            ).length,
-        [account, loading, loans],
-    )
+    const [loanPendingApproval, setLoanPendingApproval] = useState<{
+        hasOpenApplication: boolean
+        account: string
+        loanDeskAddress: string
+    } | null>(null)
+    const loanPendingApprovalRef = useRef<string | undefined>()
+    useEffect(() => {
+        if (account === loanPendingApprovalRef.current) return
+        loanPendingApprovalRef.current = account
 
-    const borrowInfo = useBorrowInfo(poolAddress)
+        if (!account) return
 
-    const [amount, setAmount] = useState(initialAmount)
-    const [max, refetch] = usePoolLiquidity(poolAddress)
-    const { maxElement, canRequest } = useMemo(() => {
-        if (!max || !borrowInfo) return { maxElement: null, canRequest: false }
+        loanDeskContract
+            .attach(loanDeskAddress)
+            .connect(provider!)
+            .borrowerStats(account)
+            .then(({ hasOpenApplication }) => {
+                setLoanPendingApproval({
+                    hasOpenApplication,
+                    account,
+                    loanDeskAddress,
+                })
+            })
+            .catch((error) => {
+                console.error(error)
+            })
+    }, [account, loanDeskAddress, provider])
 
-        const maxBigNumber = BigNumber.from(max)
-        const maxFormatted = format(formatUnits(maxBigNumber, tokenDecimals))
+    const isLoanPendingApproval =
+        loanPendingApproval &&
+        loanPendingApproval.hasOpenApplication &&
+        loanPendingApproval.account === account &&
+        loanDeskAddress === loanPendingApproval.loanDeskAddress
 
-        return {
-            maxElement: max ? (
-                <span
-                    tabIndex={0}
-                    onClick={() => {
-                        setAmount(maxFormatted)
-                        setDisplayAlert(true)
-                    }}
-                >
-                    Max: {maxFormatted}
-                </span>
-            ) : null,
-            canRequest: maxBigNumber.gte(borrowInfo.minLoanAmount),
-        }
-    }, [borrowInfo, max, tokenDecimals])
-    const value = useMemo(() => {
-        if (!max) return amount
-        const maxBigNumber = BigNumber.from(max)
+    const borrowInfo = useBorrowInfo(poolAddress, loanDeskAddress)
 
-        return maxBigNumber.gt(
-            amount ? parseUnits(amount, tokenDecimals) : zero,
-        )
-            ? amount
-            : format(formatUnits(maxBigNumber, tokenDecimals))
-    }, [max, amount, tokenDecimals])
-    const isAmountTooLow = useMemo(
-        () =>
-            borrowInfo &&
-            value &&
-            parseUnits(value, tokenDecimals).lt(borrowInfo.minLoanAmount),
-        [borrowInfo, tokenDecimals, value],
-    )
+    const [name, setName] = useState('')
+    const [businessName, setBusinessName] = useState('')
+    const [phone, setPhone] = useState('')
+    const [email, setEmail] = useState('')
+
+    const emailInputRef = useRef<HTMLInputElement>(null)
+
+    const [amount, setAmount] = useState(initialValue)
 
     const [duration, setDuration] = useState(initialDuration)
-    const [durationMultiplier, setDurationMultiplier] = useState(
-        initialDurationMultiplier,
-    )
+    const durationMultiplier = thirtyDays
 
-    const durationInSeconds = Number(duration) * Number(durationMultiplier)
-    const isDurationTooLow =
-        borrowInfo && durationInSeconds < borrowInfo.minLoanDuration
-    const isDurationTooHigh =
-        borrowInfo && durationInSeconds > borrowInfo.maxLoanDuration
-
-    function reset() {
-        setAmount(initialAmount)
-        setDuration(initialDuration)
-        setDurationMultiplier(initialDurationMultiplier)
-        setDisplayAlert(initialDisplayAlert)
-    }
-
-    useEffect(() => {
-        if (!loading || loading === -1) return
-
-        if (loans.filter((loan) => loan.id === loading).length) {
-            setLoading(0)
-            reset()
+    const { invalidAmountMessage, invalidDurationMessage } = useMemo(() => {
+        if (!borrowInfo) {
+            return {
+                isAmountValid: true,
+                invalidAmountMessage: '',
+                isDurationValid: true,
+                invalidDurationMessage: '',
+            }
         }
-    }, [loans, loading])
 
-    const { alert, willDisplayAlert } = useMemo(
-        () => ({
-            willDisplayAlert: isLoanPendingApproval || isAmountTooLow,
-            alert:
-                isLoanPendingApproval && displayAlert
-                    ? 'A loan you requested is already pending approval'
-                    : isAmountTooLow && displayAlert
-                    ? `Minimum amount is ${format(
-                          formatUnits(
-                              BigNumber.from(borrowInfo!.minLoanAmount),
-                              tokenDecimals,
-                          ),
-                      )}`
-                    : isDurationTooLow
-                    ? `Minimum duration is ${
-                          borrowInfo.minLoanDuration / oneDay
-                      } day`
-                    : isDurationTooHigh
-                    ? `Maximum duration is ${
-                          borrowInfo.maxLoanDuration / oneYear
-                      } years`
-                    : null,
-        }),
+        const durationInSeconds = Number(duration) * Number(durationMultiplier)
+        const isDurationTooLow = durationInSeconds < borrowInfo.minLoanDuration
+        const isDurationTooHigh = durationInSeconds > borrowInfo.maxLoanDuration
+
+        const isAmountValid = checkAmountValidity(
+            amount,
+            liquidityTokenDecimals,
+            borrowInfo.minLoanAmount,
+        )
+
+        return {
+            invalidAmountMessage: isAmountValid
+                ? ''
+                : `Minimum amount is ${format(
+                      formatUnits(
+                          BigNumber.from(borrowInfo.minLoanAmount),
+                          liquidityTokenDecimals,
+                      ),
+                  )}`,
+            invalidDurationMessage: isDurationTooLow
+                ? `Minimum duration is ${
+                      borrowInfo.minLoanDuration / oneDay
+                  } day`
+                : isDurationTooHigh
+                ? `Maximum duration is ${
+                      borrowInfo.maxLoanDuration / oneYear
+                  } years`
+                : '',
+        }
+    }, [
+        borrowInfo,
+        duration,
+        durationMultiplier,
+        liquidityTokenDecimals,
+        amount,
+    ])
+
+    const alert = useMemo(
+        () =>
+            !checkValidityNotEmpty(name)
+                ? 'Please enter your name'
+                : !checkValidityNotEmpty(businessName)
+                ? 'Please enter your business name'
+                : !checkValidityNotEmpty(email) && !checkValidityNotEmpty(phone)
+                ? 'Please enter an email or phone number'
+                : !emailInputRef.current?.checkValidity()
+                ? 'Invalid email'
+                : isLoanPendingApproval
+                ? 'x'
+                : invalidAmountMessage || invalidDurationMessage || null,
         [
-            displayAlert,
-            borrowInfo,
-            isAmountTooLow,
-            isDurationTooHigh,
-            isDurationTooLow,
+            businessName,
+            email,
+            invalidAmountMessage,
+            invalidDurationMessage,
             isLoanPendingApproval,
-            tokenDecimals,
+            name,
+            phone,
         ],
     )
 
-    const willOwe = useMemo(() => {
-        if (!borrowInfo) return '0'
-
-        return format(
-            formatUnits(
-                withInterest(
-                    parseUnits(value || '0', tokenDecimals),
-                    BigNumber.from((borrowInfo.apr / 100) * oneHundredPercent),
-                    durationInSeconds / oneDay,
-                ),
-                tokenDecimals,
-            ),
-        )
-    }, [borrowInfo, durationInSeconds, value, tokenDecimals])
-
     const isManager = managerAddress === account
-    const componentIsLoading = !max || !borrowInfo
+    const componentIsLoading =
+        !borrowInfo || Boolean(account && !loanPendingApproval)
     const disabled = isManager || componentIsLoading
-    const waitingForTransaction = loading !== 0
-    const invalidBorrower =
-        !isValidBorrower ||
-        isValidBorrower[0] !== account ||
-        !isValidBorrower[1]
     const disabledSubmit = Boolean(
-        invalidBorrower ||
-            waitingForTransaction ||
-            disabled ||
-            !value ||
-            !canRequest ||
-            alert ||
-            willDisplayAlert,
+        loading || disabled || !amount || alert || isSubmitted,
     )
-    const displayS = Number(duration) !== 1
 
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined = account
-        ? disabledSubmit
-            ? undefined
-            : (event) => {
-                  event.preventDefault()
+    const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
+        (event) => {
+            event.preventDefault()
+            if (!account) {
+                setShowConnectModal(true)
+                return
+            }
 
-                  setLoading(-1)
+            if (disabledSubmit) return
 
-                  const parsedAmount = parseUnits(value, tokenDecimals)
-                  const parsedDuration = BigNumber.from(
-                      Number(duration) * Number(durationMultiplier),
-                  )
+            setLoading(true)
 
-                  // TODO: Handle errors
-                  // TODO: Handle user cancelation
-                  contract
-                      .attach(poolAddress)
-                      .connect(provider!.getSigner())
-                      .requestLoan(parsedAmount, parsedDuration)
-                      .then((tx) =>
-                          trackTransaction(dispatch, {
-                              name: `Request loan for ${value} ${TOKEN_SYMBOL}`,
-                              tx,
-                          }),
-                      )
-                      .then(({ payload: { receipt } }) => {
-                          if (!receipt) {
-                              setLoading(0)
-                              reset()
-                              return
-                          }
+            const parsedAmount = parseUnits(amount, liquidityTokenDecimals)
+            const parsedDuration = BigNumber.from(
+                Number(duration) * Number(durationMultiplier),
+            )
 
-                          let id = 0
-                          for (const event of receipt.events || []) {
-                              if (
-                                  event.eventSignature ===
-                                  loanRequestedSignature
-                              ) {
-                                  id = BigNumber.from(
-                                      event.args!.array[0],
-                                  ).toNumber()
-                                  break
-                              }
-                          }
+            const signer = provider!.getSigner()
 
-                          return refetch().then(() => {
-                              setLoading(id)
-                              if (id === 0) {
-                                  reset()
-                              }
-                          })
-                      })
-                      .catch((error) => {
-                          console.error(error)
-                          setLoading(0)
-                          reset()
-                      })
-              }
-        : (event) => {
-              event.preventDefault()
-              setShowConnectModal(true)
-          }
+            // TODO: Handle errors
+            // TODO: Handle user cancelation
+            signer
+                .signMessage(
+                    `My name is ${name.trim()}.\nMy business name is ${businessName.trim()}.${
+                        phone ? `\nMy phone is ${phone.trim()}.` : ''
+                    }${email ? `\nMy email is ${email.trim()}.` : ''}`,
+                )
+                .then((walletSignature) =>
+                    fetch(`${BORROWER_SERVICE_URL}/profile`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name,
+                            businessName,
+                            phone,
+                            email,
+                            walletSignature,
+                            walletAddress: account.toLowerCase(),
+                        }),
+                    }),
+                )
+                .then((response) => response.json())
+                .then(({ id, digest }: { id: string; digest: string }) =>
+                    loanDeskContract
+                        .attach(loanDeskAddress)
+                        .connect(signer)
+                        .requestLoan(parsedAmount, parsedDuration, id, digest),
+                )
+                .then((tx) =>
+                    trackTransaction(dispatch, {
+                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
+                        tx,
+                    }),
+                )
+                .then(() => {
+                    setIsSubmitted(true)
+                    setLoading(false)
+                })
+                .catch((error) => {
+                    console.error(error)
+                    setLoading(false)
+                })
+        },
+        [
+            account,
+            businessName,
+            disabledSubmit,
+            dispatch,
+            duration,
+            durationMultiplier,
+            email,
+            liquidityTokenDecimals,
+            loanDeskAddress,
+            name,
+            phone,
+            provider,
+            amount,
+        ],
+    )
 
     return (
         <Box
             loading={componentIsLoading}
             overlay={
-                isManager
-                    ? `Manager can't request a loan`
-                    : isValidBorrower &&
-                      isValidBorrower[0] === account &&
-                      invalidBorrower
-                    ? `Lenders can't borrow`
-                    : !canRequest
-                    ? 'There is not enough liquidity in the pool to request a loan'
-                    : undefined
+                isManager ? (
+                    `Manager can't request a loan`
+                ) : isLoanPendingApproval ? (
+                    'A loan you requested is already pending approval'
+                ) : isSubmitted ? (
+                    <div>
+                        <h2>Thank you for applying!</h2>
+                        <h2>The pool manager will be in touch shortly.</h2>
+                    </div>
+                ) : undefined
             }
         >
             <style jsx>{`
                 form {
                     > h3 {
-                        margin: 0 0 8px;
+                        margin: 0;
                     }
 
-                    > table {
-                        border-collapse: collapse;
-                    }
+                    > label {
+                        display: block;
+                        margin-top: 16px;
 
-                    .max {
-                        font-size: 14px;
-                        font-weight: 500;
-                        height: 16px;
-                        line-height: 16px;
-                        color: var(--color-secondary);
-
-                        > :global(span) {
-                            cursor: pointer;
+                        > .label {
+                            color: var(--color-secondary);
+                            font-weight: 400;
+                            margin-bottom: 8px;
                         }
                     }
 
-                    td {
-                        padding: 3px 0;
-                    }
+                    > .alert-positioner {
+                        margin-top: 16px;
 
-                    .amount-label {
-                        padding-right: 6px;
-                    }
-
-                    .duration-label {
-                        padding-right: 6px;
-                    }
-
-                    .duration {
-                        padding-top: 6px;
-                        display: flex;
-
-                        > :global(.input) {
-                            width: 46px;
-                            margin-right: 6px;
-                        }
-                    }
-
-                    .info {
-                        display: flex;
-                        position: relative;
-                        padding: 16px 0;
-
-                        > .item {
-                            flex-basis: 50%;
-                            > .label {
-                                font-size: 15px;
-                                font-weight: 400;
-                                color: var(--color);
-                            }
-                            > .value {
-                                font-size: 18px;
-                                padding-top: 2px;
-                                font-weight: 700;
-                            }
-                        }
-
-                        > .alert-positioner {
-                            position: absolute;
-                            top: 0;
-                            bottom: 0;
+                        > :global(.alert) {
                             width: 100%;
-                            display: flex;
-                            align-items: center;
-
-                            > :global(.alert) {
-                                width: 100%;
-                            }
                         }
                     }
 
                     > .button-container {
+                        margin-top: 16px;
                         position: relative;
                         display: table;
 
@@ -457,100 +391,138 @@ function RequestLoan({
                 }
             `}</style>
             <form onSubmit={handleSubmit}>
-                <h3>Request Loan</h3>
+                <h3>Apply For a Loan</h3>
 
-                <table>
-                    <tbody>
-                        <tr>
-                            <td className="amount-label">Amount</td>
-                            <td>
-                                <AmountInput
-                                    decimals={tokenDecimals}
-                                    value={value}
-                                    onChange={setAmount}
-                                    disabled={disabled}
-                                    onBlur={() => setDisplayAlert(true)}
-                                    onKeyDown={(event) =>
-                                        event.key === 'Enter'
-                                            ? setDisplayAlert(true)
-                                            : undefined
-                                    }
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colSpan={2}>
-                                <div className="max">{maxElement}</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="duration-label">Duration</td>
-                            <td className="duration">
-                                <AmountInput
-                                    decimals={4}
-                                    value={duration}
-                                    onChange={setDuration}
-                                    disabled={disabled}
-                                    noToken
-                                    s
-                                    center
-                                />
-                                <select
-                                    className="s"
-                                    value={durationMultiplier}
-                                    onChange={(event) => {
-                                        setDurationMultiplier(
-                                            event.target.value,
-                                        )
-                                    }}
-                                >
-                                    <option value={multipliers[0]}>
-                                        day{displayS ? 's' : ''}
-                                    </option>
-                                    <option value={multipliers[1]}>
-                                        week{displayS ? 's' : ''}
-                                    </option>
-                                    <option value={multipliers[2]}>
-                                        year{displayS ? 's' : ''}
-                                    </option>
-                                </select>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <label>
+                    <div className="label">Account</div>
+                    <input
+                        type="text"
+                        required={Boolean(account)}
+                        disabled
+                        value={account ? shortenAddress(account) : ''}
+                    />
+                </label>
+                <label>
+                    <div className="label">Name</div>
+                    <input
+                        type="text"
+                        required={Boolean(account)}
+                        placeholder="John Smith"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        onBlur={() =>
+                            !checkValidityNotEmpty(name) &&
+                            setDisplayAlert(true)
+                        }
+                    />
+                </label>
+                <label>
+                    <div className="label">Business Name</div>
+                    <input
+                        type="text"
+                        required={Boolean(account)}
+                        placeholder="Green LLC"
+                        value={businessName}
+                        onChange={(event) =>
+                            setBusinessName(event.target.value)
+                        }
+                        onBlur={() =>
+                            !checkValidityNotEmpty(businessName) &&
+                            setDisplayAlert(true)
+                        }
+                    />
+                </label>
+                <label>
+                    <div className="label">Phone</div>
+                    <input
+                        type="tel"
+                        placeholder="+1 (555) 343-3411"
+                        value={phone}
+                        onChange={(event) => setPhone(event.target.value)}
+                        onBlur={() =>
+                            !checkValidityNotEmpty(email) &&
+                            !checkValidityNotEmpty(phone) &&
+                            setDisplayAlert(true)
+                        }
+                    />
+                </label>
+                <label>
+                    <div className="label">Email</div>
+                    <input
+                        ref={emailInputRef}
+                        type="email"
+                        placeholder="johnsmith@gmail.com"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        onBlur={() =>
+                            ((!checkValidityNotEmpty(email) &&
+                                !checkValidityNotEmpty(phone)) ||
+                                !emailInputRef.current?.checkValidity()) &&
+                            setDisplayAlert(true)
+                        }
+                    />
+                </label>
+                <label>
+                    <div className="label">Amount</div>
+                    <AmountInput
+                        decimals={liquidityTokenDecimals}
+                        value={amount}
+                        onChange={setAmount}
+                        disabled={disabled}
+                        onBlur={() =>
+                            !checkAmountValidity(
+                                amount,
+                                liquidityTokenDecimals,
+                                borrowInfo!.minLoanAmount,
+                            ) && setDisplayAlert(true)
+                        }
+                        onKeyDown={(event) =>
+                            event.key === 'Enter'
+                                ? !checkAmountValidity(
+                                      amount,
+                                      liquidityTokenDecimals,
+                                      borrowInfo!.minLoanAmount,
+                                  ) && setDisplayAlert(true)
+                                : undefined
+                        }
+                    />
+                </label>
+                <label>
+                    <div className="label">Duration</div>
+                    <AmountInput
+                        decimals={4}
+                        value={duration}
+                        onChange={setDuration}
+                        onBlur={showDisplayAlert}
+                        disabled={disabled}
+                        noToken
+                        label="months"
+                        paddingRight={60}
+                        onKeyDown={(event) =>
+                            event.key === 'Enter'
+                                ? setDisplayAlert(true)
+                                : undefined
+                        }
+                    />
+                </label>
 
-                <div className="info">
-                    <div className="item">
-                        <div className="value">
-                            {borrowInfo ? borrowInfo.apr : '0'}%
-                        </div>
-                        <div className="label">Interest rate</div>
+                {displayAlert && alert ? (
+                    <div className="alert-positioner">
+                        <Alert style="error-filled" title={alert} />
                     </div>
-                    <div className="item">
-                        <div className="value">
-                            {borrowInfo ? willOwe : '0'}
-                        </div>
-                        <div className="label">Owed after duration</div>
-                    </div>
-
-                    {alert ? (
-                        <div className="alert-positioner">
-                            <Alert style="error-filled" title={alert} />
-                        </div>
-                    ) : null}
-                </div>
+                ) : null}
 
                 <div className="button-container">
                     <Button
                         disabled={account ? disabledSubmit : false}
-                        loading={waitingForTransaction}
+                        loading={loading}
                     >
                         {account ? 'Request Loan' : 'Connect Wallet'}
                     </Button>
 
                     {/* Disabled elements prevent any click events to be fired resulting in inputs not being blurred */}
                     {account && disabledSubmit ? (
-                        <div className="clickable" />
+                        <div className="clickable" onClick={showDisplayAlert} />
                     ) : null}
                 </div>
             </form>
@@ -560,4 +532,18 @@ function RequestLoan({
             ) : null}
         </Box>
     )
+}
+
+function checkValidityNotEmpty(value: string) {
+    return Boolean(value.trim())
+}
+
+function checkAmountValidity(
+    value: string,
+    liquidityTokenDecimals: number,
+    minLoanAmount: string,
+) {
+    return value
+        ? parseUnits(value, liquidityTokenDecimals).gte(minLoanAmount)
+        : false
 }

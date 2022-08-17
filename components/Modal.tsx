@@ -41,7 +41,6 @@ export function Modal({
         >
             <style jsx>{`
                 .background {
-                    background-color: rgba(1, 1, 1, 0.7);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -51,6 +50,11 @@ export function Modal({
                     width: 100vw;
                     height: 100vh;
                     z-index: 10;
+                    background-color: rgba(0, 0, 0, 0.7);
+
+                    @media (prefers-color-scheme: dark) {
+                        background-color: rgba(20, 20, 20, 0.7);
+                    }
                 }
 
                 .content {

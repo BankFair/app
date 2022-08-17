@@ -68,7 +68,7 @@ export default Manage
 
 const types = ['Stake', 'Unstake'] as const
 function StakeAndUnstake({
-    pool: { managerAddress, tokenAddress, tokenDecimals },
+    pool: { managerAddress, liquidityTokenAddress, liquidityTokenDecimals },
     poolAddress,
 }: {
     pool: Pool
@@ -79,10 +79,7 @@ function StakeAndUnstake({
     const account = useAccount()
 
     const [stats] = useStatsState(poolAddress)
-    const [info, refetchManagerInfo] = useManagerInfo(
-        poolAddress,
-        managerAddress,
-    )
+    const [info, refetchManagerInfo] = useManagerInfo(poolAddress)
 
     const max = useMemo(() => {
         if (type === 'Stake') return undefined
@@ -99,17 +96,19 @@ function StakeAndUnstake({
         onSumbit:
             type === 'Stake'
                 ? (contract, amount) =>
-                      contract.stake(parseUnits(amount, tokenDecimals))
+                      contract.stake(parseUnits(amount, liquidityTokenDecimals))
                 : (contract, amount) =>
-                      contract.unstake(parseUnits(amount, tokenDecimals)),
+                      contract.unstake(
+                          parseUnits(amount, liquidityTokenDecimals),
+                      ),
         refetch: () =>
             Promise.all([
                 refetchManagerInfo(),
                 refetchStatsIfUsed(poolAddress),
             ]),
         poolAddress,
-        tokenAddress,
-        tokenDecimals,
+        liquidityTokenAddress,
+        liquidityTokenDecimals,
         disabled: Boolean(isNotManager),
         max,
     })
@@ -132,7 +131,6 @@ function StakeAndUnstake({
                 <ExitAlert
                     value={value}
                     verb="unstaking"
-                    deadline={info ? info.earlyExitDeadline : 0}
                     feePercent={stats ? stats.exitFeePercent : 0}
                 />
             )}

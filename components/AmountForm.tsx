@@ -24,8 +24,8 @@ import { ConnectModal } from './ConnectModal'
 
 type Types = 'Deposit' | 'Withdraw' | 'Stake' | 'Unstake' | 'Repay'
 export function useAmountForm<T extends Types>({
-    tokenDecimals,
-    tokenAddress,
+    liquidityTokenDecimals,
+    liquidityTokenAddress,
     poolAddress,
     onSumbit,
     refetch,
@@ -33,8 +33,8 @@ export function useAmountForm<T extends Types>({
     disabled,
     type,
 }: {
-    tokenDecimals: number
-    tokenAddress: string
+    liquidityTokenDecimals: number
+    liquidityTokenAddress: string
     poolAddress: string
     onSumbit: (
         contract: CoreContract,
@@ -48,7 +48,6 @@ export function useAmountForm<T extends Types>({
     const [loading, setLoading] = useState('')
 
     const isWithdraw = type === 'Unstake' || type === 'Withdraw'
-    const isRepay = type === 'Repay'
 
     const account = useAccount()
     const provider = useProvider()
@@ -59,7 +58,7 @@ export function useAmountForm<T extends Types>({
         allowance,
         balance,
         refetch: refetchAllowanceAndBalance,
-    } = useAllowanceAndBalance(tokenAddress, poolAddress, account)
+    } = useAllowanceAndBalance(liquidityTokenAddress, poolAddress, account)
 
     const max = useMemo(() => {
         if (isWithdraw) return maxProp
@@ -81,16 +80,19 @@ export function useAmountForm<T extends Types>({
     const { value, isValueBiggerThanZero, needsApproval, formattedMax } =
         useMemo(() => {
             const amountBigNumber = amount
-                ? parseUnits(amount, tokenDecimals)
+                ? parseUnits(amount, liquidityTokenDecimals)
                 : zero
 
             const value =
                 loading ||
                 (max?.lt(amountBigNumber)
-                    ? format(formatUnits(max, tokenDecimals))
+                    ? format(formatUnits(max, liquidityTokenDecimals))
                     : amount)
 
-            const valueBigNumber = parseUnits(value || '0', tokenDecimals)
+            const valueBigNumber = parseUnits(
+                value || '0',
+                liquidityTokenDecimals,
+            )
             return {
                 value,
                 isValueBiggerThanZero: valueBigNumber.gt(zero),
@@ -99,10 +101,17 @@ export function useAmountForm<T extends Types>({
                         ? BigNumber.from(allowance).lt(valueBigNumber)
                         : false,
                 formattedMax: max
-                    ? format(formatUnits(max, tokenDecimals))
+                    ? format(formatUnits(max, liquidityTokenDecimals))
                     : '',
             }
-        }, [loading, max, tokenDecimals, amount, allowance, isWithdraw])
+        }, [
+            loading,
+            max,
+            liquidityTokenDecimals,
+            amount,
+            allowance,
+            isWithdraw,
+        ])
 
     const handleClickMax = useCallback(() => {
         setAmount(formattedMax)
@@ -125,7 +134,7 @@ export function useAmountForm<T extends Types>({
                 setLoading(value)
 
                 if (needsApproval) {
-                    getERC20Contract(tokenAddress)
+                    getERC20Contract(liquidityTokenAddress)
                         .connect(signer)
                         .approve(poolAddress, infiniteAllowance)
                         .then((tx) =>
@@ -215,7 +224,7 @@ export function useAmountForm<T extends Types>({
             >
                 {account
                     ? needsApproval
-                        ? 'Approve USDC'
+                        ? `Approve ${TOKEN_SYMBOL}`
                         : type
                     : 'Connect Wallet'}
             </Button>

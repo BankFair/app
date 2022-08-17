@@ -4,13 +4,13 @@ import { formatMaxDecimals, formatNoDecimals, prefix } from '../app'
 import { Skeleton } from './Skeleton'
 
 export function PoolStats({
-    pool: { managerAddress, tokenDecimals },
+    pool: { managerAddress, liquidityTokenDecimals },
     poolAddress,
 }: {
     pool: Pool
     poolAddress: string
 }) {
-    const stats = useStats(poolAddress, tokenDecimals)
+    const stats = useStats(poolAddress, liquidityTokenDecimals)
 
     return (
         <div className="stats-container">

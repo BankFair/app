@@ -96,6 +96,24 @@ export default function App({ Component, pageProps }: AppProps) {
 
                     input {
                         font-size: 16px;
+                        font-weight: 600;
+                        line-height: 21px;
+                        width: 100%;
+                        padding: 10px 8px 10px 8px;
+                        border: 2px solid ${rgbStone};
+                        border-radius: 8px;
+                        background-color: ${rgbWhite};
+                        color: var(--color);
+                        max-width: 224px;
+
+                        &:disabled {
+                            cursor: not-allowed;
+                            color: var(--color-disabled);
+                        }
+
+                        @media (prefers-color-scheme: dark) {
+                            background-color: ${rgbGround};
+                        }
                     }
 
                     select {

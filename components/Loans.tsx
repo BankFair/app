@@ -9,6 +9,7 @@ import {
     CoreContract,
     fetchLoan,
     formatStatus,
+    loanDeskContract,
     LoanStatus,
     Pool,
     trackTransaction,
@@ -127,8 +128,8 @@ export function Loans(props: {
                               )
                       },
                       (loanId: number) => {
-                          return contract
-                              .attach(poolAddress)
+                          return loanDeskContract
+                              .attach(pool.loanDeskAddress)
                               .connect(provider!.getSigner())
                               .denyLoan(loanId)
                               .then((tx) =>
@@ -139,8 +140,8 @@ export function Loans(props: {
                               )
                       },
                       (loanId: number) => {
-                          return contract
-                              .attach(poolAddress)
+                          return loanDeskContract
+                              .attach(pool.loanDeskAddress)
                               .connect(provider!.getSigner())
                               .cancelLoan(loanId)
                               .then((tx) =>
@@ -164,7 +165,7 @@ export function Loans(props: {
                       },
                   ]
                 : [],
-        [showAllLoans, poolAddress, provider, dispatch],
+        [showAllLoans, poolAddress, pool, provider, dispatch],
     )
 
     const header = (
@@ -269,7 +270,7 @@ export function Loans(props: {
                 <LoanView
                     key={loan.id}
                     loan={loan}
-                    tokenDecimals={pool.tokenDecimals}
+                    liquidityTokenDecimals={pool.liquidityTokenDecimals}
                     showAll={showAllLoans}
                     onBorrow={handleBorrow}
                     onRepay={handleRepay}
@@ -286,8 +287,8 @@ export function Loans(props: {
                 <RepayModal
                     poolAddress={poolAddress}
                     loanId={repay.id}
-                    tokenDecimals={pool.tokenDecimals}
-                    tokenAddress={pool.tokenAddress}
+                    liquidityTokenDecimals={pool.liquidityTokenDecimals}
+                    liquidityTokenAddress={pool.liquidityTokenAddress}
                     max={repay.max}
                     onClose={() => setRepay(null)}
                 />
@@ -306,28 +307,28 @@ export function Loans(props: {
 function RepayModal({
     poolAddress,
     loanId,
-    tokenDecimals,
-    tokenAddress,
+    liquidityTokenAddress,
+    liquidityTokenDecimals,
     max,
     onClose,
 }: {
     poolAddress: string
     loanId: number
-    tokenDecimals: number
-    tokenAddress: string
+    liquidityTokenAddress: string
+    liquidityTokenDecimals: number
     max: BigNumber
     onClose(): void
 }) {
     const dispatch = useDispatch()
 
     const { form } = useAmountForm({
-        tokenAddress,
-        tokenDecimals,
+        liquidityTokenAddress,
+        liquidityTokenDecimals,
         poolAddress,
         onSumbit: (contract: CoreContract, amount: string) =>
             contract.repay(
                 BigNumber.from(loanId),
-                parseUnits(amount, tokenDecimals),
+                parseUnits(amount, liquidityTokenDecimals),
             ),
         refetch: () =>
             dispatch(fetchLoan({ poolAddress, loanId })).then(onClose),

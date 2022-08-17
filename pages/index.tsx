@@ -42,13 +42,13 @@ const EarnPools: NextPage = () => {
                                       `$${formatNoDecimals(
                                           formatUnits(
                                               pool.stats.poolFunds,
-                                              pool.tokenDecimals,
+                                              pool.liquidityTokenDecimals,
                                           ),
                                       )}`,
                                       `$${formatNoDecimals(
                                           formatUnits(
                                               pool.stats.amountDepositable,
-                                              pool.tokenDecimals,
+                                              pool.liquidityTokenDecimals,
                                           ),
                                       )}`,
                                       `${pool.stats.apy}%`,

@@ -12,6 +12,7 @@ import {
     nullAddress,
 } from '../../app'
 import abi from './abi.json'
+import loanDeskAbi from './loanDeskAbi.json'
 
 type TypedEvent<
     T extends readonly unknown[],
@@ -29,7 +30,9 @@ export interface CoreContract
     attach(...args: Parameters<CustomBaseContract['attach']>): this
 
     manager: ContractFunction<string>
-    token: ContractFunction<string>
+    loanDesk: ContractFunction<string>
+    poolToken: ContractFunction<string>
+    liquidityToken: ContractFunction<string>
     loansCount: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [account: string]>
@@ -40,18 +43,12 @@ export interface CoreContract
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber, [account: string]>
-    requestLoan: ContractFunction<
-        ContractTransaction,
-        [amount: BigNumber, loanDuration: BigNumber]
-    >
-    cancelLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     borrow: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     repay: ContractFunction<
         ContractTransaction,
         [loanId: BigNumber, amount: BigNumber]
     >
     approveLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
-    denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumberish]>
     defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     canDefault: ContractFunction<
         boolean,
@@ -65,60 +62,41 @@ export interface CoreContract
     poolLiquidity: ContractFunction<BigNumber>
     currentLenderAPY: ContractFunction<number>
 
-    templateLoanAPR: ContractFunction<number>
-    maxLoanDuration: ContractFunction<BigNumber>
-    minLoanAmount: ContractFunction<BigNumber>
-    minLoanDuration: ContractFunction<BigNumber>
-
     protocolEarningsOf: ContractFunction<BigNumber, [account: string]>
     withdrawProtocolEarnings: ContractFunction<ContractTransaction>
 
-    isValidLender: ContractFunction<boolean, [account: string]>
-    isValidBorrower: ContractFunction<boolean, [account: string]>
-
-    earlyExitDeadlines: ContractFunction<BigNumber, [account: string]>
     exitFeePercent: ContractFunction<BigNumber>
 
     filters: {
-        /**
-         * ```solidity
-         * event LoanRequested(uint256 loanId, address borrower)
-         * ```
-         */
-        LoanRequested: EventFilterFactory<
-            [loanId: BigNumber, borrower: string],
-            ['loanId', 'borrower']
-        >
+        // /**
+        //  * ```solidity
+        //  * event LoanApproved(uint256 loanId, address borrower)
+        //  * ```
+        //  */
+        // LoanApproved: EventFilterFactory<
+        //     [loanId: BigNumber, borrower: string],
+        //     ['loanId', 'borrower']
+        // >
 
-        /**
-         * ```solidity
-         * event LoanApproved(uint256 loanId, address borrower)
-         * ```
-         */
-        LoanApproved: EventFilterFactory<
-            [loanId: BigNumber, borrower: string],
-            ['loanId', 'borrower']
-        >
+        // /**
+        //  * ```solidity
+        //  * event LoanDenied(uint256 loanId, address borrower)
+        //  * ```
+        //  */
+        // LoanDenied: EventFilterFactory<
+        //     [loanId: BigNumber, borrower: string],
+        //     ['loanId', 'borrower']
+        // >
 
-        /**
-         * ```solidity
-         * event LoanDenied(uint256 loanId, address borrower)
-         * ```
-         */
-        LoanDenied: EventFilterFactory<
-            [loanId: BigNumber, borrower: string],
-            ['loanId', 'borrower']
-        >
-
-        /**
-         * ```solidity
-         * event LoanCancelled(uint256 loanId, address borrower)
-         * ```
-         */
-        LoanCancelled: EventFilterFactory<
-            [loanId: BigNumber, borrower: string],
-            ['loanId', 'borrower']
-        >
+        // /**
+        //  * ```solidity
+        //  * event LoanCancelled(uint256 loanId, address borrower)
+        //  * ```
+        //  */
+        // LoanCancelled: EventFilterFactory<
+        //     [loanId: BigNumber, borrower: string],
+        //     ['loanId', 'borrower']
+        // >
 
         /**
          * ```solidity
@@ -157,11 +135,107 @@ export interface CoreContract
     ): Promise<TypedEvent<T, K>[]>
 }
 
+export interface LoanDeskContract
+    extends Omit<
+        CustomBaseContract,
+        'filters' | 'connect' | 'attach' | 'queryFilter' | 'on'
+    > {
+    connect(...args: Parameters<CustomBaseContract['connect']>): this
+    attach(...args: Parameters<CustomBaseContract['attach']>): this
+
+    requestLoan: ContractFunction<
+        ContractTransaction,
+        [
+            amount: BigNumber,
+            loanDuration: BigNumber,
+            profileId: string,
+            profileDigest: string,
+        ]
+    >
+    cancelLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
+    approveLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
+    denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumberish]>
+    canDefault: ContractFunction<
+        boolean,
+        [loanId: BigNumberish, account: string]
+    >
+
+    borrowerStats: ContractFunction<
+        { hasOpenApplication: boolean },
+        [account: string]
+    >
+    templateLoanAPR: ContractFunction<number>
+    maxLoanDuration: ContractFunction<BigNumber>
+    minLoanAmount: ContractFunction<BigNumber>
+    minLoanDuration: ContractFunction<BigNumber>
+
+    filters: {
+        /**
+         * ```solidity
+         * event LoanRequested(uint256 applicationId, address borrower)
+         * ```
+         */
+        LoanRequested: EventFilterFactory<
+            [applicationId: BigNumber, borrower: string],
+            ['applicationId', 'borrower']
+        >
+
+        // /**
+        //  * ```solidity
+        //  * event LoanApproved(uint256 loanId, address borrower)
+        //  * ```
+        //  */
+        // LoanApproved: EventFilterFactory<
+        //     [loanId: BigNumber, borrower: string],
+        //     ['loanId', 'borrower']
+        // >
+        // /**
+        //  * ```solidity
+        //  * event LoanDenied(uint256 loanId, address borrower)
+        //  * ```
+        //  */
+        // LoanDenied: EventFilterFactory<
+        //     [loanId: BigNumber, borrower: string],
+        //     ['loanId', 'borrower']
+        // >
+        // /**
+        //  * ```solidity
+        //  * event LoanCancelled(uint256 loanId, address borrower)
+        //  * ```
+        //  */
+        // LoanCancelled: EventFilterFactory<
+        //     [loanId: BigNumber, borrower: string],
+        //     ['loanId', 'borrower']
+        // >
+    }
+
+    on<
+        T extends readonly unknown[],
+        K extends Record<keyof TupleToObject<T>, PropertyKey>,
+    >(
+        filter: EventFilterWithType<T, K>,
+        callback: (...args: [...T, TypedEvent<T, K>]) => void,
+    ): true
+
+    queryFilter<
+        T extends readonly unknown[],
+        K extends Record<keyof TupleToObject<T>, PropertyKey>,
+    >(
+        filter: EventFilterWithType<T, K>,
+    ): Promise<TypedEvent<T, K>[]>
+}
+
 export const contract = new Contract(
     nullAddress,
     abi,
     provider,
 ) as unknown as CoreContract
+
+export const loanDeskContract = new Contract(
+    nullAddress,
+    loanDeskAbi,
+    provider,
+) as unknown as LoanDeskContract
 
 export interface EVMLoan {
     id: BigNumber
@@ -220,5 +294,16 @@ export function getBatchProviderAndContract(
     return {
         provider,
         contract: contract.connect(provider),
+    }
+}
+
+export function getBatchProviderAndLoanDeskContract(
+    count: number,
+    loanDeskContract: LoanDeskContract,
+) {
+    const provider = new CustomBatchProvider(count)
+    return {
+        provider,
+        contract: loanDeskContract.connect(provider),
     }
 }

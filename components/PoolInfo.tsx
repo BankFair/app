@@ -37,8 +37,8 @@ export function PoolInfo({
             <h2>{name}</h2>
             {description && <PoolDescription text={description} />}
             <div className="subtitle">
-                <img src={`${prefix}/usdc.svg`} alt="USDC logo" />
-                USDC
+                <img src={`${prefix}/usdt.svg`} alt="USDT logo" />
+                USDT
             </div>
         </Box>
     )

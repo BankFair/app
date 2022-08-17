@@ -8,7 +8,7 @@ import {
     ERC20Contract,
     useAccount,
     zero,
-    USDC_DECIMALS,
+    USDT_DECIMALS,
     ONE_HUNDRED_PERCENT,
 } from '../../app'
 import {
@@ -18,7 +18,7 @@ import {
     EVMLoan,
     EVMLoanDetails,
     LoanStatus,
-} from './contract'
+} from './contracts'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
     updateLoans,
@@ -37,8 +37,8 @@ import {
 } from './poolsSlice'
 import { createSelector } from '@reduxjs/toolkit'
 
-export function useManagerInfo(poolAddress: string, managerAddress: string) {
-    const refetch = useFetchIntervalManagerInfo({ poolAddress, managerAddress })
+export function useManagerInfo(poolAddress: string) {
+    const refetch = useFetchIntervalManagerInfo({ poolAddress })
 
     const info = useSelector((state) => state.pools[poolAddress]?.managerInfo)
 
@@ -88,7 +88,7 @@ export function usePoolLiquidity(poolAddress: string) {
     return [poolLiquidity, refetch] as const
 }
 
-export function useStats(poolAddress: string, tokenDecimals: number) {
+export function useStats(poolAddress: string, liquidityTokenDecimals: number) {
     useFetchIntervalStats(poolAddress)
 
     const stats = useSelector((state) => state.pools[poolAddress]?.stats)
@@ -104,26 +104,26 @@ export function useStats(poolAddress: string, tokenDecimals: number) {
         lossBuffer: poolFunds.eq(zero)
             ? 0
             : balanceStaked.mul(100_000).div(poolFunds).toNumber() / 1000,
-        managerFunds: formatUnits(balanceStaked, tokenDecimals),
+        managerFunds: formatUnits(balanceStaked, liquidityTokenDecimals),
         availableForDeposits: formatUnits(
             stats.amountDepositable,
-            tokenDecimals,
+            liquidityTokenDecimals,
         ),
-        totalPoolSize: formatUnits(stats.poolFunds, tokenDecimals),
+        totalPoolSize: formatUnits(stats.poolFunds, liquidityTokenDecimals),
         loansOutstanding: formatUnits(
             poolFunds.sub(stats.poolLiquidity),
-            tokenDecimals,
+            liquidityTokenDecimals,
         ),
         maxPoolSize: formatUnits(
             poolFunds.add(stats.amountDepositable),
-            tokenDecimals,
+            liquidityTokenDecimals,
         ),
-        poolLiquidity: formatUnits(stats.poolLiquidity, tokenDecimals),
+        poolLiquidity: formatUnits(stats.poolLiquidity, liquidityTokenDecimals),
     }
 }
 
-export function useBorrowInfo(poolAddress: string) {
-    useFetchIntervalBorrowInfo(poolAddress)
+export function useBorrowInfo(poolAddress: string, loanDeskAddress: string) {
+    useFetchIntervalBorrowInfo({ poolAddress, loanDeskAddress })
 
     return useSelector((state) => state.pools[poolAddress]?.borrowInfo)
 }
@@ -159,13 +159,13 @@ export function useAccountStats() {
 
             if (!accountInfo || !stats) {
                 return {
-                    lentUSDC: '0x0',
+                    lentUSDT: '0x0',
                     apy: 0,
                 }
             }
 
             return {
-                lentUSDC: accountInfo.balance,
+                lentUSDT: accountInfo.balance,
                 apy: stats.apy,
             }
         })
@@ -174,7 +174,7 @@ export function useAccountStats() {
         let poolsInvestedIn = 0
 
         for (const item of data) {
-            const lentBigNumber = BigNumber.from(item.lentUSDC)
+            const lentBigNumber = BigNumber.from(item.lentUSDT)
             if (zero.eq(lentBigNumber)) continue
 
             lent = lent.add(lentBigNumber)
@@ -186,21 +186,57 @@ export function useAccountStats() {
             : data
                   .map((item) =>
                       BigNumber.from(item.apy * 10)
-                          .mul(item.lentUSDC)
+                          .mul(item.lentUSDT)
                           .div(lent),
                   )
                   .reduce((accumulator, item) => accumulator.add(item), zero)
 
         return {
-            lent: formatUnits(lent, USDC_DECIMALS),
+            lent: formatUnits(lent, USDT_DECIMALS),
             apy: apy.toNumber() / 10,
             earning: formatUnits(
                 lent.mul(apy).div(ONE_HUNDRED_PERCENT),
-                USDC_DECIMALS,
+                USDT_DECIMALS,
             ),
             pools: poolsInvestedIn,
         }
     }, [pools, account])
+}
+
+async function fetchAndSetPoolInfo([
+    pool,
+    managerAddress,
+    loanDeskAddress,
+    poolTokenAddress,
+    liquidityTokenAddress,
+]: [
+    {
+        name: string
+        address: string
+        description: string
+    },
+    string,
+    string,
+    string,
+    string,
+]) {
+    const poolTokenContract = getERC20Contract(poolTokenAddress)
+    const liquidityTokenContract = getERC20Contract(liquidityTokenAddress)
+    const [poolTokenDecimals, liquidityTokenDecimals] = await Promise.all([
+        poolTokenContract.decimals(),
+        liquidityTokenContract.decimals(),
+    ])
+
+    return setPoolInfo({
+        name: pool.name,
+        address: pool.address,
+        managerAddress,
+        loanDeskAddress,
+        poolTokenAddress,
+        poolTokenDecimals,
+        liquidityTokenAddress,
+        liquidityTokenDecimals,
+    })
 }
 
 const ref = { current: false }
@@ -214,22 +250,15 @@ export function useFetchPoolsPropertiesOnce() {
             const attachedContract = contract.attach(pool.address)
 
             Promise.all([
+                pool,
                 attachedContract.manager(),
-                attachedContract.token(),
-            ]).then(async ([managerAddress, tokenAddress]) => {
-                const tokenContract = getERC20Contract(tokenAddress)
-                const tokenDecimals = await tokenContract.decimals()
-
-                dispatch(
-                    setPoolInfo({
-                        name: pool.name,
-                        address: pool.address,
-                        managerAddress,
-                        tokenAddress,
-                        tokenDecimals,
-                    }),
-                )
-            })
+                attachedContract.loanDesk(),
+                attachedContract.poolToken(),
+                attachedContract.liquidityToken(),
+            ])
+                .then(fetchAndSetPoolInfo)
+                .then(dispatch)
+                .catch(console.error)
         }
     }, [dispatch])
 }
@@ -249,37 +278,38 @@ export function useLoadAccountLoans(
         map[key] = true
 
         const attached = contract.attach(poolAddress)
-        attached
-            .queryFilter(attached.filters.LoanRequested(null, account))
-            .then((loans) =>
-                fetchLoans(
-                    attached,
-                    loans.map((loan) => loan.args.loanId),
-                ),
-            )
-            .then(([loans, details, blockNumber]) => {
-                dispatch(
-                    updateLoans({
-                        loans: transformToStateLoans(loans, details),
-                        blockNumber,
-                        poolAddress,
-                    }),
-                )
-            })
+        // TODO: Fix LoanRequested, LoanApproved, LoanDenied, and LoanRepaid
+        // attached
+        //     .queryFilter(attached.filters.LoanRequested(null, account))
+        //     .then((loans) =>
+        //         fetchLoans(
+        //             attached,
+        //             loans.map((loan) => loan.args.loanId),
+        //         ),
+        //     )
+        //     .then(([loans, details, blockNumber]) => {
+        //         dispatch(
+        //             updateLoans({
+        //                 loans: transformToStateLoans(loans, details),
+        //                 blockNumber,
+        //                 poolAddress,
+        //             }),
+        //         )
+        //     })
 
-        attached.on(
-            attached.filters.LoanRequested(null, account),
-            handleLoanEvent,
-        )
-        attached.on(
-            attached.filters.LoanApproved(null, account),
-            handleLoanEvent,
-        )
-        attached.on(attached.filters.LoanDenied(null, account), handleLoanEvent)
-        attached.on(
-            attached.filters.LoanCancelled(null, account),
-            handleLoanEvent,
-        )
+        // attached.on(
+        //     attached.filters.LoanRequested(null, account),
+        //     handleLoanEvent,
+        // )
+        // attached.on(
+        //     attached.filters.LoanApproved(null, account),
+        //     handleLoanEvent,
+        // )
+        // attached.on(attached.filters.LoanDenied(null, account), handleLoanEvent)
+        // attached.on(
+        //     attached.filters.LoanCancelled(null, account),
+        //     handleLoanEvent,
+        // )
         attached.on(attached.filters.LoanRepaid(null, account), handleLoanEvent)
         attached.on(
             attached.filters.LoanDefaulted(null, account),
@@ -320,10 +350,10 @@ export function useLoadManagerState(
             )
         })
 
-        attached.on(attached.filters.LoanRequested(), handleLoanEvent)
-        attached.on(attached.filters.LoanApproved(), handleLoanEvent)
-        attached.on(attached.filters.LoanDenied(), handleLoanEvent)
-        attached.on(attached.filters.LoanCancelled(), handleLoanEvent)
+        // attached.on(attached.filters.LoanRequested(), handleLoanEvent)
+        // attached.on(attached.filters.LoanApproved(), handleLoanEvent)
+        // attached.on(attached.filters.LoanDenied(), handleLoanEvent)
+        // attached.on(attached.filters.LoanCancelled(), handleLoanEvent)
         attached.on(attached.filters.LoanRepaid(), handleLoanEvent)
         attached.on(attached.filters.LoanDefaulted(), handleLoanEvent)
         function handleLoanEvent<_T>(loanId: BigNumber) {

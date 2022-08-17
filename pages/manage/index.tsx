@@ -69,19 +69,19 @@ const ManagePools: NextPage = () => {
                                   `$${formatNoDecimals(
                                       formatUnits(
                                           pool.stats.poolFunds,
-                                          pool.tokenDecimals,
+                                          pool.liquidityTokenDecimals,
                                       ),
                                   )}`,
                                   `$${formatNoDecimals(
                                       formatUnits(
                                           pool.stats.balanceStaked,
-                                          pool.tokenDecimals,
+                                          pool.liquidityTokenDecimals,
                                       ),
                                   )}`,
                                   `$${formatNoDecimals(
                                       formatUnits(
                                           pool.stats.poolLiquidity,
-                                          pool.tokenDecimals,
+                                          pool.liquidityTokenDecimals,
                                       ),
                                   )}`,
                                   pool.stats.loans.toString(),
