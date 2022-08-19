@@ -80,3 +80,6 @@ export const zero = BigNumber.from(0)
 
 export const commonBoxShadow = '0px 28px 32px -16px rgba(66, 117, 48, 0.19)'
 export const commonDarkBoxShadow = `0px 28px 32px -16px #000000, ${commonBoxShadow}`
+
+export const oneDay = 86400
+export const thirtyDays = oneDay * 30

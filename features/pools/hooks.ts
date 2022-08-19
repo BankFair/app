@@ -278,38 +278,28 @@ export function useLoadAccountLoans(
         map[key] = true
 
         const attached = contract.attach(poolAddress)
-        // TODO: Fix LoanRequested, LoanApproved, LoanDenied, and LoanRepaid
-        // attached
-        //     .queryFilter(attached.filters.LoanRequested(null, account))
-        //     .then((loans) =>
-        //         fetchLoans(
-        //             attached,
-        //             loans.map((loan) => loan.args.loanId),
-        //         ),
-        //     )
-        //     .then(([loans, details, blockNumber]) => {
-        //         dispatch(
-        //             updateLoans({
-        //                 loans: transformToStateLoans(loans, details),
-        //                 blockNumber,
-        //                 poolAddress,
-        //             }),
-        //         )
-        //     })
+        attached
+            .queryFilter(attached.filters.LoanBorrowed(null, account))
+            .then((loans) =>
+                fetchLoans(
+                    attached,
+                    loans.map((loan) => loan.args.loanId),
+                ),
+            )
+            .then(([loans, details, blockNumber]) => {
+                dispatch(
+                    updateLoans({
+                        loans: transformToStateLoans(loans, details),
+                        blockNumber,
+                        poolAddress,
+                    }),
+                )
+            })
 
-        // attached.on(
-        //     attached.filters.LoanRequested(null, account),
-        //     handleLoanEvent,
-        // )
-        // attached.on(
-        //     attached.filters.LoanApproved(null, account),
-        //     handleLoanEvent,
-        // )
-        // attached.on(attached.filters.LoanDenied(null, account), handleLoanEvent)
-        // attached.on(
-        //     attached.filters.LoanCancelled(null, account),
-        //     handleLoanEvent,
-        // )
+        attached.on(
+            attached.filters.LoanBorrowed(null, account),
+            handleLoanEvent,
+        )
         attached.on(attached.filters.LoanRepaid(null, account), handleLoanEvent)
         attached.on(
             attached.filters.LoanDefaulted(null, account),
@@ -452,28 +442,6 @@ export function useLoans(address: string, account?: string) {
     return useSelector(selector)
 }
 // #endregion
-
-export function useRequestedLoans(address: string) {
-    const loans = useLoans(address)
-    return useMemo(
-        () => loans.filter((loan) => loan.status === LoanStatus.APPLIED),
-        [loans],
-    )
-}
-export function useApprovedLoans(address: string) {
-    const loans = useLoans(address)
-    return useMemo(
-        () => loans.filter((loan) => loan.status === LoanStatus.APPROVED),
-        [loans],
-    )
-}
-export function useRejectedLoans(address: string) {
-    const loans = useLoans(address)
-    return useMemo(
-        () => loans.filter((loan) => loan.status === LoanStatus.DENIED),
-        [loans],
-    )
-}
 
 export function useCanDefaultLoan(
     poolAddress: string,

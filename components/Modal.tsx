@@ -50,11 +50,7 @@ export function Modal({
                     width: 100vw;
                     height: 100vh;
                     z-index: 10;
-                    background-color: rgba(0, 0, 0, 0.7);
-
-                    @media (prefers-color-scheme: dark) {
-                        background-color: rgba(20, 20, 20, 0.7);
-                    }
+                    background-color: var(--bg-modal-overlay);
                 }
 
                 .content {

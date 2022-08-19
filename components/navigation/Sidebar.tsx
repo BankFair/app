@@ -61,7 +61,7 @@ export function Sidebar({
                         margin-left: ${SIDEBAR_MAX_WIDTH}px;
                         width: 100%;
                         height: 100vh;
-                        background-color: rgba(0, 0, 0, 0.5);
+                        background-color: var(--bg-modal-overlay);
                     }
                 }
 
@@ -175,7 +175,10 @@ export function Sidebar({
                             oETH Faucet
                         </a>
                         <a
-                            className={getSidebarItemClass('/okfaucet', pathname)}
+                            className={getSidebarItemClass(
+                                '/okfaucet',
+                                pathname,
+                            )}
                             onClick={hideSidebar}
                             href="https://okfaucet.pages.dev"
                             rel="noopener noreferrer"
@@ -198,8 +201,9 @@ function getSidebarItemClass(
     currentPath: string,
     home?: boolean,
 ) {
-    return `sidebar-button${currentPath.startsWith(href) || (home && currentPath === '/')
+    return `sidebar-button${
+        currentPath.startsWith(href) || (home && currentPath === '/')
             ? ' current'
             : ''
-        }`
+    }`
 }

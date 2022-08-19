@@ -19,8 +19,6 @@ type TypedEvent<
     K extends Record<keyof TupleToObject<T>, PropertyKey>,
 > = Omit<Event, 'args'> & { args: TupleToObjectWithPropNames<T, K> }
 
-export const loanRequestedSignature = 'LoanRequested(uint256,address)'
-
 export interface CoreContract
     extends Omit<
         CustomBaseContract,
@@ -43,12 +41,11 @@ export interface CoreContract
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber, [account: string]>
-    borrow: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
+    borrow: ContractFunction<ContractTransaction, [applicationId: BigNumberish]>
     repay: ContractFunction<
         ContractTransaction,
         [loanId: BigNumber, amount: BigNumber]
     >
-    approveLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     canDefault: ContractFunction<
         boolean,
@@ -68,35 +65,15 @@ export interface CoreContract
     exitFeePercent: ContractFunction<BigNumber>
 
     filters: {
-        // /**
-        //  * ```solidity
-        //  * event LoanApproved(uint256 loanId, address borrower)
-        //  * ```
-        //  */
-        // LoanApproved: EventFilterFactory<
-        //     [loanId: BigNumber, borrower: string],
-        //     ['loanId', 'borrower']
-        // >
-
-        // /**
-        //  * ```solidity
-        //  * event LoanDenied(uint256 loanId, address borrower)
-        //  * ```
-        //  */
-        // LoanDenied: EventFilterFactory<
-        //     [loanId: BigNumber, borrower: string],
-        //     ['loanId', 'borrower']
-        // >
-
-        // /**
-        //  * ```solidity
-        //  * event LoanCancelled(uint256 loanId, address borrower)
-        //  * ```
-        //  */
-        // LoanCancelled: EventFilterFactory<
-        //     [loanId: BigNumber, borrower: string],
-        //     ['loanId', 'borrower']
-        // >
+        /**
+         * ```solidity
+         * event LoanBorrowed(uint256 loanId, address borrower)
+         * ```
+         */
+        LoanBorrowed: EventFilterFactory<
+            [loanId: BigNumber, borrower: string, applicationId: BigNumber],
+            ['loanId', 'borrower', 'applicationId']
+        >
 
         /**
          * ```solidity
@@ -135,6 +112,39 @@ export interface CoreContract
     ): Promise<TypedEvent<T, K>[]>
 }
 
+export enum LoanApplicationStatus {
+    NULL,
+    APPLIED,
+    DENIED,
+    OFFER_MADE,
+    OFFER_ACCEPTED,
+    OFFER_CANCELLED,
+}
+
+export interface LoanRequest {
+    id: BigNumber
+    borrower: string
+    amount: BigNumber
+    duration: BigNumber
+    requestedTime: BigNumber
+    status: LoanApplicationStatus
+
+    profileId: string
+    profileDigest: string
+}
+
+export interface LoanOffer {
+    applicationId: BigNumber
+    borrower: string
+    amount: BigNumber
+    duration: BigNumber
+    gracePeriod: BigNumber
+    installments: number
+    apr: number
+    lateAPRDelta: number
+    offeredTime: BigNumber
+}
+
 export interface LoanDeskContract
     extends Omit<
         CustomBaseContract,
@@ -152,14 +162,40 @@ export interface LoanDeskContract
             profileDigest: string,
         ]
     >
-    cancelLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
-    approveLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
-    denyLoan: ContractFunction<ContractTransaction, [loandId: BigNumberish]>
+    offerLoan: ContractFunction<
+        ContractTransaction,
+        [
+            applicationId: BigNumberish,
+            amount: BigNumberish,
+            duration: BigNumberish,
+            gracePeriod: BigNumberish,
+            installments: number,
+            apr: number,
+            lateAPRDelta: number,
+        ]
+    >
+    cancelLoan: ContractFunction<
+        ContractTransaction,
+        [applicationId: BigNumberish]
+    >
+    approveLoan: ContractFunction<
+        ContractTransaction,
+        [applicationId: BigNumberish]
+    >
+    denyLoan: ContractFunction<
+        ContractTransaction,
+        [applicationId: BigNumberish]
+    >
     canDefault: ContractFunction<
         boolean,
         [loanId: BigNumberish, account: string]
     >
 
+    loanApplications: ContractFunction<
+        LoanRequest,
+        [applicationId: BigNumberish]
+    >
+    loanOffers: ContractFunction<LoanOffer, [applicationId: BigNumberish]>
     borrowerStats: ContractFunction<
         { hasOpenApplication: boolean },
         [account: string]
@@ -179,6 +215,15 @@ export interface LoanDeskContract
             [applicationId: BigNumber, borrower: string],
             ['applicationId', 'borrower']
         >
+        /**
+         * ```solidity
+         * event LoanOffered(uint256 applicationId, address borrower)
+         * ```
+         */
+        LoanOffered: EventFilterFactory<
+            [applicationId: BigNumber, borrower: string],
+            ['applicationId', 'borrower']
+        >
 
         // /**
         //  * ```solidity
@@ -189,6 +234,7 @@ export interface LoanDeskContract
         //     [loanId: BigNumber, borrower: string],
         //     ['loanId', 'borrower']
         // >
+
         // /**
         //  * ```solidity
         //  * event LoanDenied(uint256 loanId, address borrower)
@@ -242,10 +288,14 @@ export interface EVMLoan {
     status: LoanStatus
     borrower: string
     amount: BigNumber
-    duration: BigNumber
-    requestedTime: BigNumber
     lateAPRDelta: number
     apr: number
+    loanDeskAddress: string
+    applicationId: BigNumber
+    duration: BigNumber
+    gracePeriod: BigNumber
+    installments: number
+    borrowedTime: BigNumber
 }
 
 export interface EVMLoanDetails {
@@ -253,34 +303,24 @@ export interface EVMLoanDetails {
     totalAmountRepaid: BigNumber
     baseAmountRepaid: BigNumber
     interestPaid: BigNumber
-    approvedTime: BigNumber
     lastPaymentTime: BigNumber
 }
 
 export enum LoanStatus {
-    APPLIED,
-    DENIED,
-    APPROVED,
-    CANCELLED,
-    FUNDS_WITHDRAWN,
+    NULL,
+    OUTSTANDING,
     REPAID,
     DEFAULTED,
 }
 
 export function formatStatus(status: LoanStatus) {
     switch (status) {
-        case LoanStatus.APPLIED:
-            return 'Waiting for approval'
-        case LoanStatus.APPROVED:
-            return 'Approved'
-        case LoanStatus.DENIED:
-            return 'Rejected'
-        case LoanStatus.CANCELLED:
-            return 'Canceled'
+        case LoanStatus.NULL:
+            return "You shouldn't see this"
+        case LoanStatus.OUTSTANDING:
+            return 'Outstanding'
         case LoanStatus.DEFAULTED:
             return 'Defaulted'
-        case LoanStatus.FUNDS_WITHDRAWN:
-            return 'Withdrawn'
         case LoanStatus.REPAID:
             return 'Repaid'
     }

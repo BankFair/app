@@ -18,18 +18,18 @@ export interface Loan {
     borrower: string
     amount: string
     duration: number
-    requestedTime: number
+    borrowedTime: number
     apr: number
     lateAPRDelta: number
+    gracePeriod: number
+    applicationId: number
     details: LoanDetails
 }
 
 export interface LoanDetails {
-    id: number
     totalAmountRepaid: string
     baseAmountRepaid: string
     interestPaid: string
-    approvedTime: number
 }
 
 interface Stats {
@@ -606,8 +606,6 @@ export function transformToStateLoanDetails(
     details: EVMLoanDetails,
 ): LoanDetails {
     return {
-        id: details.loanId.toNumber(),
-        approvedTime: details.approvedTime.toNumber(),
         baseAmountRepaid: details.baseAmountRepaid.toString(),
         interestPaid: details.interestPaid.toString(),
         totalAmountRepaid: details.totalAmountRepaid.toString(),
@@ -634,7 +632,9 @@ export function transformToStateLoan(
         duration: loan.duration.toNumber(),
         apr: (loan.apr / oneHundredPercent) * 100,
         lateAPRDelta: (loan.lateAPRDelta / oneHundredPercent) * 100,
-        requestedTime: loan.requestedTime.toNumber(),
+        borrowedTime: loan.borrowedTime.toNumber(),
+        gracePeriod: loan.gracePeriod.toNumber(),
+        applicationId: loan.applicationId.toNumber(),
         details: transformToStateLoanDetails(details),
     }
 }

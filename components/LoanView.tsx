@@ -16,27 +16,19 @@ import {
     format,
     formatMaxDecimals,
     noop,
-    oneHundredPercent,
     rgbaLimeGreen21,
-    rgbBlue,
     rgbGreen,
     rgbRed,
     rgbRedLight,
     rgbYellow,
+    thirtyDays,
     TOKEN_SYMBOL,
-    withInterest,
+    useAmountWithInterest,
     zero,
 } from '../app'
 
-import {
-    LoanStatus,
-    Loan,
-    formatStatus,
-    useCanDefaultLoan,
-    Transaction,
-} from '../features'
+import { LoanStatus, Loan, formatStatus } from '../features'
 
-import { ActionButton } from './ActionButton'
 import { EtherscanAddress } from './EtherscanLink'
 import { Button } from './Button'
 import { Progress } from './Progress'
@@ -46,7 +38,7 @@ export function LoanView({
         borrower,
         amount,
         duration,
-        requestedTime,
+        borrowedTime,
         id,
         status,
         details,
@@ -55,11 +47,6 @@ export function LoanView({
     },
     liquidityTokenDecimals,
     showAll,
-    onApprove,
-    onReject,
-    onCancel,
-    onDefault,
-    onBorrow,
     onRepay,
     poolAddress,
     account,
@@ -67,12 +54,7 @@ export function LoanView({
     loan: Loan
     liquidityTokenDecimals: number
     showAll?: boolean
-    onBorrow?(id: number): Promise<unknown>
     onRepay?(id: number, debt: BigNumber): void
-    onApprove?(id: number): Promise<unknown>
-    onReject?(id: number): Promise<unknown>
-    onCancel?(id: number): Promise<unknown>
-    onDefault?(id: number): Promise<unknown>
     poolAddress: string
     account: string | undefined
 }) {
@@ -87,32 +69,23 @@ export function LoanView({
         apr,
         lateAPRDelta,
         duration,
-        details.approvedTime,
+        borrowedTime,
     )
     const { debt, repaid, percent } = useMemo(() => {
         const repaid = BigNumber.from(details.totalAmountRepaid)
 
         return {
-            debt: details.approvedTime ? amountWithInterest.sub(repaid) : zero,
+            debt: amountWithInterest.sub(repaid),
             repaid,
-            percent:
-                details.approvedTime && !zero.eq(amountWithInterest)
-                    ? repaid
-                          .mul(100_000_000)
-                          .div(amountWithInterest)
-                          .toNumber() / 1_000_000
-                    : 0,
+            percent: !zero.eq(amountWithInterest)
+                ? repaid.mul(100_000_000).div(amountWithInterest).toNumber() /
+                  1_000_000
+                : 0,
         }
     }, [details, amountWithInterest])
 
-    const canDefaultLoan = useCanDefaultLoan(
-        poolAddress,
-        id,
-        onDefault && account,
-    )
-
-    const hasDebt = status === LoanStatus.FUNDS_WITHDRAWN
-    const wasRepaid = status === LoanStatus.REPAID
+    const hasDebt = status === LoanStatus.OUTSTANDING
+    const isRepaid = status === LoanStatus.REPAID
 
     return (
         <div className="loan">
@@ -192,7 +165,7 @@ export function LoanView({
                           formatUnits(debt, liquidityTokenDecimals),
                       )}`
                     : `Amount: ${
-                          wasRepaid
+                          isRepaid
                               ? format(
                                     formatUnits(repaid, liquidityTokenDecimals),
                                 )
@@ -206,13 +179,9 @@ export function LoanView({
                 backgroundColor={
                     hasDebt
                         ? rgbRedLight
-                        : wasRepaid
+                        : isRepaid
                         ? rgbGreen
-                        : status === LoanStatus.APPROVED
-                        ? rgbBlue
-                        : status === LoanStatus.DENIED ||
-                          status === LoanStatus.CANCELLED ||
-                          status === LoanStatus.DEFAULTED
+                        : status === LoanStatus.DEFAULTED
                         ? rgbRed
                         : rgbYellow
                 }
@@ -243,21 +212,9 @@ export function LoanView({
             {showAll ? (
                 <div className="stats">
                     <div className="item">
-                        <div className="label">Requested</div>
-                        <div className="value">
-                            <TimeAgo datetime={requestedTime * 1000} />
-                        </div>
-                    </div>
-                    <div className="item">
                         <div className="label">Approved</div>
                         <div className="value">
-                            {details.approvedTime ? (
-                                <TimeAgo
-                                    datetime={details.approvedTime * 1000}
-                                />
-                            ) : (
-                                '-'
-                            )}
+                            <TimeAgo datetime={borrowedTime * 1000} />
                         </div>
                     </div>
                     <div className="item">
@@ -267,13 +224,7 @@ export function LoanView({
                     <div className="item">
                         <div className="label">Remaining</div>
                         <div className="value">
-                            <Remaining
-                                timestamp={
-                                    status === LoanStatus.CANCELLED
-                                        ? 0
-                                        : details.approvedTime + duration
-                                }
-                            />
+                            <Remaining timestamp={borrowedTime + duration} />
                         </div>
                     </div>
                     <div className="item">
@@ -319,76 +270,20 @@ export function LoanView({
                     <div className="item">
                         <div className="label">Remaining</div>
                         <div className="value">
-                            <Remaining
-                                timestamp={
-                                    status === LoanStatus.CANCELLED
-                                        ? 0
-                                        : details.approvedTime + duration
-                                }
-                            />
+                            <Remaining timestamp={borrowedTime + duration} />
                         </div>
                     </div>
-                    {details.approvedTime ? (
-                        <div className="item">
-                            <div className="label">Approved</div>
-                            <div className="value">
-                                <TimeAgo
-                                    datetime={details.approvedTime * 1000}
-                                />
-                            </div>
+                    <div className="item">
+                        <div className="label">Approved</div>
+                        <div className="value">
+                            <TimeAgo datetime={borrowedTime * 1000} />
                         </div>
-                    ) : (
-                        <div className="item">
-                            <div className="label">Requested</div>
-                            <div className="value">
-                                <TimeAgo datetime={requestedTime * 1000} />
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
             )}
             {onRepay && hasDebt ? (
                 <div className="actions">
                     <Button onClick={() => onRepay(id, debt)}>Repay</Button>
-                </div>
-            ) : onBorrow && status === LoanStatus.APPROVED ? (
-                <div className="actions">
-                    <ActionButton
-                        action={() => onBorrow(id).then(actionPromiseHandler)}
-                    >
-                        Borrow
-                    </ActionButton>
-                </div>
-            ) : onApprove && onReject && status === LoanStatus.APPLIED ? (
-                <div className="actions">
-                    <ActionButton
-                        action={() => onApprove(id).then(actionPromiseHandler)}
-                    >
-                        Approve
-                    </ActionButton>
-                    <ActionButton
-                        action={() => onReject(id).then(actionPromiseHandler)}
-                    >
-                        Reject
-                    </ActionButton>
-                </div>
-            ) : onCancel && status === LoanStatus.APPROVED ? (
-                <div className="actions">
-                    <ActionButton
-                        action={() => onCancel(id).then(actionPromiseHandler)}
-                    >
-                        Cancel
-                    </ActionButton>
-                </div>
-            ) : onDefault &&
-              status === LoanStatus.FUNDS_WITHDRAWN &&
-              canDefaultLoan ? (
-                <div className="actions">
-                    <ActionButton
-                        action={() => onDefault(id).then(actionPromiseHandler)}
-                    >
-                        Default
-                    </ActionButton>
                 </div>
             ) : null}
         </div>
@@ -426,85 +321,6 @@ function formatRemaining(timestamp: number) {
     return formatDuration(timestamp - now, true)
 }
 
-const oneDay = 86400
-const halfHour = 30 * 60 * 1000
-function useAmountWithInterest(
-    amount: string,
-    interestRate: number,
-    interestRateDelta: number,
-    duration: number,
-    approvedTime: number | undefined,
-): BigNumber {
-    const [integer, setInteger] = useState(0) // Force update
-    useEffect(() => {
-        // Will update every 30 minutes
-        const timeoutId = setTimeout(() => {
-            setInteger((i) => i + 1)
-        }, halfHour)
-
-        return () => {
-            clearTimeout(timeoutId)
-        }
-    }, [])
-
-    return useMemo(() => {
-        process.env.NODE_ENV === 'development' && noop(integer) // because of react-hooks/exhaustive-deps
-
-        if (!interestRate || !approvedTime) return zero
-
-        const now = Date.now() / 1000
-        const dueTimestamp = approvedTime + duration
-        const isLate = now > dueTimestamp
-
-        const amountBigNumber = BigNumber.from(amount)
-        const days = countInterestDays(approvedTime, now)
-
-        const interestRateBigNumber = BigNumber.from(
-            (interestRate / 100) * oneHundredPercent,
-        )
-
-        if (!isLate) {
-            return withInterest(amountBigNumber, interestRateBigNumber, days)
-        }
-
-        const interestDays = BigNumber.from(days)
-        const interestRateDeltaBigNumber = BigNumber.from(
-            (interestRateDelta / 100) * oneHundredPercent,
-        )
-
-        return withInterest(
-            amountBigNumber,
-            interestDays
-                .mul(interestRateBigNumber)
-                .add(
-                    interestRateDeltaBigNumber.mul(
-                        countInterestDays(dueTimestamp, now),
-                    ),
-                )
-                .div(interestDays),
-            days,
-        )
-    }, [
-        amount,
-        approvedTime,
-        duration,
-        integer,
-        interestRate,
-        interestRateDelta,
-    ])
-}
-
-function countInterestDays(from: number, to: number) {
-    const seconds = to - from
-    const days = Math.trunc(seconds / oneDay)
-
-    if (seconds % oneDay > 0) {
-        return days + 1
-    }
-
-    return days
-}
-
 function onlyPositive<T, R extends { [key in keyof T]?: number }>(
     object: R,
 ): R {
@@ -540,6 +356,6 @@ function formatDuration(duration: number, noSeconds?: boolean): string {
     })
 }
 
-function actionPromiseHandler() {
-    new Promise(noop) // Event handler will unmount button
+export function formatDurationInMonths(duration: number): number {
+    return duration / thirtyDays
 }

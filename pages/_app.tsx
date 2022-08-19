@@ -40,6 +40,7 @@ export default function App({ Component, pageProps }: AppProps) {
                     :root {
                         --bg-color: ${rgbNewWhite};
                         --bg-overlay: ${rgba(NEW_COLOR_WHITE, 0.9)};
+                        --bg-modal-overlay: rgba(0, 0, 0, 0.7);
                         --bg-section: ${rgbaWhite5};
                         --color: ${rgbGround};
                         --color-secondary: ${rgbStone};
@@ -176,6 +177,7 @@ export default function App({ Component, pageProps }: AppProps) {
                         :root {
                             --bg-color: ${rgbRichBlack};
                             --bg-overlay: ${rgba(NEW_COLOR_RICH_BLACK, 0.9)};
+                            --bg-modal-overlay: rgba(20, 20, 20, 0.7);
                             --bg-section: ${rgbaBlack5};
                             --color: ${rgbChineseSilver};
                             --color-disabled: ${rgbGrey600};

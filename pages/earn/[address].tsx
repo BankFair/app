@@ -417,6 +417,7 @@ function Earnings({
                     {TOKEN_SYMBOL}
                 </div>
                 <Button
+                    type="submit"
                     loading={isLoading}
                     disabled={
                         isLoading || earnings?.amount.lte(BigNumber.from(0))

@@ -1,5 +1,3 @@
-import 'isomorphic-fetch'
-
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import { NextPage } from 'next'
@@ -18,11 +16,14 @@ import {
     BORROWER_SERVICE_URL,
     format,
     getAddress,
+    oneDay,
     POOLS,
     prefix,
     shortenAddress,
+    thirtyDays,
     TOKEN_SYMBOL,
     useAccount,
+    useAmountWithInterest,
     useProvider,
 } from '../../app'
 import {
@@ -37,13 +38,16 @@ import {
     PageLoading,
 } from '../../components'
 import {
-    LoanStatus,
     Pool,
-    useLoans,
     useBorrowInfo,
-    loanRequestedSignature,
     trackTransaction,
     loanDeskContract,
+    LoanOffer,
+    contract,
+    LoanApplicationStatus,
+    useLoans,
+    fetchLoan,
+    LoanStatus,
 } from '../../features'
 import { useDispatch, useSelector } from '../../store'
 
@@ -69,6 +73,8 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
 
             <BackToPools href="/borrow" />
             <h1>{name}</h1>
+            <Offer pool={pool} poolAddress={address} account={account} />
+            <RepayLoans pool={pool} poolAddress={address} account={account} />
             <RequestLoan pool={pool} poolAddress={address} account={account} />
             <Loans pool={pool} poolAddress={address} account={account} />
         </Page>
@@ -81,9 +87,513 @@ Borrow.getInitialProps = (context) => {
 
 export default Borrow
 
-const oneDay = 86400
+function Offer({
+    pool: { loanDeskAddress, liquidityTokenDecimals },
+    poolAddress,
+    account,
+}: {
+    pool: Pool
+    poolAddress: string
+    account: string | undefined
+}) {
+    const provider = useProvider()
+    const dispatch = useDispatch()
+
+    const [offer, setOffer] = useState<{
+        details: LoanOffer
+        account: string
+        contactDetails: {
+            name: string
+            businessName: string
+            phone?: string
+            email?: string
+        }
+        loanDeskAddress: string
+    } | null>(null)
+    const offerRef = useRef<string | undefined>()
+    useEffect(() => {
+        if (account === offerRef.current) return
+        offerRef.current = account
+
+        if (!account) return
+
+        const contract = loanDeskContract
+            .attach(loanDeskAddress)
+            .connect(provider!)
+
+        contract
+            .queryFilter(contract.filters.LoanOffered(null, account))
+            .then(async (events) => {
+                if (!events.length) return
+
+                events.sort(
+                    (a, b) =>
+                        b.args.applicationId.toNumber() -
+                        a.args.applicationId.toNumber(),
+                )
+
+                const { applicationId } = events[0].args
+                const request = await contract.loanApplications(applicationId)
+
+                if (request.status !== LoanApplicationStatus.OFFER_MADE) return
+
+                const [offer, contactDetails] = await Promise.all([
+                    contract.loanOffers(applicationId),
+                    fetch(
+                        `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
+                    ).then(
+                        (response) =>
+                            response.json() as Promise<{
+                                name: string
+                                businessName: string
+                                phone?: string
+                                email?: string
+                            }>,
+                    ),
+                ])
+
+                setOffer({
+                    details: offer,
+                    account,
+                    loanDeskAddress,
+                    contactDetails: contactDetails || {},
+                })
+            })
+            .catch((error) => {
+                console.error(error)
+            })
+    }, [account, loanDeskAddress, provider])
+
+    const [isLoading, setIsLoading] = useState(false)
+    const [isAccepted, setIsAccepted] = useState(false)
+
+    if (
+        !offer ||
+        offer.account !== account ||
+        offer.loanDeskAddress !== loanDeskAddress
+    ) {
+        return null
+    }
+
+    return (
+        <Box
+            className="loan-offer"
+            overlay={isAccepted ? <h2>Funds withdrawn!</h2> : null}
+        >
+            <h3>Offer Received</h3>
+            <div className="field">
+                <div className="label">Amount</div>
+                <div>
+                    {format(
+                        formatUnits(
+                            offer.details.amount,
+                            liquidityTokenDecimals,
+                        ),
+                    )}{' '}
+                    {TOKEN_SYMBOL}
+                </div>
+            </div>
+            <div className="field">
+                <div className="label">Duration</div>
+                <div>
+                    {offer.details.duration.toNumber() / thirtyDays} months
+                </div>
+            </div>
+            <div className="field">
+                <div className="label">Interest APR</div>
+                <div>{offer.details.apr / 10}%</div>
+            </div>
+            <div className="field">
+                <div className="label">Late Payment Fee</div>
+                <div>{offer.details.lateAPRDelta / 10}%</div>
+            </div>
+            <div className="field">
+                <div className="label">Grace Default Period</div>
+                <div>{offer.details.gracePeriod.toNumber() / oneDay} days</div>
+            </div>
+
+            <div className="field">
+                <div className="label">Name</div>
+                <div>{offer.contactDetails.name}</div>
+            </div>
+            <div className="field">
+                <div className="label">Business Name</div>
+                <div>{offer.contactDetails.businessName}</div>
+            </div>
+            {offer.contactDetails.phone ? (
+                <div className="field">
+                    <div className="label">Phone</div>
+                    <div>
+                        <a href={`tel:${offer.contactDetails.phone}`}>
+                            {offer.contactDetails.phone}
+                        </a>
+                    </div>
+                </div>
+            ) : null}
+            {offer.contactDetails.email ? (
+                <div className="field">
+                    <div className="label">Email</div>
+                    <div>
+                        <a href={`mailto:${offer.contactDetails.email}`}>
+                            {offer.contactDetails.email}
+                        </a>
+                    </div>
+                </div>
+            ) : null}
+
+            <Button
+                disabled={isAccepted || isLoading}
+                loading={isLoading}
+                type="submit"
+                onClick={async () => {
+                    setIsLoading(true)
+
+                    try {
+                        await contract
+                            .attach(poolAddress)
+                            .connect(provider!.getSigner())
+                            .borrow(offer.details.applicationId)
+                            .then((tx) =>
+                                trackTransaction(dispatch, {
+                                    tx,
+                                    name: 'Accept loan & withdraw',
+                                }),
+                            )
+                        setIsAccepted(true)
+                    } catch (error) {
+                        // TODO: Display to user if not cancelation
+                        console.error(error)
+                    }
+
+                    setIsLoading(false)
+                }}
+            >
+                Accept Loan &amp; Withdraw Funds
+            </Button>
+
+            <style jsx>{`
+                :global(.loan-offer) {
+                    > :global(button) {
+                        margin-top: 16px;
+                    }
+                    > :global(h3) {
+                        margin-top: 0;
+                    }
+                }
+
+                .field {
+                    margin-top: 16px;
+
+                    > .label {
+                        color: var(--color-secondary);
+                        font-weight: 400;
+                        margin-bottom: 8px;
+                    }
+                }
+            `}</style>
+        </Box>
+    )
+}
+
+function RepayLoans({
+    pool,
+    poolAddress,
+    account,
+}: {
+    pool: Pool
+    poolAddress: string
+    account: string | undefined
+}) {
+    const provider = useProvider()
+    const loans = useLoans(poolAddress, account)
+
+    return loans
+        .filter((loan) => loan.status === LoanStatus.OUTSTANDING)
+        .sort((a, b) => b.id - a.id)
+        .map((loan) => (
+            <RepayLoan
+                key={loan.id}
+                pool={pool}
+                poolAddress={poolAddress}
+                loan={loan}
+                provider={provider}
+            />
+        )) as unknown as JSX.Element
+}
+
+function RepayLoan({
+    pool: { liquidityTokenDecimals, loanDeskAddress },
+    poolAddress,
+    loan,
+    provider,
+}: {
+    pool: Pool
+    poolAddress: string
+    loan: ReturnType<typeof useLoans>[number]
+    provider: ReturnType<typeof useProvider>
+}) {
+    const dispatch = useDispatch()
+
+    const [amount, setAmount] = useState('')
+
+    const amountWithInterest = useAmountWithInterest(
+        loan.amount,
+        loan.apr,
+        loan.lateAPRDelta,
+        loan.duration,
+        loan.borrowedTime,
+    )
+    const { debt, repaid } = useMemo(() => {
+        const repaid = BigNumber.from(loan.details.totalAmountRepaid)
+
+        return {
+            debt: amountWithInterest.sub(repaid),
+            repaid,
+        }
+    }, [loan, amountWithInterest])
+
+    const [contactDetailsState, setContactDetailsState] = useState<{
+        applicationId: number
+        name: string
+        businessName: string
+        phone?: string
+        email?: string
+    } | null>(null)
+    const contactDetails =
+        contactDetailsState &&
+        contactDetailsState.applicationId === loan.applicationId
+            ? contactDetailsState
+            : null
+    useEffect(() => {
+        loanDeskContract
+            .connect(provider!)
+            .attach(loanDeskAddress)
+            .loanApplications(loan.applicationId)
+            .then(({ profileId }) =>
+                fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`),
+            )
+            .then(
+                (response) =>
+                    response.json() as Promise<{
+                        name: string
+                        businessName: string
+                        phone?: string
+                        email?: string
+                    }>,
+            )
+            .then((info) =>
+                setContactDetailsState({
+                    ...info,
+                    applicationId: loan.applicationId,
+                }),
+            )
+    }, [loan, loanDeskAddress, provider])
+
+    const [isLoading, setIsLoading] = useState(false)
+
+    const handleRepay = useCallback<FormEventHandler<HTMLFormElement>>(
+        (event) => {
+            event.preventDefault()
+
+            setIsLoading(true)
+
+            contract
+                .connect(provider!.getSigner())
+                .attach(poolAddress)
+                .repay(
+                    BigNumber.from(loan.id),
+                    parseUnits(amount, liquidityTokenDecimals),
+                )
+                .then((tx) =>
+                    trackTransaction(dispatch, { tx, name: 'Repay loan' }),
+                )
+                .then(() =>
+                    dispatch(fetchLoan({ poolAddress, loanId: loan.id })),
+                )
+                .then(() => {
+                    setIsLoading(false)
+                    setAmount('')
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+        },
+        [provider, poolAddress, loan, amount, liquidityTokenDecimals, dispatch],
+    )
+
+    return (
+        <>
+            <Box>
+                <h2>Loan Status</h2>
+                <div className="stats">
+                    <div className="stat">
+                        <div className="label">Outstanding</div>
+                        <div className="value">
+                            {format(formatUnits(debt, liquidityTokenDecimals))}{' '}
+                            {TOKEN_SYMBOL}
+                        </div>
+                    </div>
+                </div>
+            </Box>
+            <form className="main" onSubmit={handleRepay}>
+                <Box className="repay">
+                    <h2>Repay Loan</h2>
+                    <AmountInput
+                        decimals={liquidityTokenDecimals}
+                        value={amount}
+                        onChange={setAmount}
+                    />
+                    <Button
+                        type="submit"
+                        loading={isLoading}
+                        disabled={isLoading}
+                    >
+                        Repay
+                    </Button>
+                    <Alert
+                        style="warning"
+                        title="Late payments will affect your on chain credit rating"
+                    />
+                </Box>
+                <Box className="details">
+                    <h3>Loan Contract Details</h3>
+
+                    <div className="field">
+                        <span className="label">Initial loan amount:</span>{' '}
+                        {format(
+                            formatUnits(loan.amount, liquidityTokenDecimals),
+                        )}{' '}
+                        {TOKEN_SYMBOL}
+                    </div>
+                    <div className="field">
+                        <span className="label">Repaid:</span>{' '}
+                        {format(formatUnits(repaid, liquidityTokenDecimals))}{' '}
+                        {TOKEN_SYMBOL}
+                    </div>
+                    <div className="field">
+                        <span className="label">Total interest paid:</span>{' '}
+                        {format(
+                            formatUnits(
+                                loan.details.interestPaid,
+                                liquidityTokenDecimals,
+                            ),
+                        )}{' '}
+                        {TOKEN_SYMBOL}
+                    </div>
+                    {
+                        // TODO: Display time remaining and start date instead of duration
+                    }
+                    <div className="field">
+                        <span className="label">Duration:</span>{' '}
+                        {loan.duration / thirtyDays} months
+                    </div>
+                    <div className="field">
+                        <span className="label">Interest APR:</span> {loan.apr}%
+                    </div>
+                    <div className="field">
+                        <span className="label">Late payment fee:</span>{' '}
+                        {loan.lateAPRDelta}%
+                    </div>
+                    <div className="field">
+                        <span className="label">Grace default period:</span>{' '}
+                        {loan.gracePeriod / oneDay} days
+                    </div>
+
+                    <div className="field">
+                        <span className="label">Name:</span>{' '}
+                        {contactDetails?.name}
+                    </div>
+                    <div className="field">
+                        <span className="label">Business name:</span>{' '}
+                        {contactDetails?.businessName}
+                    </div>
+                    {contactDetails?.phone ? (
+                        <div className="field">
+                            <span className="label">Phone:</span>{' '}
+                            <a href={`tel:${contactDetails.phone}`}>
+                                {contactDetails.phone}
+                            </a>
+                        </div>
+                    ) : null}
+                    {contactDetails?.email ? (
+                        <div className="field">
+                            <span className="label">Email:</span>{' '}
+                            <a href={`mailto:${contactDetails.email}`}>
+                                {contactDetails.email}
+                            </a>
+                        </div>
+                    ) : null}
+                </Box>
+            </form>
+
+            <style jsx>{`
+                h2,
+                h3 {
+                    margin-top: 0;
+                    margin-bottom: 16px;
+                }
+
+                .stats {
+                    > .stat {
+                        > .label {
+                            color: var(--color-secondary);
+                            font-weight: 400;
+                            margin-bottom: 8px;
+                        }
+
+                        > .value {
+                            font-weight: 700;
+                            font-size: 24px;
+                        }
+                    }
+                }
+
+                .main {
+                    > :global(.repay) {
+                        :global(button) {
+                            margin-top: 8px;
+                            margin-bottom: 16px;
+                            display: flex;
+                        }
+                    }
+                }
+
+                :global(.details) {
+                    > .field {
+                        margin-top: 8px;
+
+                        > .label {
+                            color: var(--color-secondary);
+                            font-weight: 400;
+                            margin-bottom: 8px;
+                        }
+                    }
+                }
+
+                @media screen and (min-width: 1000px) {
+                    .main {
+                        display: flex;
+
+                        > :global(.box) {
+                            flex-basis: 50%;
+                            margin: 0;
+
+                            &:first-child {
+                                margin-right: 8px;
+                            }
+
+                            &:last-child {
+                                margin-left: 8px;
+                            }
+                        }
+                    }
+                }
+            `}</style>
+        </>
+    )
+}
+
 const oneWeek = oneDay * 7
-const thirtyDays = oneDay * 30
 const oneYear = oneWeek * 52 + oneDay
 const initialValue = ''
 const initialDuration = ''
@@ -163,9 +673,7 @@ function RequestLoan({
     const { invalidAmountMessage, invalidDurationMessage } = useMemo(() => {
         if (!borrowInfo) {
             return {
-                isAmountValid: true,
                 invalidAmountMessage: '',
-                isDurationValid: true,
                 invalidDurationMessage: '',
             }
         }
@@ -328,7 +836,7 @@ function RequestLoan({
                 isManager ? (
                     `Manager can't request a loan`
                 ) : isLoanPendingApproval ? (
-                    'A loan you requested is already pending approval'
+                    'A loan application you requested is pending approval'
                 ) : isSubmitted ? (
                     <div>
                         <h2>Thank you for applying!</h2>
@@ -514,6 +1022,7 @@ function RequestLoan({
 
                 <div className="button-container">
                     <Button
+                        type="submit"
                         disabled={account ? disabledSubmit : false}
                         loading={loading}
                     >

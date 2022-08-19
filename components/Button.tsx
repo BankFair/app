@@ -65,7 +65,6 @@ export function Button({
                     font-weight: 400;
                     font-size: 16px;
                     font-family: inherit;
-                    display: inline-block;
                     transition-property: background-image;
                     transition-duration: 100ms;
                     transition-timing-function: linear;
