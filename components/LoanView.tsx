@@ -47,15 +47,11 @@ export function LoanView({
     liquidityTokenDecimals,
     showAll,
     onRepay,
-    poolAddress,
-    account,
 }: {
     loan: Loan
     liquidityTokenDecimals: number
     showAll?: boolean
     onRepay?(id: number, debt: BigNumber): void
-    poolAddress: string
-    account: string | undefined
 }) {
     const formattedAmount = useMemo(
         () => format(formatUnits(amount, liquidityTokenDecimals)),

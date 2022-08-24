@@ -181,8 +181,6 @@ export function Loans(props: {
                     liquidityTokenDecimals={pool.liquidityTokenDecimals}
                     showAll={showAllLoans}
                     onRepay={handleRepay}
-                    poolAddress={poolAddress}
-                    account={pool.managerAddress}
                 />
             ))}
 
