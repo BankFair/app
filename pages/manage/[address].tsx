@@ -21,6 +21,7 @@ import {
     rgbGreen,
     thirtyDays,
     oneDay,
+    amountWithInterest,
 } from '../../app'
 import {
     Alert,
@@ -227,12 +228,12 @@ function LoansAwaitingApproval({
                                         phone?: string
                                         email?: string
                                     }) =>
-                                        ({
+                                ({
                                             ...info,
-                                            ...request,
-                                            id: request.id.toHexString(),
-                                        } as LoanRequest),
-                                ),
+                                    ...request,
+                                    id: request.id.toHexString(),
+                                } as LoanRequest),
+                        ),
                         ),
                 )
             })
@@ -408,6 +409,8 @@ function LoansAwaitingApproval({
     )
 }
 
+const initialInterest = 35
+const initialInterestString = initialInterest.toString()
 function OfferModal({
     loan,
     onClose,
@@ -432,12 +435,20 @@ function OfferModal({
         formatUnits(loan.amount, liquidityTokenDecimals),
     )
     const { initialMonths, initialInstallmentAmount } = useMemo(() => {
-        const initialMonths = formatDurationInMonths(loan.duration.toNumber())
+        const duration = loan.duration.toNumber()
+        const initialMonths = formatDurationInMonths(duration)
 
         return {
             initialMonths: initialMonths.toString(),
             initialInstallmentAmount: formatUnits(
-                loan.amount.mul(100).div(initialMonths).div(100),
+                amountWithInterest(
+                    loan.amount,
+                    Math.trunc(Date.now() / 1000) - duration,
+                    initialInterest,
+                )
+                    .mul(100)
+                    .div(Math.trunc(initialMonths))
+                    .div(100),
                 liquidityTokenDecimals,
             ),
         }
@@ -446,7 +457,7 @@ function OfferModal({
     const [installmentAmount, setInstallmentAmount] = useState(
         initialInstallmentAmount,
     )
-    const [interest, setInterest] = useState('35')
+    const [interest, setInterest] = useState(initialInterestString)
     const [graceDefaultPeriod, setGraceDefaultPeriod] = useState('35')
 
     const [isOfferLoading, setIsOfferLoading] = useState(false)
@@ -623,14 +634,14 @@ function OfferModal({
 
                 <div className="buttons">
                     <Button
-                        disabled={isOfferLoading}
+                        disabled={isOfferLoading || isRejectLoading}
                         loading={isOfferLoading}
                         type="submit"
                     >
                         Offer Loan
                     </Button>
                     <Button
-                        disabled={isRejectLoading}
+                        disabled={isOfferLoading || isRejectLoading}
                         loading={isRejectLoading}
                         onClick={handleReject}
                         type="button"
