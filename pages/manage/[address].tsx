@@ -178,7 +178,7 @@ interface LoanRequest {
     email?: string
 }
 function LoansAwaitingApproval({
-    pool: { loanDeskAddress, liquidityTokenDecimals },
+    pool: { loanDeskAddress, liquidityTokenDecimals, block },
 }: {
     pool: Pool
 }) {
@@ -193,8 +193,9 @@ function LoansAwaitingApproval({
             .connect(provider!)
 
         contract
-            .queryFilter(contract.filters.LoanRequested())
+            .queryFilter(contract.filters.LoanRequested(), block)
             .then((events) => {
+                console.log(events)
                 if (canceled) return []
 
                 const { contract: attached } =
@@ -257,7 +258,7 @@ function LoansAwaitingApproval({
 
             setRequests(null)
         }
-    }, [loanDeskAddress, provider])
+    }, [block, loanDeskAddress, provider])
 
     const [offerForRequest, setOfferForRequest] = useState<LoanRequest | null>(
         null,
@@ -266,7 +267,7 @@ function LoansAwaitingApproval({
     return (
         <Box>
             <h2>Loans awaiting approval</h2>
-            <div className="grid">
+            <div className={requests === null ? undefined : 'grid'}>
                 {requests ? (
                     requests.map((loan) => (
                         <Fragment key={loan.id}>
@@ -388,7 +389,7 @@ function LoansAwaitingApproval({
                 .loading {
                     > :global(svg) {
                         display: block;
-                        margin: 10px auto;
+                        margin: 10px auto 0;
                     }
                 }
 

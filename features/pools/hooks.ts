@@ -212,6 +212,7 @@ async function fetchAndSetPoolInfo([
 ]: [
     {
         name: string
+        block: number
         address: string
         description: string
     },
@@ -229,6 +230,7 @@ async function fetchAndSetPoolInfo([
 
     return setPoolInfo({
         name: pool.name,
+        block: pool.block,
         address: pool.address,
         managerAddress,
         loanDeskAddress,
@@ -279,7 +281,10 @@ export function useLoadAccountLoans(
 
         const attached = contract.attach(poolAddress)
         attached
-            .queryFilter(attached.filters.LoanBorrowed(null, account))
+            .queryFilter(
+                attached.filters.LoanBorrowed(null, account),
+                pool.block,
+            )
             .then((loans) =>
                 fetchLoans(
                     attached,

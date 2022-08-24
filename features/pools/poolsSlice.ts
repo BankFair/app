@@ -66,6 +66,7 @@ type Loading = 'stats' | `accountInfo_${string}`
 
 export interface Pool {
     name: string
+    block: number
     address: string
     managerAddress: string
     loanDeskAddress: string
@@ -341,6 +342,7 @@ export const poolsSlice = createSlice({
             {
                 payload: {
                     name,
+                    block,
                     address,
                     managerAddress,
                     loanDeskAddress,
@@ -351,6 +353,7 @@ export const poolsSlice = createSlice({
                 },
             }: Action<{
                 name: string
+                block: number
                 address: string
                 managerAddress: string
                 loanDeskAddress: string
@@ -362,6 +365,7 @@ export const poolsSlice = createSlice({
         ) {
             state[address] = {
                 name,
+                block,
                 address,
                 managerAddress,
                 loanDeskAddress,
