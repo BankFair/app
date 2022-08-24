@@ -48,6 +48,7 @@ import {
     useLoans,
     fetchLoan,
     LoanStatus,
+    loanBorrowedSignature,
     useLoadAccountLoans,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
@@ -261,16 +262,33 @@ function Offer({
                     setIsLoading(true)
 
                     try {
-                        await contract
+                        const tx = await contract
                             .attach(poolAddress)
                             .connect(provider!.getSigner())
                             .borrow(offer.details.applicationId)
-                            .then((tx) =>
-                                trackTransaction(dispatch, {
-                                    tx,
-                                    name: 'Accept loan & withdraw',
-                                }),
-                            )
+
+                        const {
+                            payload: { receipt },
+                        } = await trackTransaction(dispatch, {
+                            tx,
+                            name: 'Accept loan & withdraw',
+                        })
+
+                        for (const event of receipt.events || []) {
+                            if (
+                                event.eventSignature === loanBorrowedSignature
+                            ) {
+                                await dispatch(
+                                    fetchLoan({
+                                        poolAddress,
+                                        loanId: BigNumber.from(
+                                            event.args!.array[0],
+                                        ),
+                                    }),
+                                )
+                            }
+                        }
+
                         setIsAccepted(true)
                     } catch (error) {
                         // TODO: Display to user if not cancelation
