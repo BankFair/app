@@ -109,6 +109,7 @@ export interface CoreContract
         K extends Record<keyof TupleToObject<T>, PropertyKey>,
     >(
         filter: EventFilterWithType<T, K>,
+        fromBlock?: number,
     ): Promise<TypedEvent<T, K>[]>
 }
 
@@ -267,6 +268,7 @@ export interface LoanDeskContract
         K extends Record<keyof TupleToObject<T>, PropertyKey>,
     >(
         filter: EventFilterWithType<T, K>,
+        fromBlock?: number,
     ): Promise<TypedEvent<T, K>[]>
 }
 

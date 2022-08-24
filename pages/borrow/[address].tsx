@@ -87,7 +87,7 @@ Borrow.getInitialProps = (context) => {
 export default Borrow
 
 function Offer({
-    pool: { loanDeskAddress, liquidityTokenDecimals },
+    pool: { loanDeskAddress, liquidityTokenDecimals, block },
     poolAddress,
     account,
 }: {
@@ -121,7 +121,7 @@ function Offer({
             .connect(provider!)
 
         contract
-            .queryFilter(contract.filters.LoanOffered(null, account))
+            .queryFilter(contract.filters.LoanOffered(null, account), block)
             .then(async (events) => {
                 if (!events.length) return
 
@@ -161,7 +161,7 @@ function Offer({
             .catch((error) => {
                 console.error(error)
             })
-    }, [account, loanDeskAddress, provider])
+    }, [account, block, loanDeskAddress, provider])
 
     const [isLoading, setIsLoading] = useState(false)
     const [isAccepted, setIsAccepted] = useState(false)
