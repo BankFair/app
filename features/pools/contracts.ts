@@ -140,6 +140,7 @@ export interface LoanOffer {
     amount: BigNumber
     duration: BigNumber
     gracePeriod: BigNumber
+    installmentAmount: BigNumber
     installments: number
     apr: number
     offeredTime: BigNumber
