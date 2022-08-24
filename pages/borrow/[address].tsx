@@ -16,6 +16,8 @@ import {
     BORROWER_SERVICE_URL,
     format,
     getAddress,
+    getERC20Contract,
+    infiniteAllowance,
     oneDay,
     POOLS,
     prefix,
@@ -25,6 +27,7 @@ import {
     useAccount,
     useAmountWithInterest,
     useProvider,
+    zero,
 } from '../../app'
 import {
     Alert,
@@ -50,6 +53,7 @@ import {
     LoanStatus,
     loanBorrowedSignature,
     useLoadAccountLoans,
+    useAllowanceAndBalance,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
 
@@ -351,22 +355,25 @@ function RepayLoans({
                 loan={loan}
                 provider={provider}
                 dispatch={dispatch}
+                account={account}
             />
         )) as unknown as JSX.Element
 }
 
 function RepayLoan({
-    pool: { liquidityTokenDecimals, loanDeskAddress },
+    pool: { liquidityTokenAddress, liquidityTokenDecimals, loanDeskAddress },
     poolAddress,
     loan,
     provider,
     dispatch,
+    account,
 }: {
     pool: Pool
     poolAddress: string
     loan: ReturnType<typeof useLoans>[number]
     provider: ReturnType<typeof useProvider>
     dispatch: AppDispatch
+    account: string | undefined
 }) {
     const [amount, setAmount] = useState('')
 
@@ -383,6 +390,21 @@ function RepayLoan({
             repaid,
         }
     }, [loan, amountWithInterest])
+
+    const { allowance, refetch: refetchAllowanceAndBalance } =
+        useAllowanceAndBalance(liquidityTokenAddress, poolAddress, account)
+
+    const needsApproval = useMemo(() => {
+        if (!allowance) return false
+
+        const approvalBigNumber = BigNumber.from(allowance)
+        return (
+            approvalBigNumber.eq(zero) ||
+            approvalBigNumber.lt(
+                amount ? parseUnits(amount, liquidityTokenDecimals) : zero,
+            )
+        )
+    }, [allowance, amount, liquidityTokenDecimals])
 
     const [contactDetailsState, setContactDetailsState] = useState<{
         applicationId: number
@@ -429,8 +451,32 @@ function RepayLoan({
 
             setIsLoading(true)
 
+            const signer = provider!.getSigner()
+
+            if (needsApproval) {
+                getERC20Contract(liquidityTokenAddress)
+                    .connect(signer)
+                    .approve(poolAddress, infiniteAllowance)
+                    .then((tx) =>
+                        trackTransaction(dispatch, {
+                            name: `Approve ${TOKEN_SYMBOL}`,
+                            tx,
+                        }),
+                    )
+                    .then(() => refetchAllowanceAndBalance())
+                    .then(() => {
+                        setIsLoading(false)
+                    })
+                    .catch((reason) => {
+                        console.error(reason)
+                        setIsLoading(false)
+                    })
+
+                return
+            }
+
             contract
-                .connect(provider!.getSigner())
+                .connect(signer)
                 .attach(poolAddress)
                 .repay(
                     BigNumber.from(loan.id),
@@ -450,7 +496,17 @@ function RepayLoan({
                     console.error(error)
                 })
         },
-        [provider, poolAddress, loan, amount, liquidityTokenDecimals, dispatch],
+        [
+            provider,
+            needsApproval,
+            poolAddress,
+            loan,
+            amount,
+            liquidityTokenDecimals,
+            liquidityTokenAddress,
+            dispatch,
+            refetchAllowanceAndBalance,
+        ],
     )
 
     return (
@@ -478,9 +534,12 @@ function RepayLoan({
                     <Button
                         type="submit"
                         loading={isLoading}
-                        disabled={isLoading}
+                        disabled={
+                            (Number(amount) === 0 && !needsApproval) ||
+                            isLoading
+                        }
                     >
-                        Repay
+                        {needsApproval ? `Approve ${TOKEN_SYMBOL}` : 'Repay'}
                     </Button>
                     <Alert
                         style="warning"
