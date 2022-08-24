@@ -623,14 +623,14 @@ function OfferModal({
 
                 <div className="buttons">
                     <Button
-                        disabled={isOfferLoading}
+                        disabled={isOfferLoading || isRejectLoading}
                         loading={isOfferLoading}
                         type="submit"
                     >
                         Offer Loan
                     </Button>
                     <Button
-                        disabled={isRejectLoading}
+                        disabled={isOfferLoading || isRejectLoading}
                         loading={isRejectLoading}
                         onClick={handleReject}
                         type="button"
