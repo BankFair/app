@@ -29,7 +29,7 @@ export function Box({
                     background-color: var(--bg-section);
                     backdrop-filter: blur(16px);
                     box-shadow: ${commonBoxShadow};
-                    margin: 24px auto;
+                    margin: 16px auto;
                     padding: 24px;
                     position: relative;
 
@@ -42,13 +42,6 @@ export function Box({
                     }
                 }
 
-                .loading-container {
-                    background-color: inherit;
-                }
-                .overlay-container {
-                    background-color: var(--bg-overlay);
-                    backdrop-filter: blur(5px);
-                }
                 .loading-container,
                 .overlay-container {
                     border-radius: inherit;
@@ -62,6 +55,8 @@ export function Box({
                     justify-content: center;
                     padding: inherit;
                     text-align: center;
+                    background-color: var(--bg-overlay);
+                    backdrop-filter: blur(5px);
                 }
             `}</style>
 

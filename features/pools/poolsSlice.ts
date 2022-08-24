@@ -6,7 +6,9 @@ import {
     getBatchProviderAndContract,
     EVMLoan,
     EVMLoanDetails,
-} from './contract'
+    getBatchProviderAndLoanDeskContract,
+    loanDeskContract,
+} from './contracts'
 import { createFetchInterval, oneHundredPercent, POOLS } from '../../app'
 import { AppState, Action, AppDispatch } from '../../store'
 
@@ -16,18 +18,17 @@ export interface Loan {
     borrower: string
     amount: string
     duration: number
-    requestedTime: number
+    borrowedTime: number
     apr: number
-    lateAPRDelta: number
+    gracePeriod: number
+    applicationId: number
     details: LoanDetails
 }
 
 export interface LoanDetails {
-    id: number
     totalAmountRepaid: string
     baseAmountRepaid: string
     interestPaid: string
-    approvedTime: number
 }
 
 interface Stats {
@@ -44,14 +45,12 @@ interface Stats {
 interface ManagerInfo {
     staked: string
     unstakable: string
-    earlyExitDeadline: number
     blockNumber: number
 }
 
 interface AccountInfo {
     balance: string
     withdrawable: string
-    earlyExitDeadline: number
     blockNumber: number
 }
 
@@ -69,8 +68,11 @@ export interface Pool {
     name: string
     address: string
     managerAddress: string
-    tokenAddress: string
-    tokenDecimals: number
+    loanDeskAddress: string
+    poolTokenAddress: string
+    poolTokenDecimals: number
+    liquidityTokenAddress: string
+    liquidityTokenDecimals: number
     loans: Loan[]
     loansBlockNumber: number
     loanUpdates: { loan: Loan; blockNumber: number }[]
@@ -160,22 +162,19 @@ const fetchAccountInfo = createAsyncThunk(
         account: string
     }) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            4,
+            3,
             contract.attach(poolAddress),
         )
 
-        const [balance, withdrawable, earlyExitDeadline, blockNumber] =
-            await Promise.all([
-                connected.balanceOf(account),
-                connected.amountWithdrawable(account),
-                connected.earlyExitDeadlines(account),
-                provider.getCurrentBlockNumber(),
-            ])
+        const [balance, withdrawable, blockNumber] = await Promise.all([
+            connected.balanceOf(account),
+            connected.amountWithdrawable(account),
+            provider.getCurrentBlockNumber(),
+        ])
 
         const accountInfo: AccountInfo = {
             balance: balance.toHexString(),
             withdrawable: withdrawable.toHexString(),
-            earlyExitDeadline: earlyExitDeadline.toNumber(),
             blockNumber,
         }
 
@@ -204,30 +203,21 @@ export const { hook: useFetchIntervalAccountInfoAllPools } =
 
 const fetchManagerInfo = createAsyncThunk(
     'pools/fetchManagerInfo',
-    async ({
-        poolAddress,
-        managerAddress,
-    }: {
-        poolAddress: string
-        managerAddress: string
-    }) => {
+    async ({ poolAddress }: { poolAddress: string }) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            4,
+            3,
             contract.attach(poolAddress),
         )
 
-        const [staked, unstakable, earlyExitDeadline, blockNumber] =
-            await Promise.all([
-                connected.balanceStaked(),
-                connected.amountUnstakable(),
-                connected.earlyExitDeadlines(managerAddress),
-                provider.getCurrentBlockNumber(),
-            ])
+        const [staked, unstakable, blockNumber] = await Promise.all([
+            connected.balanceStaked(),
+            connected.amountUnstakable(),
+            provider.getCurrentBlockNumber(),
+        ])
 
         const managerInfo: ManagerInfo = {
             staked: staked.toHexString(),
             unstakable: unstakable.toHexString(),
-            earlyExitDeadline: earlyExitDeadline.toNumber(),
             blockNumber,
         }
 
@@ -242,20 +232,31 @@ export const { hook: useFetchIntervalManagerInfo } = createFetchInterval(
 
 const fetchBorrowInfo = createAsyncThunk(
     'pools/fetchBorrowConstraints',
-    async (poolAddress: string) => {
-        const { provider, contract: connected } = getBatchProviderAndContract(
-            5,
-            contract.attach(poolAddress),
-        )
+    async ({
+        loanDeskAddress,
+    }: {
+        poolAddress: string
+        loanDeskAddress: string
+    }) => {
+        const { provider, contract: connected } =
+            getBatchProviderAndLoanDeskContract(
+                5,
+                loanDeskContract.attach(loanDeskAddress),
+            )
 
-        const [minLoanAmount, minLoanDuration, maxLoanDuration, apr, blockNumber] =
-            await Promise.all([
-                connected.minLoanAmount(),
-                connected.minLoanDuration(),
-                connected.maxLoanDuration(),
-                connected.templateLoanAPR(),
-                provider.getCurrentBlockNumber(),
-            ])
+        const [
+            minLoanAmount,
+            minLoanDuration,
+            maxLoanDuration,
+            apr,
+            blockNumber,
+        ] = await Promise.all([
+            connected.minLoanAmount(),
+            connected.minLoanDuration(),
+            connected.maxLoanDuration(),
+            connected.templateLoanAPR(),
+            provider.getCurrentBlockNumber(),
+        ])
 
         const info: BorrowInfo = {
             minLoanAmount: minLoanAmount.toHexString(),
@@ -276,12 +277,24 @@ export const {
 
 export const fetchAllBorrowInfo = createAsyncThunk(
     'pools/fetchAllBorrowInfo',
-    (dispatch: AppDispatch) => {
-        return Promise.all(
-            POOLS.map(({ address }) =>
-                fetchIntervalBorrowInfo(dispatch, address),
-            ),
-        )
+    ({
+        dispatch,
+        pools,
+    }: {
+        dispatch: AppDispatch
+        pools: Record<string, Pool>
+    }) => {
+        const promises: Promise<object>[] = []
+
+        // TODO: Batch
+        for (const i in pools) {
+            fetchIntervalBorrowInfo(dispatch, {
+                poolAddress: i,
+                loanDeskAddress: pools[i].loanDeskAddress,
+            })
+        }
+
+        return Promise.all(promises)
     },
 )
 
@@ -330,23 +343,32 @@ export const poolsSlice = createSlice({
                     name,
                     address,
                     managerAddress,
-                    tokenAddress,
-                    tokenDecimals,
+                    loanDeskAddress,
+                    poolTokenAddress,
+                    poolTokenDecimals,
+                    liquidityTokenAddress,
+                    liquidityTokenDecimals,
                 },
             }: Action<{
                 name: string
                 address: string
                 managerAddress: string
-                tokenAddress: string
-                tokenDecimals: number
+                loanDeskAddress: string
+                poolTokenAddress: string
+                poolTokenDecimals: number
+                liquidityTokenAddress: string
+                liquidityTokenDecimals: number
             }>,
         ) {
             state[address] = {
                 name,
                 address,
                 managerAddress,
-                tokenAddress,
-                tokenDecimals,
+                loanDeskAddress,
+                poolTokenAddress,
+                poolTokenDecimals,
+                liquidityTokenAddress,
+                liquidityTokenDecimals,
                 loans: [],
                 loansBlockNumber: 0,
                 loanUpdates: [],
@@ -471,7 +493,15 @@ export const poolsSlice = createSlice({
             )
             .addCase(
                 fetchBorrowInfo.fulfilled,
-                (state, { payload, meta: { arg: poolAddress } }) => {
+                (
+                    state,
+                    {
+                        payload,
+                        meta: {
+                            arg: { poolAddress },
+                        },
+                    },
+                ) => {
                     replaceIfHigherBlockNumber(
                         state[poolAddress],
                         'borrowInfo',
@@ -575,8 +605,6 @@ export function transformToStateLoanDetails(
     details: EVMLoanDetails,
 ): LoanDetails {
     return {
-        id: details.loanId.toNumber(),
-        approvedTime: details.approvedTime.toNumber(),
         baseAmountRepaid: details.baseAmountRepaid.toString(),
         interestPaid: details.interestPaid.toString(),
         totalAmountRepaid: details.totalAmountRepaid.toString(),
@@ -602,8 +630,9 @@ export function transformToStateLoan(
         amount: loan.amount.toHexString(),
         duration: loan.duration.toNumber(),
         apr: (loan.apr / oneHundredPercent) * 100,
-        lateAPRDelta: (loan.lateAPRDelta / oneHundredPercent) * 100,
-        requestedTime: loan.requestedTime.toNumber(),
+        borrowedTime: loan.borrowedTime.toNumber(),
+        gracePeriod: loan.gracePeriod.toNumber(),
+        applicationId: loan.applicationId.toNumber(),
         details: transformToStateLoanDetails(details),
     }
 }

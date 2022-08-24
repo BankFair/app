@@ -17,9 +17,9 @@ const BorrowPools: NextPage = () => {
     const pools = usePools()
     const dispatch = useDispatch()
     const poolsLoaded = Object.keys(pools).length === POOLS.length
-    const hookArg = poolsLoaded ? { dispatch } : null
-    useFetchIntervalAllStats(hookArg)
-    useFetchIntervalAllBorrowInfo(hookArg && dispatch)
+    const hookArg = poolsLoaded ? { dispatch, pools } : null
+    useFetchIntervalAllStats(poolsLoaded ? { dispatch } : null)
+    useFetchIntervalAllBorrowInfo(hookArg)
 
     return (
         <Page>
@@ -42,7 +42,7 @@ const BorrowPools: NextPage = () => {
                                       `$${formatNoDecimals(
                                           formatUnits(
                                               pool.stats.poolLiquidity,
-                                              pool.tokenDecimals,
+                                              pool.liquidityTokenDecimals,
                                           ),
                                       )}`,
                                       `${pool.borrowInfo.apr}%`,

@@ -5,13 +5,11 @@ import { useMemo, useState } from 'react'
 import { useDispatch } from '../store'
 import { disabledBackground, useProvider } from '../app'
 import {
-    contract,
     CoreContract,
     fetchLoan,
     formatStatus,
     LoanStatus,
     Pool,
-    trackTransaction,
     useLoadAccountLoans,
     useLoadManagerState,
     useLoans,
@@ -25,23 +23,11 @@ import { LoanView } from './LoanView'
 const options = (
     <>
         <option value={-1}>all loans</option>
-        <option value={LoanStatus.APPLIED}>
-            loans {formatStatus(LoanStatus.APPLIED).toLowerCase()}
-        </option>
-        <option value={LoanStatus.APPROVED}>
-            {formatStatus(LoanStatus.APPROVED).toLowerCase()} loans
-        </option>
-        <option value={LoanStatus.DENIED}>
-            {formatStatus(LoanStatus.DENIED).toLowerCase()} loans
-        </option>
-        <option value={LoanStatus.CANCELLED}>
-            {formatStatus(LoanStatus.CANCELLED).toLowerCase()} loans
-        </option>
         <option value={LoanStatus.DEFAULTED}>
             {formatStatus(LoanStatus.DEFAULTED).toLowerCase()} loans
         </option>
-        <option value={LoanStatus.FUNDS_WITHDRAWN}>
-            {formatStatus(LoanStatus.FUNDS_WITHDRAWN).toLowerCase()} loans
+        <option value={LoanStatus.OUTSTANDING}>
+            {formatStatus(LoanStatus.OUTSTANDING).toLowerCase()} loans
         </option>
         <option value={LoanStatus.REPAID}>
             {formatStatus(LoanStatus.REPAID).toLowerCase()} loans
@@ -57,7 +43,6 @@ export function Loans(props: {
 
     const showAllLoans = !props.hasOwnProperty('account')
 
-    const provider = useProvider()
     const [filter, setFilter] = useState<LoanStatus | -1>(-1)
     const loans = showAllLoans
         ? useLoans(poolAddress) // eslint-disable-line react-hooks/rules-of-hooks
@@ -83,88 +68,12 @@ export function Loans(props: {
         useLoadAccountLoans(poolAddress, account, dispatch, pool)
     }
 
-    const handleBorrow = useMemo(
-        () =>
-            showAllLoans
-                ? undefined
-                : (loanId: number) => {
-                      return contract
-                          .attach(poolAddress)
-                          .connect(provider!.getSigner())
-                          .borrow(BigNumber.from(loanId))
-                          .then((tx) =>
-                              trackTransaction(dispatch, {
-                                  name: 'Borrow',
-                                  tx,
-                              }),
-                          )
-                  },
-        [showAllLoans, poolAddress, provider, dispatch],
-    )
-
     const handleRepay = useMemo(
         () =>
             showAllLoans
                 ? undefined
                 : (id: number, max: BigNumber) => setRepay({ id, max }),
         [showAllLoans],
-    )
-
-    const [handleApprove, handleReject, handleCancel, handleDefault] = useMemo(
-        () =>
-            showAllLoans
-                ? [
-                      (loanId: number) => {
-                          return contract
-                              .attach(poolAddress)
-                              .connect(provider!.getSigner())
-                              .approveLoan(loanId)
-                              .then((tx) =>
-                                  trackTransaction(dispatch, {
-                                      name: 'Approve loan',
-                                      tx,
-                                  }),
-                              )
-                      },
-                      (loanId: number) => {
-                          return contract
-                              .attach(poolAddress)
-                              .connect(provider!.getSigner())
-                              .denyLoan(loanId)
-                              .then((tx) =>
-                                  trackTransaction(dispatch, {
-                                      name: 'Reject loan',
-                                      tx,
-                                  }),
-                              )
-                      },
-                      (loanId: number) => {
-                          return contract
-                              .attach(poolAddress)
-                              .connect(provider!.getSigner())
-                              .cancelLoan(loanId)
-                              .then((tx) =>
-                                  trackTransaction(dispatch, {
-                                      name: 'Cancel loan',
-                                      tx,
-                                  }),
-                              )
-                      },
-                      (loanId: number) => {
-                          return contract
-                              .attach(poolAddress)
-                              .connect(provider!.getSigner())
-                              .defaultLoan(loanId)
-                              .then((tx) =>
-                                  trackTransaction(dispatch, {
-                                      name: 'Default loan',
-                                      tx,
-                                  }),
-                              )
-                      },
-                  ]
-                : [],
-        [showAllLoans, poolAddress, provider, dispatch],
     )
 
     const header = (
@@ -269,14 +178,9 @@ export function Loans(props: {
                 <LoanView
                     key={loan.id}
                     loan={loan}
-                    tokenDecimals={pool.tokenDecimals}
+                    liquidityTokenDecimals={pool.liquidityTokenDecimals}
                     showAll={showAllLoans}
-                    onBorrow={handleBorrow}
                     onRepay={handleRepay}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onCancel={handleCancel}
-                    onDefault={handleDefault}
                     poolAddress={poolAddress}
                     account={pool.managerAddress}
                 />
@@ -286,8 +190,8 @@ export function Loans(props: {
                 <RepayModal
                     poolAddress={poolAddress}
                     loanId={repay.id}
-                    tokenDecimals={pool.tokenDecimals}
-                    tokenAddress={pool.tokenAddress}
+                    liquidityTokenDecimals={pool.liquidityTokenDecimals}
+                    liquidityTokenAddress={pool.liquidityTokenAddress}
                     max={repay.max}
                     onClose={() => setRepay(null)}
                 />
@@ -306,28 +210,28 @@ export function Loans(props: {
 function RepayModal({
     poolAddress,
     loanId,
-    tokenDecimals,
-    tokenAddress,
+    liquidityTokenAddress,
+    liquidityTokenDecimals,
     max,
     onClose,
 }: {
     poolAddress: string
     loanId: number
-    tokenDecimals: number
-    tokenAddress: string
+    liquidityTokenAddress: string
+    liquidityTokenDecimals: number
     max: BigNumber
     onClose(): void
 }) {
     const dispatch = useDispatch()
 
     const { form } = useAmountForm({
-        tokenAddress,
-        tokenDecimals,
+        liquidityTokenAddress,
+        liquidityTokenDecimals,
         poolAddress,
         onSumbit: (contract: CoreContract, amount: string) =>
             contract.repay(
                 BigNumber.from(loanId),
-                parseUnits(amount, tokenDecimals),
+                parseUnits(amount, liquidityTokenDecimals),
             ),
         refetch: () =>
             dispatch(fetchLoan({ poolAddress, loanId })).then(onClose),

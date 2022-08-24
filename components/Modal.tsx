@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { FormEventHandler, ReactNode, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { GrClose } from 'react-icons/gr'
 import { stopPropagation } from '../app'
 
@@ -31,7 +32,7 @@ export function Modal({
         [],
     )
 
-    return (
+    const node = (
         <div
             ref={backgroundRef}
             className="background"
@@ -40,7 +41,6 @@ export function Modal({
         >
             <style jsx>{`
                 .background {
-                    background-color: rgba(1, 1, 1, 0.7);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -50,6 +50,7 @@ export function Modal({
                     width: 100vw;
                     height: 100vh;
                     z-index: 10;
+                    background-color: var(--bg-modal-overlay);
                 }
 
                 .content {
@@ -94,4 +95,6 @@ export function Modal({
             </Element>
         </div>
     )
+
+    return createPortal(node, document.body)
 }

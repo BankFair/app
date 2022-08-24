@@ -1,11 +1,15 @@
 import { BaseContract, EventFilter } from '@ethersproject/contracts'
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 
-export type ContractFunction<T, R extends readonly unknown[] = []> = (
-    ...args: R
-) => Promise<T>
+export type ContractFunction<
+    ReturnType,
+    Arguments extends readonly unknown[] = [],
+> = (...args: Arguments) => Promise<ReturnType>
 
 type OptionalOrNullTuple<Tuple extends readonly unknown[]> = {
-    [Index in keyof Tuple]?: Tuple[Index] | null
+    [Index in keyof Tuple]?:
+        | (Tuple[Index] extends BigNumber ? BigNumberish : Tuple[Index])
+        | null
 }
 
 export type TupleToObject<T extends readonly unknown[]> = {

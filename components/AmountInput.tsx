@@ -12,6 +12,8 @@ export function AmountInput({
     onChange,
     onBlur,
     onKeyDown,
+    label,
+    paddingRight,
     ...classModifiers
 }: {
     decimals: number
@@ -19,6 +21,8 @@ export function AmountInput({
     onChange: (newValue: string) => void
     onBlur?: FocusEventHandler<HTMLInputElement>
     onKeyDown?: KeyboardEventHandler<HTMLInputElement>
+    label?: string
+    paddingRight?: number
     disabled?: boolean
     noToken?: boolean
     s?: boolean
@@ -89,23 +93,7 @@ export function AmountInput({
                 }
 
                 input {
-                    font-size: 16px;
-                    font-weight: 600;
-                    line-height: 21px;
-                    width: 100%;
                     padding: 10px 84px 10px 8px;
-                    border: 2px solid ${rgbStone};
-                    border-radius: 8px;
-                    background-color: ${rgbWhite};
-                    color: var(--color);
-
-                    &:disabled {
-                        cursor: not-allowed;
-                    }
-
-                    @media (prefers-color-scheme: dark) {
-                        background-color: ${rgbGround};
-                    }
                 }
 
                 .token {
@@ -125,6 +113,17 @@ export function AmountInput({
                         margin-right: 2px;
                     }
                 }
+
+                .label {
+                    font-size: 14px;
+                    position: absolute;
+                    right: 10px;
+                    top: 0;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    color: var(--color-secondary);
+                }
             `}</style>
 
             <input
@@ -136,10 +135,12 @@ export function AmountInput({
                 onChange={handleChange}
                 onBlur={onBlur}
                 onKeyDown={onKeyDown}
+                style={paddingRight ? { paddingRight } : undefined}
             />
+            {label ? <div className="label">{label}</div> : null}
             <div className="token">
-                <img src={`${prefix}/usdc.svg`} alt="USDC logo" />
-                USDC
+                <img src={`${prefix}/usdt.svg`} alt="USDT logo" />
+                USDT
             </div>
         </div>
     )
