@@ -193,6 +193,22 @@ function Offer({
                 </div>
             </div>
             <div className="field">
+                <div className="label">Installment amount</div>
+                <div>
+                    {format(
+                        formatUnits(
+                            offer.details.installmentAmount,
+                            liquidityTokenDecimals,
+                        ),
+                    )}{' '}
+                    {TOKEN_SYMBOL}
+                </div>
+            </div>
+            <div className="field">
+                <div className="label">Installments</div>
+                <div>{offer.details.installments}</div>
+            </div>
+            <div className="field">
                 <div className="label">Duration</div>
                 <div>
                     {offer.details.duration.toNumber() / thirtyDays} months
