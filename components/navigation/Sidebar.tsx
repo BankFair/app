@@ -188,6 +188,29 @@ export function Sidebar({
                             USDC Faucet
                         </a>
                     </>
+                ) : RPC_NETWORK_ID === networks.mumbai ? (
+                    <>
+                        <a
+                            className={getSidebarItemClass('/faucet', pathname)}
+                            onClick={hideSidebar}
+                            href="https://faucet.polygon.technology/"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                        >
+                            <RiCoinLine size={24} />
+                            MATIC Faucet
+                        </a>
+                        <a
+                            className={getSidebarItemClass('/faucet', pathname)}
+                            onClick={hideSidebar}
+                            href="https://multitoken-faucet.pages.dev/"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                        >
+                            <RiCoinLine size={24} />
+                            USDT Faucet
+                        </a>
+                    </>
                 ) : null}
             </div>
 
