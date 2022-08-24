@@ -16,6 +16,8 @@ import {
     BORROWER_SERVICE_URL,
     format,
     getAddress,
+    getERC20Contract,
+    infiniteAllowance,
     oneDay,
     POOLS,
     prefix,
@@ -25,6 +27,7 @@ import {
     useAccount,
     useAmountWithInterest,
     useProvider,
+    zero,
 } from '../../app'
 import {
     Alert,
@@ -48,8 +51,11 @@ import {
     useLoans,
     fetchLoan,
     LoanStatus,
+    loanBorrowedSignature,
+    useLoadAccountLoans,
+    useAllowanceAndBalance,
 } from '../../features'
-import { useDispatch, useSelector } from '../../store'
+import { AppDispatch, useDispatch, useSelector } from '../../store'
 
 const title = `Borrow - ${APP_NAME}`
 
@@ -260,16 +266,33 @@ function Offer({
                     setIsLoading(true)
 
                     try {
-                        await contract
+                        const tx = await contract
                             .attach(poolAddress)
                             .connect(provider!.getSigner())
                             .borrow(offer.details.applicationId)
-                            .then((tx) =>
-                                trackTransaction(dispatch, {
-                                    tx,
-                                    name: 'Accept loan & withdraw',
-                                }),
-                            )
+
+                        const {
+                            payload: { receipt },
+                        } = await trackTransaction(dispatch, {
+                            tx,
+                            name: 'Accept loan & withdraw',
+                        })
+
+                        for (const event of receipt.events || []) {
+                            if (
+                                event.eventSignature === loanBorrowedSignature
+                            ) {
+                                await dispatch(
+                                    fetchLoan({
+                                        poolAddress,
+                                        loanId: BigNumber.from(
+                                            event.args!.array[0],
+                                        ),
+                                    }),
+                                )
+                            }
+                        }
+
                         setIsAccepted(true)
                     } catch (error) {
                         // TODO: Display to user if not cancelation
@@ -317,6 +340,9 @@ function RepayLoans({
 }) {
     const provider = useProvider()
     const loans = useLoans(poolAddress, account)
+    const dispatch = useDispatch()
+
+    useLoadAccountLoans(poolAddress, account, dispatch, pool)
 
     return loans
         .filter((loan) => loan.status === LoanStatus.OUTSTANDING)
@@ -328,23 +354,27 @@ function RepayLoans({
                 poolAddress={poolAddress}
                 loan={loan}
                 provider={provider}
+                dispatch={dispatch}
+                account={account}
             />
         )) as unknown as JSX.Element
 }
 
 function RepayLoan({
-    pool: { liquidityTokenDecimals, loanDeskAddress },
+    pool: { liquidityTokenAddress, liquidityTokenDecimals, loanDeskAddress },
     poolAddress,
     loan,
     provider,
+    dispatch,
+    account,
 }: {
     pool: Pool
     poolAddress: string
     loan: ReturnType<typeof useLoans>[number]
     provider: ReturnType<typeof useProvider>
+    dispatch: AppDispatch
+    account: string | undefined
 }) {
-    const dispatch = useDispatch()
-
     const [amount, setAmount] = useState('')
 
     const amountWithInterest = useAmountWithInterest(
@@ -360,6 +390,21 @@ function RepayLoan({
             repaid,
         }
     }, [loan, amountWithInterest])
+
+    const { allowance, refetch: refetchAllowanceAndBalance } =
+        useAllowanceAndBalance(liquidityTokenAddress, poolAddress, account)
+
+    const needsApproval = useMemo(() => {
+        if (!allowance) return false
+
+        const approvalBigNumber = BigNumber.from(allowance)
+        return (
+            approvalBigNumber.eq(zero) ||
+            approvalBigNumber.lt(
+                amount ? parseUnits(amount, liquidityTokenDecimals) : zero,
+            )
+        )
+    }, [allowance, amount, liquidityTokenDecimals])
 
     const [contactDetailsState, setContactDetailsState] = useState<{
         applicationId: number
@@ -406,8 +451,32 @@ function RepayLoan({
 
             setIsLoading(true)
 
+            const signer = provider!.getSigner()
+
+            if (needsApproval) {
+                getERC20Contract(liquidityTokenAddress)
+                    .connect(signer)
+                    .approve(poolAddress, infiniteAllowance)
+                    .then((tx) =>
+                        trackTransaction(dispatch, {
+                            name: `Approve ${TOKEN_SYMBOL}`,
+                            tx,
+                        }),
+                    )
+                    .then(() => refetchAllowanceAndBalance())
+                    .then(() => {
+                        setIsLoading(false)
+                    })
+                    .catch((reason) => {
+                        console.error(reason)
+                        setIsLoading(false)
+                    })
+
+                return
+            }
+
             contract
-                .connect(provider!.getSigner())
+                .connect(signer)
                 .attach(poolAddress)
                 .repay(
                     BigNumber.from(loan.id),
@@ -427,7 +496,17 @@ function RepayLoan({
                     console.error(error)
                 })
         },
-        [provider, poolAddress, loan, amount, liquidityTokenDecimals, dispatch],
+        [
+            provider,
+            needsApproval,
+            poolAddress,
+            loan,
+            amount,
+            liquidityTokenDecimals,
+            liquidityTokenAddress,
+            dispatch,
+            refetchAllowanceAndBalance,
+        ],
     )
 
     return (
@@ -455,9 +534,12 @@ function RepayLoan({
                     <Button
                         type="submit"
                         loading={isLoading}
-                        disabled={isLoading}
+                        disabled={
+                            (Number(amount) === 0 && !needsApproval) ||
+                            isLoading
+                        }
                     >
-                        Repay
+                        {needsApproval ? `Approve ${TOKEN_SYMBOL}` : 'Repay'}
                     </Button>
                     <Alert
                         style="warning"

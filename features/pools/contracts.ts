@@ -19,6 +19,8 @@ type TypedEvent<
     K extends Record<keyof TupleToObject<T>, PropertyKey>,
 > = Omit<Event, 'args'> & { args: TupleToObjectWithPropNames<T, K> }
 
+export const loanBorrowedSignature = 'LoanBorrowed(uint256,address)'
+
 export interface CoreContract
     extends Omit<
         CustomBaseContract,
