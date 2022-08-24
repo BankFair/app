@@ -48,8 +48,9 @@ import {
     useLoans,
     fetchLoan,
     LoanStatus,
+    useLoadAccountLoans,
 } from '../../features'
-import { useDispatch, useSelector } from '../../store'
+import { AppDispatch, useDispatch, useSelector } from '../../store'
 
 const title = `Borrow - ${APP_NAME}`
 
@@ -317,6 +318,9 @@ function RepayLoans({
 }) {
     const provider = useProvider()
     const loans = useLoans(poolAddress, account)
+    const dispatch = useDispatch()
+
+    useLoadAccountLoans(poolAddress, account, dispatch, pool)
 
     return loans
         .filter((loan) => loan.status === LoanStatus.OUTSTANDING)
@@ -328,6 +332,7 @@ function RepayLoans({
                 poolAddress={poolAddress}
                 loan={loan}
                 provider={provider}
+                dispatch={dispatch}
             />
         )) as unknown as JSX.Element
 }
@@ -337,14 +342,14 @@ function RepayLoan({
     poolAddress,
     loan,
     provider,
+    dispatch,
 }: {
     pool: Pool
     poolAddress: string
     loan: ReturnType<typeof useLoans>[number]
     provider: ReturnType<typeof useProvider>
+    dispatch: AppDispatch
 }) {
-    const dispatch = useDispatch()
-
     const [amount, setAmount] = useState('')
 
     const amountWithInterest = useAmountWithInterest(

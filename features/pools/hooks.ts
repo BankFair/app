@@ -428,12 +428,7 @@ function createLoansSelector(address: string, account?: string) {
         },
     )
 }
-export function useLoans(address: string): StateLoan[]
-export function useLoans(
-    address: string,
-    account: string | undefined,
-): StateLoan[]
-export function useLoans(address: string, account?: string) {
+export function useLoans(address: string, account?: string): StateLoan[] {
     const forAddress = arguments.length === 2
 
     const selectorKey = `${address}_${account}`
