@@ -313,9 +313,9 @@ function LoansAwaitingApproval({
                     onOffer={(
                         amount,
                         duration,
+                        installmentAmount,
                         installments,
                         interest,
-                        latePaymentFee,
                         graceDefaultPeriod,
                     ) =>
                         loanDeskContract
@@ -326,9 +326,9 @@ function LoansAwaitingApproval({
                                 amount,
                                 duration,
                                 graceDefaultPeriod,
+                                installmentAmount,
                                 installments,
                                 interest,
-                                latePaymentFee,
                             )
                             .then((tx) =>
                                 trackTransaction(dispatch, {
@@ -420,9 +420,9 @@ function OfferModal({
     onOffer(
         amount: BigNumber,
         duration: BigNumber,
+        installmentAmount: BigNumber,
         installments: number,
         interest: number,
-        latePaymentFee: number,
         graceDefaultPeriod: number,
     ): Promise<void | object>
     onReject(): Promise<void>
@@ -430,11 +430,22 @@ function OfferModal({
     const [amount, setAmount] = useState(
         formatUnits(loan.amount, liquidityTokenDecimals),
     )
-    const [duration, setDuration] = useState(
-        formatDurationInMonths(loan.duration.toNumber()).toString(),
+    const { initialMonths, initialInstallmentAmount } = useMemo(() => {
+        const initialMonths = formatDurationInMonths(loan.duration.toNumber())
+
+        return {
+            initialMonths: initialMonths.toString(),
+            initialInstallmentAmount: formatUnits(
+                loan.amount.mul(100).div(initialMonths).div(100),
+                liquidityTokenDecimals,
+            ),
+        }
+    }, [liquidityTokenDecimals, loan.amount, loan.duration])
+    const [duration, setDuration] = useState(initialMonths)
+    const [installmentAmount, setInstallmentAmount] = useState(
+        initialInstallmentAmount,
     )
     const [interest, setInterest] = useState('35')
-    const [latePaymentFee, setLatePaymentFee] = useState('15')
     const [graceDefaultPeriod, setGraceDefaultPeriod] = useState('35')
 
     const [isOfferLoading, setIsOfferLoading] = useState(false)
@@ -447,9 +458,9 @@ function OfferModal({
             onOffer(
                 parseUnits(amount, liquidityTokenDecimals),
                 BigNumber.from(Number(duration) * thirtyDays),
+                parseUnits(installmentAmount, liquidityTokenDecimals),
                 parseInt(duration, 10),
                 Number(interest) * 10,
-                Number(latePaymentFee) * 10,
                 Number(graceDefaultPeriod) * oneDay,
             ).catch(() => {
                 setIsOfferLoading(false)
@@ -459,8 +470,8 @@ function OfferModal({
             amount,
             duration,
             graceDefaultPeriod,
+            installmentAmount,
             interest,
-            latePaymentFee,
             liquidityTokenDecimals,
             onOffer,
         ],
@@ -570,16 +581,13 @@ function OfferModal({
                     />
                 </label>
                 <label>
-                    <div className="label">Late Payment Fee</div>
+                    <div className="label">Installment amount</div>
                     <AmountInput
-                        decimals={1}
-                        value={latePaymentFee}
-                        onChange={setLatePaymentFee}
+                        decimals={liquidityTokenDecimals}
+                        value={installmentAmount}
+                        onChange={setInstallmentAmount}
                         // onBlur={showDisplayAlert}
                         // disabled={disabled}
-                        noToken
-                        label="%"
-                        paddingRight={26}
                         // onKeyDown={(event) =>
                         //     event.key === 'Enter'
                         //         ? setDisplayAlert(true)

@@ -73,10 +73,9 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
 
             <BackToPools href="/borrow" />
             <h1>{name}</h1>
-            <Offer pool={pool} poolAddress={address} account={account} />
             <RepayLoans pool={pool} poolAddress={address} account={account} />
+            <Offer pool={pool} poolAddress={address} account={account} />
             <RequestLoan pool={pool} poolAddress={address} account={account} />
-            <Loans pool={pool} poolAddress={address} account={account} />
         </Page>
     )
 }
@@ -202,10 +201,6 @@ function Offer({
             <div className="field">
                 <div className="label">Interest APR</div>
                 <div>{offer.details.apr / 10}%</div>
-            </div>
-            <div className="field">
-                <div className="label">Late Payment Fee</div>
-                <div>{offer.details.lateAPRDelta / 10}%</div>
             </div>
             <div className="field">
                 <div className="label">Grace Default Period</div>
@@ -339,8 +334,6 @@ function RepayLoan({
     const amountWithInterest = useAmountWithInterest(
         loan.amount,
         loan.apr,
-        loan.lateAPRDelta,
-        loan.duration,
         loan.borrowedTime,
     )
     const { debt, repaid } = useMemo(() => {
@@ -489,10 +482,6 @@ function RepayLoan({
                     </div>
                     <div className="field">
                         <span className="label">Interest APR:</span> {loan.apr}%
-                    </div>
-                    <div className="field">
-                        <span className="label">Late payment fee:</span>{' '}
-                        {loan.lateAPRDelta}%
                     </div>
                     <div className="field">
                         <span className="label">Grace default period:</span>{' '}

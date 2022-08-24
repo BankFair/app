@@ -691,6 +691,11 @@
             },
             {
                 "internalType": "uint256",
+                "name": "interestPaidTillTime",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
                 "name": "lastPaymentTime",
                 "type": "uint256"
             }
@@ -744,6 +749,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "installmentAmount",
+                "type": "uint256"
+            },
+            {
                 "internalType": "uint16",
                 "name": "installments",
                 "type": "uint16"
@@ -751,11 +761,6 @@
             {
                 "internalType": "uint16",
                 "name": "apr",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint16",
-                "name": "lateAPRDelta",
                 "type": "uint16"
             },
             {

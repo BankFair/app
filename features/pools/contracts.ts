@@ -141,7 +141,6 @@ export interface LoanOffer {
     gracePeriod: BigNumber
     installments: number
     apr: number
-    lateAPRDelta: number
     offeredTime: BigNumber
 }
 
@@ -169,9 +168,9 @@ export interface LoanDeskContract
             amount: BigNumberish,
             duration: BigNumberish,
             gracePeriod: BigNumberish,
+            installmentAmount: BigNumberish,
             installments: number,
             apr: number,
-            lateAPRDelta: number,
         ]
     >
     cancelLoan: ContractFunction<
@@ -288,7 +287,6 @@ export interface EVMLoan {
     status: LoanStatus
     borrower: string
     amount: BigNumber
-    lateAPRDelta: number
     apr: number
     loanDeskAddress: string
     applicationId: BigNumber

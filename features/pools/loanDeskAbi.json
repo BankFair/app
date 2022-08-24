@@ -22,9 +22,9 @@
                 "type": "address"
             },
             {
-                "internalType": "uint256",
-                "name": "_oneToken",
-                "type": "uint256"
+                "internalType": "uint8",
+                "name": "_decimals",
+                "type": "uint8"
             }
         ],
         "stateMutability": "nonpayable",
@@ -593,6 +593,11 @@
                         "type": "uint256"
                     },
                     {
+                        "internalType": "uint256",
+                        "name": "installmentAmount",
+                        "type": "uint256"
+                    },
+                    {
                         "internalType": "uint16",
                         "name": "installments",
                         "type": "uint16"
@@ -600,11 +605,6 @@
                     {
                         "internalType": "uint16",
                         "name": "apr",
-                        "type": "uint16"
-                    },
-                    {
-                        "internalType": "uint16",
-                        "name": "lateAPRDelta",
                         "type": "uint16"
                     },
                     {
@@ -657,6 +657,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "installmentAmount",
+                "type": "uint256"
+            },
+            {
                 "internalType": "uint16",
                 "name": "installments",
                 "type": "uint16"
@@ -664,11 +669,6 @@
             {
                 "internalType": "uint16",
                 "name": "apr",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint16",
-                "name": "lateAPRDelta",
                 "type": "uint16"
             },
             {
@@ -755,6 +755,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "_installmentAmount",
+                "type": "uint256"
+            },
+            {
                 "internalType": "uint16",
                 "name": "_installments",
                 "type": "uint16"
@@ -762,11 +767,6 @@
             {
                 "internalType": "uint16",
                 "name": "_apr",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint16",
-                "name": "_lateAPRDelta",
                 "type": "uint16"
             }
         ],
@@ -938,19 +938,6 @@
         "inputs": [
             {
                 "internalType": "uint16",
-                "name": "lateAPRDelta",
-                "type": "uint16"
-            }
-        ],
-        "name": "setTemplateLateLoanAPRDelta",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16",
                 "name": "apr",
                 "type": "uint16"
             }
@@ -971,19 +958,6 @@
         "name": "setTemplateLoanGracePeriod",
         "outputs": [],
         "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "templateLateLoanAPRDelta",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -1055,6 +1029,11 @@
                 "type": "uint256"
             },
             {
+                "internalType": "uint256",
+                "name": "_installmentAmount",
+                "type": "uint256"
+            },
+            {
                 "internalType": "uint16",
                 "name": "_installments",
                 "type": "uint16"
@@ -1062,11 +1041,6 @@
             {
                 "internalType": "uint16",
                 "name": "_apr",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint16",
-                "name": "_lateAPRDelta",
                 "type": "uint16"
             }
         ],

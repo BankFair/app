@@ -10,8 +10,6 @@ const halfHour = 30 * 60 * 1000
 export function useAmountWithInterest(
     amount: string,
     interestRate: number,
-    interestRateDelta: number,
-    duration: number,
     approvedTime: number,
 ): BigNumber {
     const [integer, setInteger] = useState(0) // Force update
@@ -32,8 +30,6 @@ export function useAmountWithInterest(
         if (!interestRate || !approvedTime) return zero
 
         const now = Date.now() / 1000
-        const dueTimestamp = approvedTime + duration
-        const isLate = now > dueTimestamp
 
         const amountBigNumber = BigNumber.from(amount)
         const days = countInterestDays(approvedTime, now)
@@ -42,35 +38,8 @@ export function useAmountWithInterest(
             (interestRate / 100) * oneHundredPercent,
         )
 
-        if (!isLate) {
-            return withInterest(amountBigNumber, interestRateBigNumber, days)
-        }
-
-        const interestDays = BigNumber.from(days)
-        const interestRateDeltaBigNumber = BigNumber.from(
-            (interestRateDelta / 100) * oneHundredPercent,
-        )
-
-        return withInterest(
-            amountBigNumber,
-            interestDays
-                .mul(interestRateBigNumber)
-                .add(
-                    interestRateDeltaBigNumber.mul(
-                        countInterestDays(dueTimestamp, now),
-                    ),
-                )
-                .div(interestDays),
-            days,
-        )
-    }, [
-        amount,
-        approvedTime,
-        duration,
-        integer,
-        interestRate,
-        interestRateDelta,
-    ])
+        return withInterest(amountBigNumber, interestRateBigNumber, days)
+    }, [amount, approvedTime, integer, interestRate])
 }
 
 function countInterestDays(from: number, to: number) {

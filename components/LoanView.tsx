@@ -43,7 +43,6 @@ export function LoanView({
         status,
         details,
         apr,
-        lateAPRDelta,
     },
     liquidityTokenDecimals,
     showAll,
@@ -64,13 +63,7 @@ export function LoanView({
     )
     const formattedStatus = useMemo(() => formatStatus(status), [status])
 
-    const amountWithInterest = useAmountWithInterest(
-        amount,
-        apr,
-        lateAPRDelta,
-        duration,
-        borrowedTime,
-    )
+    const amountWithInterest = useAmountWithInterest(amount, apr, borrowedTime)
     const { debt, repaid, percent } = useMemo(() => {
         const repaid = BigNumber.from(details.totalAmountRepaid)
 

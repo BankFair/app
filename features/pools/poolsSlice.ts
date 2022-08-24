@@ -20,7 +20,6 @@ export interface Loan {
     duration: number
     borrowedTime: number
     apr: number
-    lateAPRDelta: number
     gracePeriod: number
     applicationId: number
     details: LoanDetails
@@ -631,7 +630,6 @@ export function transformToStateLoan(
         amount: loan.amount.toHexString(),
         duration: loan.duration.toNumber(),
         apr: (loan.apr / oneHundredPercent) * 100,
-        lateAPRDelta: (loan.lateAPRDelta / oneHundredPercent) * 100,
         borrowedTime: loan.borrowedTime.toNumber(),
         gracePeriod: loan.gracePeriod.toNumber(),
         applicationId: loan.applicationId.toNumber(),
