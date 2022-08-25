@@ -168,16 +168,43 @@ function StakeAndUnstake({
     )
 }
 
-interface LoanRequest {
+interface BaseLoanRequest {
     id: string
     borrower: string
     amount: BigNumber
     duration: BigNumber
     name: string
     businessName: string
+    status: LoanApplicationStatus
     phone?: string
     email?: string
 }
+interface OfferValues {
+    graceDefaultPeriod: number
+    installmentAmount: BigNumber
+    installments: number
+    interest: number
+}
+
+type LoanRequest =
+    | (BaseLoanRequest & {
+          status: LoanApplicationStatus.APPLIED
+      })
+    | (BaseLoanRequest & {
+          status: LoanApplicationStatus.DENIED
+      })
+    | (BaseLoanRequest &
+          OfferValues & {
+              status: LoanApplicationStatus.OFFER_MADE
+          })
+    | (BaseLoanRequest &
+          OfferValues & {
+              status: LoanApplicationStatus.OFFER_CANCELLED
+          })
+    | (BaseLoanRequest &
+          OfferValues & {
+              status: LoanApplicationStatus.OFFER_ACCEPTED
+          })
 function LoansAwaitingApproval({
     pool: { loanDeskAddress, liquidityTokenDecimals, block },
 }: {
@@ -196,7 +223,6 @@ function LoansAwaitingApproval({
         contract
             .queryFilter(contract.filters.LoanRequested(), block)
             .then((events) => {
-                console.log(events)
                 if (canceled) return []
 
                 const { contract: attached } =
@@ -214,26 +240,46 @@ function LoansAwaitingApproval({
                         .filter(
                             (request) =>
                                 request.status ===
-                                LoanApplicationStatus.APPLIED,
+                                    LoanApplicationStatus.APPLIED ||
+                                request.status ===
+                                    LoanApplicationStatus.OFFER_MADE,
                         )
                         .map((request) =>
-                            fetch(
-                                `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                            )
-                                .then((response) => response.json())
-                                .then(
-                                    (info: {
+                            Promise.all([
+                                fetch(
+                                    `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
+                                ).then((response) => response.json()),
+                                request.status ===
+                                LoanApplicationStatus.OFFER_MADE
+                                    ? contract
+                                          .loanOffers(request.id)
+                                          .then((offer) => ({
+                                              graceDefaultPeriod:
+                                                  offer.gracePeriod.toNumber() /
+                                                  oneDay,
+                                              installmentAmount:
+                                                  offer.installmentAmount,
+                                              installments: offer.installments,
+                                              interest: offer.apr,
+                                          }))
+                                    : undefined,
+                            ]).then(
+                                ([info, offer]: [
+                                    {
                                         name: string
                                         businessName: string
                                         phone?: string
                                         email?: string
-                                    }) =>
-                                ({
-                                            ...info,
-                                    ...request,
-                                    id: request.id.toHexString(),
-                                } as LoanRequest),
-                        ),
+                                    },
+                                    OfferValues | undefined,
+                                ]) =>
+                                    ({
+                                        ...offer,
+                                        ...info,
+                                        ...request,
+                                        id: request.id.toHexString(),
+                                    } as LoanRequest),
+                            ),
                         ),
                 )
             })
@@ -261,57 +307,67 @@ function LoansAwaitingApproval({
         }
     }, [block, loanDeskAddress, provider])
 
-    const [offerForRequest, setOfferForRequest] = useState<LoanRequest | null>(
-        null,
-    )
+    const [offerModalRequest, setOfferModalRequest] =
+        useState<LoanRequest | null>(null)
 
     return (
-        <Box>
-            <h2>Loans awaiting approval</h2>
-            <div className={requests === null ? undefined : 'grid'}>
-                {requests ? (
-                    requests.map((loan) => (
-                        <Fragment key={loan.id}>
-                            <div className="name">
-                                <span onClick={() => setOfferForRequest(loan)}>
-                                    {loan.name}
-                                </span>
-                            </div>
-                            <div className="description">
-                                <span>
-                                    {formatUnits(
-                                        loan.amount,
-                                        liquidityTokenDecimals,
-                                    )}{' '}
-                                    {TOKEN_SYMBOL} for{' '}
-                                    {formatDurationInMonths(
-                                        loan.duration.toNumber(),
-                                    )}{' '}
-                                    months
-                                </span>
-                            </div>
-                            <div className="address">
-                                <EtherscanAddress address={loan.borrower} />
-                            </div>
-                        </Fragment>
-                    ))
-                ) : (
-                    <div className="loading">
-                        <Oval
-                            speed={0.7}
-                            stroke={rgbGreen}
-                            width={32}
-                            height={32}
-                        />
-                    </div>
-                )}
-            </div>
+        <>
+            <Box>
+                <h2>Loans awaiting approval</h2>
+                <div className={requests === null ? undefined : 'grid'}>
+                    {requests ? (
+                        mapLoanRequest(
+                            requests.filter(
+                                (request) =>
+                                    request.status ===
+                                    LoanApplicationStatus.APPLIED,
+                            ),
+                            setOfferModalRequest,
+                            liquidityTokenDecimals,
+                        )
+                    ) : (
+                        <div className="loading">
+                            <Oval
+                                speed={0.7}
+                                stroke={rgbGreen}
+                                width={32}
+                                height={32}
+                            />
+                        </div>
+                    )}
+                </div>
+            </Box>
 
-            {offerForRequest ? (
+            <Box>
+                <h2>Active offers</h2>
+                <div className={requests === null ? undefined : 'grid'}>
+                    {requests ? (
+                        mapLoanRequest(
+                            requests.filter(
+                                (request) =>
+                                    request.status ===
+                                    LoanApplicationStatus.OFFER_MADE,
+                            ),
+                            setOfferModalRequest,
+                            liquidityTokenDecimals,
+                        )
+                    ) : (
+                        <div className="loading">
+                            <Oval
+                                speed={0.7}
+                                stroke={rgbGreen}
+                                width={32}
+                                height={32}
+                            />
+                        </div>
+                    )}
+                </div>
+            </Box>
+            {offerModalRequest ? (
                 <OfferModal
-                    loan={offerForRequest}
+                    loan={offerModalRequest}
                     liquidityTokenDecimals={liquidityTokenDecimals}
-                    onClose={() => setOfferForRequest(null)}
+                    onClose={() => setOfferModalRequest(null)}
                     onOffer={(
                         amount,
                         duration,
@@ -319,33 +375,68 @@ function LoansAwaitingApproval({
                         installments,
                         interest,
                         graceDefaultPeriod,
-                    ) =>
-                        loanDeskContract
+                    ) => {
+                        const contract = loanDeskContract
                             .attach(loanDeskAddress)
                             .connect(provider!.getSigner())
-                            .offerLoan(
-                                offerForRequest.id,
-                                amount,
-                                duration,
-                                graceDefaultPeriod,
-                                installmentAmount,
-                                installments,
-                                interest,
-                            )
-                            .then((tx) =>
-                                trackTransaction(dispatch, {
-                                    name: `Offer a loan for ${formatUnits(
-                                        amount,
-                                        liquidityTokenDecimals,
-                                    )} ${TOKEN_SYMBOL}`,
-                                    tx,
-                                }),
+
+                        const isOfferActive =
+                            offerModalRequest.status ===
+                            LoanApplicationStatus.OFFER_MADE
+
+                        return (
+                            isOfferActive
+                                ? contract
+                                      .updateOffer(
+                                          offerModalRequest.id,
+                                          amount,
+                                          duration,
+                                          graceDefaultPeriod,
+                                          installmentAmount,
+                                          installments,
+                                          interest,
+                                      )
+                                      .then((tx) => ({
+                                          tx,
+                                          name: 'Update offer',
+                                      }))
+                                : contract
+                                      .offerLoan(
+                                          offerModalRequest.id,
+                                          amount,
+                                          duration,
+                                          graceDefaultPeriod,
+                                          installmentAmount,
+                                          installments,
+                                          interest,
+                                      )
+                                      .then((tx) => ({
+                                          tx,
+                                          name: `Offer a loan for ${formatUnits(
+                                              amount,
+                                              liquidityTokenDecimals,
+                                          )} ${TOKEN_SYMBOL}`,
+                                      }))
+                        )
+                            .then(({ tx, name }) =>
+                                trackTransaction(dispatch, { name, tx }),
                             )
                             .then(() => {
-                                setOfferForRequest(null)
+                                setOfferModalRequest(null)
                                 setRequests(
-                                    requests!.filter(
-                                        (loan) => loan !== offerForRequest,
+                                    requests!.map((loan) =>
+                                        loan === offerModalRequest
+                                            ? {
+                                                  ...loan,
+                                                  status: LoanApplicationStatus.OFFER_MADE,
+                                                  amount,
+                                                  duration,
+                                                  graceDefaultPeriod,
+                                                  installmentAmount,
+                                                  installments,
+                                                  interest,
+                                              }
+                                            : loan,
                                     ),
                                 )
                             })
@@ -353,23 +444,50 @@ function LoansAwaitingApproval({
                                 console.error(error)
                                 throw error
                             })
-                    }
-                    onReject={() =>
-                        loanDeskContract
+                    }}
+                    onReject={() => {
+                        const contract = loanDeskContract
                             .attach(loanDeskAddress)
                             .connect(provider!.getSigner())
-                            .denyLoan(offerForRequest.id)
-                            .then((tx) =>
-                                trackTransaction(dispatch, {
-                                    name: `Reject loan`,
-                                    tx,
-                                }),
+
+                        const isOfferActive =
+                            offerModalRequest.status ===
+                            LoanApplicationStatus.OFFER_MADE
+
+                        return (
+                            isOfferActive
+                                ? contract
+                                      .cancelLoan(offerModalRequest.id)
+                                      .then((tx) => ({
+                                          tx,
+                                          name: 'Cancel loan',
+                                          newStatus:
+                                              LoanApplicationStatus.OFFER_CANCELLED,
+                                      }))
+                                : contract
+                                      .denyLoan(offerModalRequest.id)
+                                      .then((tx) => ({
+                                          tx,
+                                          name: 'Reject loan',
+                                          newStatus:
+                                              LoanApplicationStatus.DENIED,
+                                      }))
+                        )
+                            .then(({ tx, name, newStatus }) =>
+                                trackTransaction(dispatch, { name, tx }).then(
+                                    () => newStatus,
+                                ),
                             )
-                            .then(() => {
-                                setOfferForRequest(null)
+                            .then((newStatus) => {
+                                setOfferModalRequest(null)
                                 setRequests(
-                                    requests!.filter(
-                                        (loan) => loan !== offerForRequest,
+                                    requests!.map((loan) =>
+                                        loan === offerModalRequest
+                                            ? {
+                                                  ...loan,
+                                                  status: newStatus as any,
+                                              }
+                                            : loan,
                                     ),
                                 )
                             })
@@ -377,7 +495,7 @@ function LoansAwaitingApproval({
                                 console.error(error)
                                 throw error
                             })
-                    }
+                    }}
                 />
             ) : null}
 
@@ -397,16 +515,42 @@ function LoansAwaitingApproval({
                 .grid {
                     display: grid;
                     grid-template-columns: 30% 50% 20%;
-                    > .name {
-                        > span {
+                    > :global(.name) {
+                        > :global(span) {
                             color: ${rgbGreen};
                             cursor: pointer;
                         }
                     }
                 }
             `}</style>
-        </Box>
+        </>
     )
+}
+
+function mapLoanRequest(
+    loans: LoanRequest[],
+    setOfferModalRequest: (loan: LoanRequest) => void,
+    liquidityTokenDecimals: number,
+) {
+    return loans.map((loan) => (
+        <Fragment key={loan.id}>
+            <div className="name">
+                <span onClick={() => setOfferModalRequest(loan)}>
+                    {loan.name}
+                </span>
+            </div>
+            <div className="description">
+                <span>
+                    {formatUnits(loan.amount, liquidityTokenDecimals)}{' '}
+                    {TOKEN_SYMBOL} for{' '}
+                    {formatDurationInMonths(loan.duration.toNumber())} months
+                </span>
+            </div>
+            <div className="address">
+                <EtherscanAddress address={loan.borrower} />
+            </div>
+        </Fragment>
+    ))
 }
 
 const initialInterest = 35
@@ -431,14 +575,32 @@ function OfferModal({
     ): Promise<void | object>
     onReject(): Promise<void>
 }) {
-    const [amount, setAmount] = useState(
-        formatUnits(loan.amount, liquidityTokenDecimals),
-    )
-    const { initialMonths, initialInstallmentAmount } = useMemo(() => {
+    const isOfferActive = loan.status === LoanApplicationStatus.OFFER_MADE
+
+    const {
+        initialAmount,
+        initialMonths,
+        initialInstallmentAmount,
+        initialGraceDefaultPeriod,
+    } = useMemo(() => {
+        const initialAmount = formatUnits(loan.amount, liquidityTokenDecimals)
         const duration = loan.duration.toNumber()
         const initialMonths = formatDurationInMonths(duration)
 
+        if (isOfferActive) {
+            return {
+                initialAmount,
+                initialMonths: initialMonths.toString(),
+                initialInstallmentAmount: formatUnits(
+                    loan.installmentAmount,
+                    liquidityTokenDecimals,
+                ),
+                initialGraceDefaultPeriod: loan.graceDefaultPeriod.toString(),
+            }
+        }
+
         return {
+            initialAmount,
             initialMonths: initialMonths.toString(),
             initialInstallmentAmount: formatUnits(
                 amountWithInterest(
@@ -451,14 +613,18 @@ function OfferModal({
                     .div(100),
                 liquidityTokenDecimals,
             ),
+            initialGraceDefaultPeriod: '35',
         }
-    }, [liquidityTokenDecimals, loan.amount, loan.duration])
+    }, [isOfferActive, liquidityTokenDecimals, loan])
+    const [amount, setAmount] = useState(initialAmount)
     const [duration, setDuration] = useState(initialMonths)
     const [installmentAmount, setInstallmentAmount] = useState(
         initialInstallmentAmount,
     )
     const [interest, setInterest] = useState(initialInterestString)
-    const [graceDefaultPeriod, setGraceDefaultPeriod] = useState('35')
+    const [graceDefaultPeriod, setGraceDefaultPeriod] = useState(
+        initialGraceDefaultPeriod,
+    )
 
     const [isOfferLoading, setIsOfferLoading] = useState(false)
     const [isRejectLoading, setIsRejectLoading] = useState(false)
@@ -499,7 +665,7 @@ function OfferModal({
     return (
         <Modal onClose={onClose}>
             <form onSubmit={handleSubmit}>
-                <h3>Offer a Loan</h3>
+                <h3>{isOfferActive ? 'Update Offer' : 'Offer a Loan'}</h3>
 
                 <div className="field">
                     <div className="label">Account</div>
@@ -638,7 +804,7 @@ function OfferModal({
                         loading={isOfferLoading}
                         type="submit"
                     >
-                        Offer Loan
+                        {isOfferActive ? 'Update Offer' : 'Offer Loan'}
                     </Button>
                     <Button
                         disabled={isOfferLoading || isRejectLoading}
@@ -647,7 +813,7 @@ function OfferModal({
                         type="button"
                         stone
                     >
-                        Reject Application
+                        {isOfferActive ? 'Cancel Offer' : 'Reject Application'}
                     </Button>
                 </div>
                 {/* Disabled elements prevent any click events to be fired resulting in inputs not being blurred */}
