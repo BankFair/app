@@ -177,6 +177,18 @@ export interface LoanDeskContract
             apr: number,
         ]
     >
+    updateOffer: ContractFunction<
+        ContractTransaction,
+        [
+            applicationId: BigNumberish,
+            amount: BigNumberish,
+            duration: BigNumberish,
+            gracePeriod: BigNumberish,
+            installmentAmount: BigNumberish,
+            installments: number,
+            apr: number,
+        ]
+    >
     cancelLoan: ContractFunction<
         ContractTransaction,
         [applicationId: BigNumberish]
