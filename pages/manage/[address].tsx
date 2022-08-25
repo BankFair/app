@@ -255,8 +255,7 @@ function LoansAwaitingApproval({
                                           .loanOffers(request.id)
                                           .then((offer) => ({
                                               graceDefaultPeriod:
-                                                  offer.gracePeriod.toNumber() /
-                                                  oneDay,
+                                                  offer.gracePeriod.toNumber(),
                                               installmentAmount:
                                                   offer.installmentAmount,
                                               installments: offer.installments,
@@ -581,6 +580,7 @@ function OfferModal({
         initialAmount,
         initialMonths,
         initialInstallmentAmount,
+        initialInterestValue,
         initialGraceDefaultPeriod,
     } = useMemo(() => {
         const initialAmount = formatUnits(loan.amount, liquidityTokenDecimals)
@@ -595,7 +595,10 @@ function OfferModal({
                     loan.installmentAmount,
                     liquidityTokenDecimals,
                 ),
-                initialGraceDefaultPeriod: loan.graceDefaultPeriod.toString(),
+                initialInterestValue: (loan.interest / 10).toString(),
+                initialGraceDefaultPeriod: (
+                    loan.graceDefaultPeriod / oneDay
+                ).toString(),
             }
         }
 
@@ -613,6 +616,7 @@ function OfferModal({
                     .div(100),
                 liquidityTokenDecimals,
             ),
+            initialInterestValue: initialInterestString,
             initialGraceDefaultPeriod: '35',
         }
     }, [isOfferActive, liquidityTokenDecimals, loan])
@@ -621,7 +625,7 @@ function OfferModal({
     const [installmentAmount, setInstallmentAmount] = useState(
         initialInstallmentAmount,
     )
-    const [interest, setInterest] = useState(initialInterestString)
+    const [interest, setInterest] = useState(initialInterestValue)
     const [graceDefaultPeriod, setGraceDefaultPeriod] = useState(
         initialGraceDefaultPeriod,
     )
