@@ -171,8 +171,8 @@ function StakeAndUnstake({
 interface BaseLoanRequest {
     id: string
     borrower: string
-    amount: BigNumber
-    duration: BigNumber
+    amount: BigNumber // Will never change
+    duration: BigNumber // Will never change
     name: string
     businessName: string
     status: LoanApplicationStatus
@@ -180,6 +180,8 @@ interface BaseLoanRequest {
     email?: string
 }
 interface OfferValues {
+    amount: BigNumber
+    duration: BigNumber
     graceDefaultPeriod: number
     installmentAmount: BigNumber
     installments: number
@@ -260,6 +262,8 @@ function LoansAwaitingApproval({
                                                   offer.installmentAmount,
                                               installments: offer.installments,
                                               interest: offer.apr,
+                                              amount: offer.amount,
+                                              duration: offer.duration,
                                           }))
                                     : undefined,
                             ]).then(
@@ -273,9 +277,9 @@ function LoansAwaitingApproval({
                                     OfferValues | undefined,
                                 ]) =>
                                     ({
-                                        ...offer,
                                         ...info,
                                         ...request,
+                                        ...offer,
                                         id: request.id.toHexString(),
                                     } as LoanRequest),
                             ),
