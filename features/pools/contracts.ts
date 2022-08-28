@@ -310,6 +310,7 @@ export interface EVMLoan {
     duration: BigNumber
     gracePeriod: BigNumber
     installments: number
+    installmentAmount: BigNumber
     borrowedTime: BigNumber
 }
 
@@ -318,6 +319,7 @@ export interface EVMLoanDetails {
     totalAmountRepaid: BigNumber
     baseAmountRepaid: BigNumber
     interestPaid: BigNumber
+    interestPaidTillTime: BigNumber
     lastPaymentTime: BigNumber
 }
 

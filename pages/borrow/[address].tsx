@@ -4,6 +4,7 @@ import { NextPage } from 'next'
 import Head from 'next/head'
 import {
     FormEventHandler,
+    Fragment,
     useCallback,
     useEffect,
     useMemo,
@@ -12,6 +13,7 @@ import {
 } from 'react'
 
 import {
+    amountWithInterest,
     APP_NAME,
     BORROWER_SERVICE_URL,
     format,
@@ -21,6 +23,7 @@ import {
     oneDay,
     POOLS,
     prefix,
+    rgbRed,
     shortenAddress,
     thirtyDays,
     TOKEN_SYMBOL,
@@ -56,6 +59,7 @@ import {
     useAllowanceAndBalance,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
+import { DateTime } from 'luxon'
 
 const title = `Borrow - ${APP_NAME}`
 
@@ -346,7 +350,7 @@ function RepayLoans({
 
     return loans
         .filter((loan) => loan.status === LoanStatus.OUTSTANDING)
-        .sort((a, b) => b.id - a.id)
+        .sort((a, b) => a.id - b.id)
         .map((loan) => (
             <RepayLoan
                 key={loan.id}
@@ -377,19 +381,17 @@ function RepayLoan({
 }) {
     const [amount, setAmount] = useState('')
 
-    const amountWithInterest = useAmountWithInterest(
+    const outstandingNow = useAmountWithInterest(
         loan.amount,
+        loan.details.baseAmountRepaid,
+        loan.details.interestPaidUntil,
         loan.apr,
-        loan.borrowedTime,
     )
-    const { debt, repaid } = useMemo(() => {
-        const repaid = BigNumber.from(loan.details.totalAmountRepaid)
+    const repaid = useMemo(
+        () => BigNumber.from(loan.details.totalAmountRepaid),
 
-        return {
-            debt: amountWithInterest.sub(repaid),
-            repaid,
-        }
-    }, [loan, amountWithInterest])
+        [loan],
+    )
 
     const { allowance, refetch: refetchAllowanceAndBalance } =
         useAllowanceAndBalance(liquidityTokenAddress, poolAddress, account)
@@ -509,6 +511,82 @@ function RepayLoan({
         ],
     )
 
+    interface ScheduleItem {
+        date: string
+        overdue: boolean
+        amount: BigNumber
+    }
+    const schedule = useMemo(() => {
+        const installmentAmount = BigNumber.from(loan.installmentAmount)
+        const now = DateTime.now()
+        const installmentDates = loan.duration / loan.installments
+        const array = Array.from<ScheduleItem | undefined>({
+            length: loan.installments,
+        })
+        const totalRepaid = BigNumber.from(loan.details.totalAmountRepaid)
+        let baseAmountRepaid = BigNumber.from(loan.details.baseAmountRepaid)
+        let interestPaidUntil = loan.details.interestPaidUntil
+        let amountSum = zero
+
+        array.reduce((array, _item, index) => {
+            const installmentNumber = index + 1
+            const timestamp =
+                loan.borrowedTime + installmentDates * installmentNumber
+            const date = DateTime.fromSeconds(timestamp)
+            const overdue = now > date
+            let amount = installmentAmount
+
+            if (overdue) {
+                const shouldHavePaid = installmentAmount.mul(installmentNumber)
+                if (totalRepaid.lt(shouldHavePaid)) {
+                    amount = shouldHavePaid.sub(amountSum).sub(totalRepaid)
+                }
+            }
+
+            const { principalOutstanding, interestOutstanding } =
+                amountWithInterest(
+                    loan.amount,
+                    baseAmountRepaid,
+                    interestPaidUntil,
+                    loan.apr,
+                    timestamp,
+                )
+
+            const outstanding = principalOutstanding.add(interestOutstanding)
+
+            if (installmentAmount.gt(outstanding)) {
+                amount = outstanding
+            }
+
+            // TODO: `amount` lower than `interestOutstanding`
+            baseAmountRepaid = baseAmountRepaid.add(
+                amount.sub(interestOutstanding),
+            )
+            interestPaidUntil = timestamp
+
+            if (
+                installmentNumber === loan.installments &&
+                outstanding.gt(amount)
+            ) {
+                amount = outstanding
+            }
+
+            if (amount.eq(zero)) {
+                return array
+            }
+
+            amountSum = amountSum.add(amount)
+
+            array[index] = {
+                date: date.toLocaleString(),
+                overdue,
+                amount,
+            }
+            return array
+        }, array)
+        return array
+    }, [loan])
+
     return (
         <>
             <Box>
@@ -517,7 +595,12 @@ function RepayLoan({
                     <div className="stat">
                         <div className="label">Outstanding</div>
                         <div className="value">
-                            {format(formatUnits(debt, liquidityTokenDecimals))}{' '}
+                            {format(
+                                formatUnits(
+                                    outstandingNow,
+                                    liquidityTokenDecimals,
+                                ),
+                            )}{' '}
                             {TOKEN_SYMBOL}
                         </div>
                     </div>
@@ -613,6 +696,33 @@ function RepayLoan({
                 </Box>
             </form>
 
+            <Box>
+                <h3>Future Re-Payments Due</h3>
+
+                <div className="schedule">
+                    <div className="label">Amount</div>
+                    <div className="label">Due</div>
+
+                    {schedule.map((item, index) =>
+                        item ? (
+                            <Fragment key={index}>
+                                <div className={item.overdue ? 'red' : ''}>
+                                    {formatUnits(
+                                        item.amount,
+                                        liquidityTokenDecimals,
+                                    )}{' '}
+                                    {TOKEN_SYMBOL}
+                                </div>
+                                <div className={item.overdue ? 'red' : ''}>
+                                    {item.date}
+                                    {item.overdue ? ' (overdue)' : ''}
+                                </div>
+                            </Fragment>
+                        ) : null,
+                    )}
+                </div>
+            </Box>
+
             <style jsx>{`
                 h2,
                 h3 {
@@ -654,6 +764,21 @@ function RepayLoan({
                             font-weight: 400;
                             margin-bottom: 8px;
                         }
+                    }
+                }
+
+                .schedule {
+                    display: grid;
+                    grid-template-columns: minmax(auto, max-content) auto;
+                    row-gap: 8px;
+                    column-gap: 16px;
+
+                    > .label {
+                        color: var(--color-secondary);
+                    }
+
+                    > .red {
+                        color: ${rgbRed};
                     }
                 }
 

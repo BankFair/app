@@ -16,6 +16,7 @@ import {
     format,
     formatMaxDecimals,
     noop,
+    oneHundredMillion,
     rgbaLimeGreen21,
     rgbGreen,
     rgbRed,
@@ -59,7 +60,12 @@ export function LoanView({
     )
     const formattedStatus = useMemo(() => formatStatus(status), [status])
 
-    const amountWithInterest = useAmountWithInterest(amount, apr, borrowedTime)
+    const amountWithInterest = useAmountWithInterest(
+        amount,
+        details.baseAmountRepaid,
+        details.interestPaidUntil,
+        apr,
+    )
     const { debt, repaid, percent } = useMemo(() => {
         const repaid = BigNumber.from(details.totalAmountRepaid)
 
@@ -67,8 +73,10 @@ export function LoanView({
             debt: amountWithInterest.sub(repaid),
             repaid,
             percent: !zero.eq(amountWithInterest)
-                ? repaid.mul(100_000_000).div(amountWithInterest).toNumber() /
-                  1_000_000
+                ? repaid
+                      .mul(oneHundredMillion)
+                      .div(amountWithInterest)
+                      .toNumber() / 1_000_000
                 : 0,
         }
     }, [details, amountWithInterest])
