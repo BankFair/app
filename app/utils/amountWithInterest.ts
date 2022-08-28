@@ -1,20 +1,17 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { useEffect, useMemo, useState } from 'react'
 
-import {
-    oneDay,
-    oneHundredPercent,
-    zero,
-    ONE_HUNDRED_PERCENT,
-} from '../constants'
+import { oneDay, zero } from '../constants'
 
 import { noop } from './noop'
+import { oneHundredThousand, oneMillion } from './precision'
 
 const halfHour = 30 * 60 * 1000
 export function useAmountWithInterest(
     amount: string,
+    baseAmountRepaid: string,
+    interestPaidUntil: number,
     interestRate: number,
-    borrowedTime: number,
 ): BigNumber {
     const [integer, setInteger] = useState(0) // Force update
     useEffect(() => {
@@ -31,35 +28,67 @@ export function useAmountWithInterest(
     return useMemo(() => {
         process.env.NODE_ENV === 'development' && noop(integer) // because of react-hooks/exhaustive-deps
 
-        return amountWithInterest(amount, borrowedTime, interestRate)
-    }, [amount, borrowedTime, integer, interestRate])
+        const { principalOutstanding, interestOutstanding } =
+            amountWithInterest(
+                amount,
+                baseAmountRepaid,
+                interestPaidUntil,
+                interestRate,
+            )
+
+        return principalOutstanding.add(interestOutstanding)
+    }, [amount, baseAmountRepaid, integer, interestPaidUntil, interestRate])
 }
 
 function countInterestDays(from: number, to: number) {
+    if (to <= from) return 0
     const seconds = to - from
     return Math.ceil(seconds / oneDay)
 }
 
-const oneYear = BigNumber.from(365)
 export function amountWithInterest(
     amount: BigNumberish,
-    borrowedTime: number,
+    baseAmountRepaid: BigNumberish,
+    interestPaidUntil: number,
     interestRate: number,
+    at = Math.trunc(Date.now() / 1000),
 ) {
-    if (!interestRate || !borrowedTime) return zero
-
-    const now = Math.trunc(Date.now() / 1000)
+    if (!interestRate) {
+        return { principalOutstanding: zero, interestOutstanding: zero }
+    }
 
     const amountBigNumber = BigNumber.from(amount)
-    const days = countInterestDays(borrowedTime, now)
+    const baseAmountRepaidBigNumber = BigNumber.from(baseAmountRepaid)
+    const daysPassed = countInterestDays(interestPaidUntil, at)
+    const interestPercent = (interestRate / 100) * (daysPassed / 365)
+    const principalOutstanding = amountBigNumber.sub(baseAmountRepaidBigNumber)
+    const interestOutstanding = principalOutstanding
+        .mul(Math.trunc(interestPercent * 1_000_000))
+        .div(oneMillion)
 
-    const interestRateBigNumber = BigNumber.from(
-        (interestRate / 100) * oneHundredPercent,
-    )
+    return { principalOutstanding, interestOutstanding }
+}
 
-    return amountBigNumber.add(
-        amountBigNumber
-            .mul(interestRateBigNumber.mul(days).div(oneYear))
-            .div(ONE_HUNDRED_PERCENT),
-    )
+export function getInstallmentAmount(
+    amount: BigNumberish,
+    apr: number,
+    installments: number,
+    duration: number,
+) {
+    const dailyInterest = apr / 100 / 365
+    const days = countInterestDays(0, duration)
+    const years = days / 365
+    const installmentInterest = ((years * 365) / installments) * dailyInterest
+    const amountBigNumber = BigNumber.from(amount)
+
+    return amountBigNumber
+        .mul(
+            Math.trunc(
+                ((installmentInterest *
+                    Math.pow(1 + installmentInterest, installments)) /
+                    (Math.pow(1 + installmentInterest, installments) - 1)) *
+                    1_000_000,
+            ),
+        )
+        .div(oneMillion)
 }

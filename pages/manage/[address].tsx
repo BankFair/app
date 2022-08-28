@@ -21,7 +21,7 @@ import {
     rgbGreen,
     thirtyDays,
     oneDay,
-    amountWithInterest,
+    getInstallmentAmount,
 } from '../../app'
 import {
     Alert,
@@ -583,18 +583,21 @@ function OfferModal({
     const {
         initialAmount,
         initialMonths,
+        initialInstallments,
         initialInstallmentAmount,
         initialInterestValue,
         initialGraceDefaultPeriod,
     } = useMemo(() => {
         const initialAmount = formatUnits(loan.amount, liquidityTokenDecimals)
         const duration = loan.duration.toNumber()
-        const initialMonths = formatDurationInMonths(duration)
+        const initialMonthsNumber = formatDurationInMonths(duration)
+        const initialMonths = initialMonthsNumber.toString()
 
         if (isOfferActive) {
             return {
                 initialAmount,
-                initialMonths: initialMonths.toString(),
+                initialMonths,
+                initialInstallments: loan.installments.toString(),
                 initialInstallmentAmount: formatUnits(
                     loan.installmentAmount,
                     liquidityTokenDecimals,
@@ -606,18 +609,19 @@ function OfferModal({
             }
         }
 
+        const initialInstallments = Math.max(Math.ceil(initialMonthsNumber), 1)
+
         return {
             initialAmount,
-            initialMonths: initialMonths.toString(),
+            initialMonths,
+            initialInstallments: initialInstallments.toString(),
             initialInstallmentAmount: formatUnits(
-                amountWithInterest(
+                getInstallmentAmount(
                     loan.amount,
-                    Math.trunc(Date.now() / 1000) - duration,
                     initialInterest,
-                )
-                    .mul(100)
-                    .div(Math.trunc(initialMonths))
-                    .div(100),
+                    initialInstallments,
+                    duration,
+                ),
                 liquidityTokenDecimals,
             ),
             initialInterestValue: initialInterestString,
@@ -626,6 +630,7 @@ function OfferModal({
     }, [isOfferActive, liquidityTokenDecimals, loan])
     const [amount, setAmount] = useState(initialAmount)
     const [duration, setDuration] = useState(initialMonths)
+    const [installments, setInstallments] = useState(initialInstallments)
     const [installmentAmount, setInstallmentAmount] = useState(
         initialInstallmentAmount,
     )
@@ -645,7 +650,7 @@ function OfferModal({
                 parseUnits(amount, liquidityTokenDecimals),
                 BigNumber.from(Number(duration) * thirtyDays),
                 parseUnits(installmentAmount, liquidityTokenDecimals),
-                parseInt(duration, 10),
+                parseInt(installments, 10),
                 Number(interest) * 10,
                 Number(graceDefaultPeriod) * oneDay,
             ).catch(() => {
@@ -657,6 +662,7 @@ function OfferModal({
             duration,
             graceDefaultPeriod,
             installmentAmount,
+            installments,
             interest,
             liquidityTokenDecimals,
             onOffer,
@@ -733,7 +739,7 @@ function OfferModal({
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
-                        decimals={0}
+                        decimals={4}
                         value={duration}
                         onChange={setDuration}
                         // onBlur={showDisplayAlert}
@@ -741,6 +747,22 @@ function OfferModal({
                         noToken
                         label="months"
                         paddingRight={60}
+                        // onKeyDown={(event) =>
+                        //     event.key === 'Enter'
+                        //         ? setDisplayAlert(true)
+                        //         : undefined
+                        // }
+                    />
+                </label>
+                <label>
+                    <div className="label">Installments</div>
+                    <AmountInput
+                        decimals={0}
+                        value={installments}
+                        onChange={setInstallments}
+                        // onBlur={showDisplayAlert}
+                        // disabled={disabled}
+                        noToken
                         // onKeyDown={(event) =>
                         //     event.key === 'Enter'
                         //         ? setDisplayAlert(true)

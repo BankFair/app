@@ -22,6 +22,8 @@ export interface Loan {
     apr: number
     gracePeriod: number
     applicationId: number
+    installments: number
+    installmentAmount: string
     details: LoanDetails
 }
 
@@ -29,6 +31,7 @@ export interface LoanDetails {
     totalAmountRepaid: string
     baseAmountRepaid: string
     interestPaid: string
+    interestPaidUntil: number
 }
 
 interface Stats {
@@ -612,6 +615,7 @@ export function transformToStateLoanDetails(
         baseAmountRepaid: details.baseAmountRepaid.toString(),
         interestPaid: details.interestPaid.toString(),
         totalAmountRepaid: details.totalAmountRepaid.toString(),
+        interestPaidUntil: details.interestPaidTillTime.toNumber(),
     }
 }
 
@@ -637,6 +641,8 @@ export function transformToStateLoan(
         borrowedTime: loan.borrowedTime.toNumber(),
         gracePeriod: loan.gracePeriod.toNumber(),
         applicationId: loan.applicationId.toNumber(),
+        installmentAmount: loan.installmentAmount.toString(),
+        installments: loan.installments,
         details: transformToStateLoanDetails(details),
     }
 }

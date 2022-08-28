@@ -10,6 +10,7 @@ import {
     zero,
     USDT_DECIMALS,
     ONE_HUNDRED_PERCENT,
+    oneMillion,
 } from '../../app'
 import {
     contract,
@@ -17,7 +18,6 @@ import {
     getBatchProviderAndContract,
     EVMLoan,
     EVMLoanDetails,
-    LoanStatus,
 } from './contracts'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
@@ -103,7 +103,7 @@ export function useStats(poolAddress: string, liquidityTokenDecimals: number) {
         loans: stats.loans,
         lossBuffer: poolFunds.eq(zero)
             ? 0
-            : balanceStaked.mul(100_000).div(poolFunds).toNumber() / 1000,
+            : balanceStaked.mul(oneMillion).div(poolFunds).toNumber() / 10_000,
         managerFunds: formatUnits(balanceStaked, liquidityTokenDecimals),
         availableForDeposits: formatUnits(
             stats.amountDepositable,
