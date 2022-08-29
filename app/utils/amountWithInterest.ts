@@ -54,7 +54,11 @@ export function amountWithInterest(
     at = Math.trunc(Date.now() / 1000),
 ) {
     if (!interestRate) {
-        return { principalOutstanding: zero, interestOutstanding: zero }
+        return {
+            principalOutstanding: zero,
+            interestOutstanding: zero,
+            daysPassed: 0,
+        }
     }
 
     const amountBigNumber = BigNumber.from(amount)
@@ -66,7 +70,7 @@ export function amountWithInterest(
         .mul(Math.trunc(interestPercent * 1_000_000))
         .div(oneMillion)
 
-    return { principalOutstanding, interestOutstanding }
+    return { principalOutstanding, interestOutstanding, daysPassed }
 }
 
 export function getInstallmentAmount(

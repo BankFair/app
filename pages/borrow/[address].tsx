@@ -543,7 +543,7 @@ function RepayLoan({
                 }
             }
 
-            const { principalOutstanding, interestOutstanding } =
+            const { principalOutstanding, interestOutstanding, daysPassed } =
                 amountWithInterest(
                     loan.amount,
                     baseAmountRepaid,
@@ -558,11 +558,18 @@ function RepayLoan({
                 amount = outstanding
             }
 
-            // TODO: `amount` lower than `interestOutstanding`
-            baseAmountRepaid = baseAmountRepaid.add(
-                amount.sub(interestOutstanding),
-            )
-            interestPaidUntil = timestamp
+            if (amount.lt(interestOutstanding)) {
+                const payableInterestDays = amount
+                    .mul(daysPassed)
+                    .div(interestOutstanding)
+
+                interestPaidUntil += payableInterestDays.toNumber() * oneDay
+            } else {
+                baseAmountRepaid = baseAmountRepaid.add(
+                    amount.sub(interestOutstanding),
+                )
+                interestPaidUntil = timestamp
+            }
 
             if (
                 installmentNumber === loan.installments &&
