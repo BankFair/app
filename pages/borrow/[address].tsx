@@ -1,5 +1,6 @@
 import { parseUnits, formatUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
+import { DateTime } from 'luxon'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import {
@@ -39,7 +40,6 @@ import {
     Box,
     Button,
     ConnectModal,
-    Loans,
     Page,
     PageLoading,
 } from '../../components'
@@ -59,7 +59,6 @@ import {
     useAllowanceAndBalance,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
-import { DateTime } from 'luxon'
 
 const title = `Borrow - ${APP_NAME}`
 
@@ -349,7 +348,6 @@ function RepayLoans({
     useLoadAccountLoans(poolAddress, account, dispatch, pool)
 
     return loans
-        .filter((loan) => loan.status === LoanStatus.OUTSTANDING)
         .sort((a, b) => a.id - b.id)
         .map((loan) => (
             <RepayLoan
@@ -389,7 +387,6 @@ function RepayLoan({
     )
     const repaid = useMemo(
         () => BigNumber.from(loan.details.totalAmountRepaid),
-
         [loan],
     )
 
@@ -511,39 +508,55 @@ function RepayLoan({
         ],
     )
 
+    const wasRepaid = loan.status === LoanStatus.REPAID
+
     interface ScheduleItem {
         date: string
+        dateTime: DateTime
         overdue: boolean
         amount: BigNumber
+        skip: boolean
+        expectedBaseAmountRepaid: BigNumber
+        expectedTimestamp: number
     }
     const schedule = useMemo(() => {
+        if (wasRepaid) return []
         const installmentAmount = BigNumber.from(loan.installmentAmount)
         const now = DateTime.now()
-        const installmentDates = loan.duration / loan.installments
-        const array = Array.from<ScheduleItem | undefined>({
-            length: loan.installments,
-        })
-        const totalRepaid = BigNumber.from(loan.details.totalAmountRepaid)
+        const installmentDuration = loan.duration / loan.installments
+
         let baseAmountRepaid = BigNumber.from(loan.details.baseAmountRepaid)
         let interestPaidUntil = loan.details.interestPaidUntil
         let amountSum = zero
 
-        array.reduce((array, _item, index) => {
+        return Array.from({
+            length: loan.installments,
+        }).reduce<ScheduleItem[]>((array, _, index) => {
             const installmentNumber = index + 1
             const timestamp =
-                loan.borrowedTime + installmentDates * installmentNumber
+                loan.borrowedTime + installmentDuration * installmentNumber
             const date = DateTime.fromSeconds(timestamp)
+            let actualDate = date
             const overdue = now > date
+            const nextDate = DateTime.fromSeconds(
+                timestamp + installmentDuration,
+            )
+            const previous = array[index - 1] as ScheduleItem | undefined
+            let skip = false
             let amount = installmentAmount
 
-            if (overdue) {
-                const shouldHavePaid = installmentAmount.mul(installmentNumber)
-                if (totalRepaid.lt(shouldHavePaid)) {
-                    amount = shouldHavePaid.sub(amountSum).sub(totalRepaid)
-                }
-            }
+            const {
+                principalOutstanding: expectedPrincipalOutstanding,
+                interestOutstanding: expectedInterestOutstanding,
+            } = amountWithInterest(
+                loan.amount,
+                previous ? previous.expectedBaseAmountRepaid : 0,
+                previous ? previous.expectedTimestamp : loan.borrowedTime,
+                loan.apr,
+                timestamp,
+            )
 
-            const { principalOutstanding, interestOutstanding, daysPassed } =
+            let { principalOutstanding, interestOutstanding, daysPassed } =
                 amountWithInterest(
                     loan.amount,
                     baseAmountRepaid,
@@ -558,17 +571,136 @@ function RepayLoan({
                 amount = outstanding
             }
 
-            if (amount.lt(interestOutstanding)) {
+            const expectedBaseAmountRepaid = installmentAmount
+                .sub(expectedInterestOutstanding)
+                .add(previous ? previous.expectedBaseAmountRepaid : zero)
+
+            if (overdue) {
+                if (nextDate) {
+                    if (nextDate > now) {
+                        if (
+                            principalOutstanding.lte(
+                                expectedPrincipalOutstanding,
+                            )
+                        ) {
+                            skip = true
+                        } else {
+                            const {
+                                principalOutstanding:
+                                    nextExpectedPrincipalOutstanding,
+                            } = amountWithInterest(
+                                loan.amount,
+                                expectedBaseAmountRepaid,
+                                timestamp,
+                                loan.apr,
+                                timestamp + installmentDuration,
+                            )
+
+                            actualDate = now
+
+                            const {
+                                interestOutstanding: currentInterestOutstanding,
+                                daysPassed: currentDaysPassed,
+                            } = amountWithInterest(
+                                loan.amount,
+                                loan.details.baseAmountRepaid,
+                                loan.details.interestPaidUntil,
+                                loan.apr,
+                                Math.trunc(now.toSeconds()),
+                            )
+                            amount = principalOutstanding
+                                .sub(nextExpectedPrincipalOutstanding)
+                                .add(currentInterestOutstanding)
+
+                            daysPassed = currentDaysPassed
+                            interestOutstanding = currentInterestOutstanding
+                        }
+                    } else {
+                        skip = true
+                    }
+                }
+            } else {
+                const previous = array[index - 1]
+                if (previous) {
+                    if (previous.amount.eq(zero)) {
+                        if (
+                            principalOutstanding.lt(
+                                expectedPrincipalOutstanding,
+                            ) &&
+                            interestOutstanding.lt(expectedInterestOutstanding)
+                        ) {
+                            const {
+                                principalOutstanding:
+                                    nextExpectedPrincipalOutstanding,
+                            } = amountWithInterest(
+                                loan.amount,
+                                expectedBaseAmountRepaid,
+                                timestamp,
+                                loan.apr,
+                                timestamp + installmentDuration,
+                            )
+
+                            const {
+                                interestOutstanding: currentInterestOutstanding,
+                                daysPassed: currentDaysPassed,
+                            } = amountWithInterest(
+                                loan.amount,
+                                loan.details.baseAmountRepaid,
+                                loan.details.interestPaidUntil,
+                                loan.apr,
+                                timestamp,
+                            )
+
+                            amount = principalOutstanding
+                                .sub(nextExpectedPrincipalOutstanding)
+                                .add(currentInterestOutstanding)
+
+                            if (amount.lt(zero)) {
+                                skip = true
+                            } else {
+                                daysPassed = currentDaysPassed
+                                interestOutstanding = currentInterestOutstanding
+                            }
+                        }
+                    } else if (
+                        previous.amount.gt(installmentAmount) &&
+                        now.equals(previous.dateTime)
+                    ) {
+                        const {
+                            interestOutstanding: currentInterestOutstanding,
+                            daysPassed: currentDaysPassed,
+                        } = amountWithInterest(
+                            loan.amount,
+                            baseAmountRepaid,
+                            interestPaidUntil,
+                            loan.apr,
+                            timestamp,
+                        )
+                        interestOutstanding = currentInterestOutstanding
+                        daysPassed = currentDaysPassed
+                        amount = expectedBaseAmountRepaid
+                            .sub(baseAmountRepaid)
+                            .add(currentInterestOutstanding)
+                    }
+                }
+            }
+
+            if (skip) {
+                amount = zero
+            } else if (amount.lt(interestOutstanding)) {
                 const payableInterestDays = amount
                     .mul(daysPassed)
                     .div(interestOutstanding)
 
+                amount = interestOutstanding
+                    .mul(payableInterestDays)
+                    .div(daysPassed)
                 interestPaidUntil += payableInterestDays.toNumber() * oneDay
             } else {
                 baseAmountRepaid = baseAmountRepaid.add(
                     amount.sub(interestOutstanding),
                 )
-                interestPaidUntil = timestamp
+                interestPaidUntil += daysPassed * oneDay
             }
 
             if (
@@ -578,21 +710,22 @@ function RepayLoan({
                 amount = outstanding
             }
 
-            if (amount.eq(zero)) {
-                return array
-            }
-
             amountSum = amountSum.add(amount)
 
             array[index] = {
-                date: date.toLocaleString(),
-                overdue,
+                date: actualDate.toLocaleString(),
+                dateTime: actualDate,
+                overdue: overdue
+                    ? !now.startOf('day').equals(date.startOf('day'))
+                    : false,
                 amount,
+                skip: amount.eq(zero),
+                expectedBaseAmountRepaid,
+                expectedTimestamp: timestamp,
             }
             return array
-        }, array)
-        return array
-    }, [loan])
+        }, [])
+    }, [loan, wasRepaid])
 
     return (
         <>
@@ -614,7 +747,14 @@ function RepayLoan({
                 </div>
             </Box>
             <form className="main" onSubmit={handleRepay}>
-                <Box className="repay">
+                <Box
+                    className="repay"
+                    overlay={
+                        loan.status === LoanStatus.REPAID
+                            ? 'Loan fully repaid'
+                            : undefined
+                    }
+                >
                     <h2>Repay Loan</h2>
                     <AmountInput
                         decimals={liquidityTokenDecimals}
@@ -703,32 +843,34 @@ function RepayLoan({
                 </Box>
             </form>
 
-            <Box>
-                <h3>Future Re-Payments Due</h3>
+            {wasRepaid ? null : (
+                <Box>
+                    <h3>Future Re-Payments Due</h3>
 
-                <div className="schedule">
-                    <div className="label">Amount</div>
-                    <div className="label">Due</div>
+                    <div className="schedule">
+                        <div className="label">Amount</div>
+                        <div className="label">Due</div>
 
-                    {schedule.map((item, index) =>
-                        item ? (
-                            <Fragment key={index}>
-                                <div className={item.overdue ? 'red' : ''}>
-                                    {formatUnits(
-                                        item.amount,
-                                        liquidityTokenDecimals,
-                                    )}{' '}
-                                    {TOKEN_SYMBOL}
-                                </div>
-                                <div className={item.overdue ? 'red' : ''}>
-                                    {item.date}
-                                    {item.overdue ? ' (overdue)' : ''}
-                                </div>
-                            </Fragment>
-                        ) : null,
-                    )}
-                </div>
-            </Box>
+                        {schedule.map((item, index) =>
+                            item.skip ? null : (
+                                <Fragment key={index}>
+                                    <div className={item.overdue ? 'red' : ''}>
+                                        {formatUnits(
+                                            item.amount,
+                                            liquidityTokenDecimals,
+                                        )}{' '}
+                                        {TOKEN_SYMBOL}
+                                    </div>
+                                    <div className={item.overdue ? 'red' : ''}>
+                                        {item.date}
+                                        {item.overdue ? ' (overdue)' : ''}
+                                    </div>
+                                </Fragment>
+                            ),
+                        )}
+                    </div>
+                </Box>
+            )}
 
             <style jsx>{`
                 h2,
