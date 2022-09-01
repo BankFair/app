@@ -524,6 +524,7 @@ function RepayLoan({
         const installmentAmount = BigNumber.from(loan.installmentAmount)
         const now = DateTime.now()
         const installmentDuration = loan.duration / loan.installments
+        const amountBigNumber = BigNumber.from(loan.amount)
 
         let baseAmountRepaid = BigNumber.from(loan.details.baseAmountRepaid)
         let interestPaidUntil = loan.details.interestPaidUntil
@@ -549,7 +550,7 @@ function RepayLoan({
                 principalOutstanding: expectedPrincipalOutstanding,
                 interestOutstanding: expectedInterestOutstanding,
             } = amountWithInterest(
-                loan.amount,
+                amountBigNumber,
                 previous ? previous.expectedBaseAmountRepaid : 0,
                 previous ? previous.expectedTimestamp : loan.borrowedTime,
                 loan.apr,
@@ -557,13 +558,19 @@ function RepayLoan({
             )
 
             let { principalOutstanding, interestOutstanding, daysPassed } =
-                amountWithInterest(
-                    loan.amount,
-                    baseAmountRepaid,
-                    interestPaidUntil,
-                    loan.apr,
-                    timestamp,
-                )
+                baseAmountRepaid.gte(amountBigNumber)
+                    ? {
+                          principalOutstanding: zero,
+                          interestOutstanding: zero,
+                          daysPassed: 0,
+                      }
+                    : amountWithInterest(
+                          amountBigNumber,
+                          baseAmountRepaid,
+                          interestPaidUntil,
+                          loan.apr,
+                          timestamp,
+                      )
 
             const outstanding = principalOutstanding.add(interestOutstanding)
 
@@ -589,7 +596,7 @@ function RepayLoan({
                                 principalOutstanding:
                                     nextExpectedPrincipalOutstanding,
                             } = amountWithInterest(
-                                loan.amount,
+                                amountBigNumber,
                                 expectedBaseAmountRepaid,
                                 timestamp,
                                 loan.apr,
@@ -602,7 +609,7 @@ function RepayLoan({
                                 interestOutstanding: currentInterestOutstanding,
                                 daysPassed: currentDaysPassed,
                             } = amountWithInterest(
-                                loan.amount,
+                                amountBigNumber,
                                 loan.details.baseAmountRepaid,
                                 loan.details.interestPaidUntil,
                                 loan.apr,
@@ -621,67 +628,63 @@ function RepayLoan({
                 }
             } else {
                 const previous = array[index - 1]
-                if (previous) {
-                    if (previous.amount.eq(zero)) {
-                        if (
-                            principalOutstanding.lt(
-                                expectedPrincipalOutstanding,
-                            ) &&
-                            interestOutstanding.lt(expectedInterestOutstanding)
-                        ) {
-                            const {
-                                principalOutstanding:
-                                    nextExpectedPrincipalOutstanding,
-                            } = amountWithInterest(
-                                loan.amount,
-                                expectedBaseAmountRepaid,
-                                timestamp,
-                                loan.apr,
-                                timestamp + installmentDuration,
-                            )
+                if (
+                    ((previous && previous.amount.eq(zero)) ||
+                        installmentNumber === 1) &&
+                    principalOutstanding.lt(expectedPrincipalOutstanding) &&
+                    interestOutstanding.lt(expectedInterestOutstanding)
+                ) {
+                    const {
+                        principalOutstanding: nextExpectedPrincipalOutstanding,
+                    } = amountWithInterest(
+                        amountBigNumber,
+                        expectedBaseAmountRepaid,
+                        timestamp,
+                        loan.apr,
+                        timestamp + installmentDuration,
+                    )
 
-                            const {
-                                interestOutstanding: currentInterestOutstanding,
-                                daysPassed: currentDaysPassed,
-                            } = amountWithInterest(
-                                loan.amount,
-                                loan.details.baseAmountRepaid,
-                                loan.details.interestPaidUntil,
-                                loan.apr,
-                                timestamp,
-                            )
+                    const {
+                        interestOutstanding: currentInterestOutstanding,
+                        daysPassed: currentDaysPassed,
+                    } = amountWithInterest(
+                        amountBigNumber,
+                        loan.details.baseAmountRepaid,
+                        loan.details.interestPaidUntil,
+                        loan.apr,
+                        timestamp,
+                    )
 
-                            amount = principalOutstanding
-                                .sub(nextExpectedPrincipalOutstanding)
-                                .add(currentInterestOutstanding)
+                    amount = principalOutstanding
+                        .sub(nextExpectedPrincipalOutstanding)
+                        .add(currentInterestOutstanding)
 
-                            if (amount.lt(zero)) {
-                                skip = true
-                            } else {
-                                daysPassed = currentDaysPassed
-                                interestOutstanding = currentInterestOutstanding
-                            }
-                        }
-                    } else if (
-                        previous.amount.gt(installmentAmount) &&
-                        now.equals(previous.dateTime)
-                    ) {
-                        const {
-                            interestOutstanding: currentInterestOutstanding,
-                            daysPassed: currentDaysPassed,
-                        } = amountWithInterest(
-                            loan.amount,
-                            baseAmountRepaid,
-                            interestPaidUntil,
-                            loan.apr,
-                            timestamp,
-                        )
-                        interestOutstanding = currentInterestOutstanding
+                    if (amount.lt(zero)) {
+                        skip = true
+                    } else {
                         daysPassed = currentDaysPassed
-                        amount = expectedBaseAmountRepaid
-                            .sub(baseAmountRepaid)
-                            .add(currentInterestOutstanding)
+                        interestOutstanding = currentInterestOutstanding
                     }
+                } else if (
+                    previous &&
+                    previous.amount.gt(installmentAmount) &&
+                    now.equals(previous.dateTime)
+                ) {
+                    const {
+                        interestOutstanding: currentInterestOutstanding,
+                        daysPassed: currentDaysPassed,
+                    } = amountWithInterest(
+                        amountBigNumber,
+                        baseAmountRepaid,
+                        interestPaidUntil,
+                        loan.apr,
+                        timestamp,
+                    )
+                    interestOutstanding = currentInterestOutstanding
+                    daysPassed = currentDaysPassed
+                    amount = expectedBaseAmountRepaid
+                        .sub(baseAmountRepaid)
+                        .add(currentInterestOutstanding)
                 }
             }
 
