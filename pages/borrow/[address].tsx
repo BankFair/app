@@ -528,7 +528,7 @@ function RepayLoan({
 
         let baseAmountRepaid = BigNumber.from(loan.details.baseAmountRepaid)
         let interestPaidUntil = loan.details.interestPaidUntil
-        let amountSum = zero
+        let paid = false
 
         return Array.from({
             length: loan.installments,
@@ -537,12 +537,26 @@ function RepayLoan({
             const timestamp =
                 loan.borrowedTime + installmentDuration * installmentNumber
             const date = DateTime.fromSeconds(timestamp)
-            let actualDate = date
+
+            if (paid) {
+                array[index] = {
+                    date: date.toLocaleString(),
+                    dateTime: date,
+                    overdue: false,
+                    amount: zero,
+                    skip: true,
+                    expectedBaseAmountRepaid: zero,
+                    expectedTimestamp: 0,
+                }
+                return array
+            }
+
             const overdue = now > date
             const nextDate = DateTime.fromSeconds(
                 timestamp + installmentDuration,
             )
             const previous = array[index - 1] as ScheduleItem | undefined
+            let actualDate = date
             let skip = false
             let amount = installmentAmount
 
@@ -713,7 +727,9 @@ function RepayLoan({
                 amount = outstanding
             }
 
-            amountSum = amountSum.add(amount)
+            if (baseAmountRepaid.gte(amountBigNumber)) {
+                paid = true
+            }
 
             array[index] = {
                 date: actualDate.toLocaleString(),
