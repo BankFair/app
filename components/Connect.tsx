@@ -91,8 +91,8 @@ export function Connect() {
             `}</style>
 
             <header>
-                <img src={`${prefix}/optimism.svg`} alt="Optimism" />
-                <h2>{APP_NAME} runs on Optimism</h2>
+                <img src={`${prefix}/polygon.svg`} alt="Polygon" />
+                <h2>{APP_NAME} runs on Polygon</h2>
             </header>
 
             <div className="wallets">
