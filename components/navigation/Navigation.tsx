@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
     rgbWhite,
     shortenAddress,
@@ -12,6 +12,7 @@ import { Sidebar } from './Sidebar'
 import { RiMenuLine, RiWallet3Line } from 'react-icons/ri'
 import { useRouter } from 'next/router'
 import { Logo } from '../Logo'
+import { ConnectModal } from '../ConnectModal'
 
 export function Navigation() {
     const { pathname } = useRouter()
@@ -23,6 +24,10 @@ export function Navigation() {
         [],
     )
     const hideSidebar = useCallback(() => setIsSidebarVisible(false), [])
+    const [showConnectModal, setShowConnectModal] = useState(false)
+    useEffect(() => {
+        if (account) setShowConnectModal(false)
+    }, [account])
 
     return (
         <nav>
@@ -93,12 +98,20 @@ export function Navigation() {
                 </Button>
             ) : (
                 pathname !== '/account' && (
-                    <Button href="/account" key="connect" whiteTransaprent>
+                    <Button
+                        onClick={() => setShowConnectModal(true)}
+                        key="connect"
+                        whiteTransaprent
+                    >
                         Connect Wallet
                     </Button>
                 )
             )}
             <Sidebar isVisible={isSidebarVisible} hideSidebar={hideSidebar} />
+
+            {showConnectModal ? (
+                <ConnectModal onClose={() => setShowConnectModal(false)} />
+            ) : null}
         </nav>
     )
 }
