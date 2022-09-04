@@ -1213,7 +1213,14 @@ function RequestLoan({
         <Box
             loading={componentIsLoading}
             overlay={
-                isManager ? (
+                !account ? (
+                    <Button
+                        type="button"
+                        onClick={() => setShowConnectModal(true)}
+                    >
+                        Connect Wallet
+                    </Button>
+                ) : isManager ? (
                     `Manager can't request a loan`
                 ) : isLoanPendingApproval ? (
                     'A loan application you requested is pending approval'
@@ -1228,6 +1235,8 @@ function RequestLoan({
             <style jsx>{`
                 form {
                     > h3 {
+                        z-index: 10;
+                        position: relative;
                         margin: 0;
                     }
 
@@ -1403,10 +1412,10 @@ function RequestLoan({
                 <div className="button-container">
                     <Button
                         type="submit"
-                        disabled={account ? disabledSubmit : false}
+                        disabled={disabledSubmit}
                         loading={loading}
                     >
-                        {account ? 'Request Loan' : 'Connect Wallet'}
+                        Request Loan
                     </Button>
 
                     {/* Disabled elements prevent any click events to be fired resulting in inputs not being blurred */}
