@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {
-    networks,
-    RPC_NETWORK_ID,
+    chains,
+    CHAIN_ID,
     SIDEBAR_ALWAYS_VISIBLE_WIDTH,
     useAccount,
 } from '../../app'
@@ -162,7 +162,7 @@ export function Sidebar({
 
                 <FlexGrow />
 
-                {RPC_NETWORK_ID === networks.optimismKovan ? (
+                {CHAIN_ID === chains.optimismKovan ? (
                     <>
                         <a
                             className={getSidebarItemClass('/faucet', pathname)}
@@ -188,7 +188,7 @@ export function Sidebar({
                             USDC Faucet
                         </a>
                     </>
-                ) : RPC_NETWORK_ID === networks.mumbai ? (
+                ) : CHAIN_ID === chains.mumbai ? (
                     <>
                         <a
                             className={getSidebarItemClass('/faucet', pathname)}

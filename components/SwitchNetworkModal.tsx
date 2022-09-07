@@ -1,6 +1,6 @@
 import { Modal } from './Modal'
 import { eip1193 } from '../app/connectors/eip1193'
-import { CHAIN, RPC_NETWORK_ID, useWeb3 } from '../app'
+import { CHAIN, CHAIN_ID, useWeb3 } from '../app'
 import { Button } from './Button'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -14,7 +14,7 @@ export function SwitchNetworkModal() {
     const web3 = useWeb3(lastConnector)
     const dispatch = useDispatch()
 
-    if (!web3 || !web3.chainId || web3.chainId === RPC_NETWORK_ID) return null
+    if (!web3 || !web3.chainId || web3.chainId === CHAIN_ID) return null
 
     return (
         <Modal>
