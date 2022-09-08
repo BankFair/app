@@ -17,14 +17,17 @@ import {
     amountWithInterest,
     APP_NAME,
     BORROWER_SERVICE_URL,
+    fetchBorrowerInfoAuthenticated,
     format,
     getAddress,
+    getBorrowerInfo,
     getERC20Contract,
     infiniteAllowance,
     oneDay,
     POOLS,
     prefix,
     rgbRed,
+    setBorrowerInfo,
     shortenAddress,
     thirtyDays,
     TOKEN_SYMBOL,
@@ -147,16 +150,30 @@ function Offer({
 
                 const [offer, contactDetails] = await Promise.all([
                     contract.loanOffers(applicationId),
-                    fetch(
-                        `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                    ).then(
-                        (response) =>
-                            response.json() as Promise<{
-                                name: string
-                                businessName: string
-                                phone?: string
-                                email?: string
-                            }>,
+                    getBorrowerInfo(request.profileId).then((info) =>
+                        info
+                            ? info
+                            : fetch(
+                                  `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
+                              )
+                                  .then(
+                                      (response) =>
+                                          response.json() as Promise<{
+                                              name: string
+                                              businessName: string
+                                              phone?: string
+                                              email?: string
+                                          }>,
+                                  )
+                                  .then(
+                                      (info) => (
+                                          setBorrowerInfo(
+                                              request.profileId,
+                                              info,
+                                          ),
+                                          info
+                                      ),
+                                  ),
                     ),
                 ])
 
@@ -406,6 +423,7 @@ function RepayLoan({
     }, [allowance, amount, liquidityTokenDecimals])
 
     const [contactDetailsState, setContactDetailsState] = useState<{
+        profileId: string
         applicationId: number
         name: string
         businessName: string
@@ -423,20 +441,31 @@ function RepayLoan({
             .attach(loanDeskAddress)
             .loanApplications(loan.applicationId)
             .then(({ profileId }) =>
-                fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`),
+                getBorrowerInfo(profileId).then((info) =>
+                    info
+                        ? { info, profileId }
+                        : fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`)
+                              .then(
+                                  (response) =>
+                                      response.json() as Promise<{
+                                          name: string
+                                          businessName: string
+                                          phone?: string
+                                          email?: string
+                                      }>,
+                              )
+                              .then(
+                                  (info) => (
+                                      setBorrowerInfo(profileId, info),
+                                      { info, profileId }
+                                  ),
+                              ),
+                ),
             )
-            .then(
-                (response) =>
-                    response.json() as Promise<{
-                        name: string
-                        businessName: string
-                        phone?: string
-                        email?: string
-                    }>,
-            )
-            .then((info) =>
+            .then(({ info, profileId }) =>
                 setContactDetailsState({
                     ...info,
+                    profileId,
                     applicationId: loan.applicationId,
                 }),
             )
@@ -859,6 +888,29 @@ function RepayLoan({
                             </a>
                         </div>
                     ) : null}
+                    {contactDetails &&
+                    !contactDetails.phone &&
+                    !contactDetails.email ? (
+                        <Button
+                            type="button"
+                            stone
+                            onClick={async () => {
+                                const info =
+                                    await fetchBorrowerInfoAuthenticated(
+                                        account!,
+                                        provider!.getSigner(),
+                                        contactDetails.profileId,
+                                        poolAddress,
+                                    )
+                                setContactDetailsState({
+                                    ...contactDetails,
+                                    ...info,
+                                })
+                            }}
+                        >
+                            Get contact information
+                        </Button>
+                    ) : null}
                 </Box>
             </form>
 
@@ -1167,15 +1219,35 @@ function RequestLoan({
                             email,
                             walletSignature,
                             walletAddress: account.toLowerCase(),
+                            poolAddress,
                         }),
                     }),
                 )
-                .then((response) => response.json())
-                .then(({ id, digest }: { id: string; digest: string }) =>
-                    loanDeskContract
-                        .attach(loanDeskAddress)
-                        .connect(signer)
-                        .requestLoan(parsedAmount, parsedDuration, id, digest),
+                .then(
+                    (response) =>
+                        response.json() as Promise<{
+                            id: string
+                            digest: string
+                        }>,
+                )
+                .then(
+                    ({ id, digest }) => (
+                        setBorrowerInfo(id, {
+                            name,
+                            businessName,
+                            phone,
+                            email,
+                        }),
+                        loanDeskContract
+                            .attach(loanDeskAddress)
+                            .connect(signer)
+                            .requestLoan(
+                                parsedAmount,
+                                parsedDuration,
+                                id,
+                                digest,
+                            )
+                    ),
                 )
                 .then((tx) =>
                     trackTransaction(dispatch, {
@@ -1194,18 +1266,19 @@ function RequestLoan({
         },
         [
             account,
-            businessName,
             disabledSubmit,
-            dispatch,
+            amount,
+            liquidityTokenDecimals,
             duration,
             durationMultiplier,
-            email,
-            liquidityTokenDecimals,
-            loanDeskAddress,
-            name,
-            phone,
             provider,
-            amount,
+            name,
+            businessName,
+            phone,
+            email,
+            poolAddress,
+            loanDeskAddress,
+            dispatch,
         ],
     )
 

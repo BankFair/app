@@ -76,6 +76,8 @@ export const CHAIN = {
 export const LOCAL_STORAGE_LAST_CONNECTOR_KEY = 'sapling_lastConnector'
 export const LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT = 'WalletConnect'
 export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'
+export const LOCAL_STORAGE_BORROWER_INFO_AUTH_KEY_PREFIX =
+    'sapling_borrowerInfoAuth_'
 
 type PoolsEnv = {
     name: string
