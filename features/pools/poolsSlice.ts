@@ -80,6 +80,7 @@ export interface Pool {
     loans: Loan[]
     loansBlockNumber: number
     loanUpdates: { loan: Loan; blockNumber: number }[]
+    loadedAccounts: Record<string, true>
     stats: Stats | null
     managerInfo: ManagerInfo | null
     accountInfo: Record<string, AccountInfo>
@@ -379,6 +380,7 @@ export const poolsSlice = createSlice({
                 loans: [],
                 loansBlockNumber: 0,
                 loanUpdates: [],
+                loadedAccounts: {},
                 stats: null,
                 managerInfo: null,
                 accountInfo: {},
@@ -409,11 +411,12 @@ export const poolsSlice = createSlice({
         updateLoans(
             state,
             {
-                payload: { poolAddress, loans, blockNumber },
+                payload: { poolAddress, loans, blockNumber, account },
             }: Action<{
                 poolAddress: string
                 loans: Loan[]
                 blockNumber: number
+                account: string
             }>,
         ) {
             if (blockNumber <= state[poolAddress].loansBlockNumber) return
@@ -427,6 +430,8 @@ export const poolsSlice = createSlice({
                 updates.sort(sortByBlockNumberDescending),
                 'loan',
             ).reverse()
+
+            state[poolAddress].loadedAccounts[account] = true
         },
     },
     extraReducers(builder) {

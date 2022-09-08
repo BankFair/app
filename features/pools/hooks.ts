@@ -297,6 +297,7 @@ export function useLoadAccountLoans(
                         loans: transformToStateLoans(loans, details),
                         blockNumber,
                         poolAddress,
+                        account,
                     }),
                 )
             })
