@@ -60,6 +60,7 @@ import {
     loanBorrowedSignature,
     useLoadAccountLoans,
     useAllowanceAndBalance,
+    Loan,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
 
@@ -67,6 +68,8 @@ const title = `Borrow - ${APP_NAME}`
 
 const Borrow: NextPage<{ address: string }> = ({ address }) => {
     const account = useAccount()
+    const provider = useProvider()
+    const dispatch = useDispatch()
     const pool = useSelector((s) => s.pools[address])
     const name = POOLS.find((pool) => pool.address === address)?.name
 
@@ -77,7 +80,16 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
         </Head>
     )
 
-    if (!pool) return <PageLoading>{head}</PageLoading>
+    const offer = useOffer(account, provider, pool)
+    const loans = useLoans(address, account)
+
+    useLoadAccountLoans(address, account, dispatch, pool)
+    const accountLoaded = pool?.loadedAccounts[account || '']
+
+    if (!pool) {
+        // TODO: Add `|| !accountLoaded || offer === undefined` when we migrate to an indexer
+        return <PageLoading>{head}</PageLoading>
+    }
 
     return (
         <Page>
@@ -85,9 +97,25 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
 
             <BackToPools href="/borrow" />
             <h1>{name}</h1>
-            <RepayLoans pool={pool} poolAddress={address} account={account} />
-            <Offer pool={pool} poolAddress={address} account={account} />
-            <RequestLoan pool={pool} poolAddress={address} account={account} />
+            <RepayLoans
+                pool={pool}
+                poolAddress={address}
+                account={account}
+                loans={loans}
+            />
+            <Offer
+                pool={pool}
+                poolAddress={address}
+                account={account}
+                offer={offer}
+            />
+            {!offer && !loans.length ? (
+                <RequestLoan
+                    pool={pool}
+                    poolAddress={address}
+                    account={account}
+                />
+            ) : null}
         </Page>
     )
 }
@@ -98,42 +126,38 @@ Borrow.getInitialProps = (context) => {
 
 export default Borrow
 
-function Offer({
-    pool: { loanDeskAddress, liquidityTokenDecimals, block },
-    poolAddress,
-    account,
-}: {
-    pool: Pool
-    poolAddress: string
-    account: string | undefined
-}) {
-    const provider = useProvider()
-    const dispatch = useDispatch()
-
-    const [offer, setOffer] = useState<{
-        details: LoanOffer
-        account: string
-        contactDetails: {
-            name: string
-            businessName: string
-            phone?: string
-            email?: string
-        }
-        loanDeskAddress: string
-    } | null>(null)
+interface Offer {
+    details: LoanOffer
+    account: string
+    contactDetails: {
+        name: string
+        businessName: string
+        phone?: string
+        email?: string
+    }
+    loanDeskAddress: string
+}
+function useOffer(
+    account: string | undefined,
+    provider: ReturnType<typeof useProvider>,
+    pool: Pool | undefined,
+) {
+    const [offer, setOffer] = useState<Offer | null | undefined>()
     const offerRef = useRef<string | undefined>()
     useEffect(() => {
+        if (!account || !pool || !provider) return
         if (account === offerRef.current) return
         offerRef.current = account
 
-        if (!account) return
-
         const contract = loanDeskContract
-            .attach(loanDeskAddress)
-            .connect(provider!)
+            .attach(pool.loanDeskAddress)
+            .connect(provider)
 
         contract
-            .queryFilter(contract.filters.LoanOffered(null, account), block)
+            .queryFilter(
+                contract.filters.LoanOffered(null, account),
+                pool.block,
+            )
             .then(async (events) => {
                 if (!events.length) return
 
@@ -146,7 +170,10 @@ function Offer({
                 const { applicationId } = events[0].args
                 const request = await contract.loanApplications(applicationId)
 
-                if (request.status !== LoanApplicationStatus.OFFER_MADE) return
+                if (request.status !== LoanApplicationStatus.OFFER_MADE) {
+                    setOffer(null)
+                    return
+                }
 
                 const [offer, contactDetails] = await Promise.all([
                     contract.loanOffers(applicationId),
@@ -180,14 +207,31 @@ function Offer({
                 setOffer({
                     details: offer,
                     account,
-                    loanDeskAddress,
+                    loanDeskAddress: pool.loanDeskAddress,
                     contactDetails: contactDetails || {},
                 })
             })
             .catch((error) => {
                 console.error(error)
             })
-    }, [account, block, loanDeskAddress, provider])
+    }, [account, pool, provider])
+
+    return offer
+}
+
+function Offer({
+    pool: { loanDeskAddress, liquidityTokenDecimals, block },
+    poolAddress,
+    account,
+    offer,
+}: {
+    pool: Pool
+    poolAddress: string
+    account: string | undefined
+    offer: Offer | null
+}) {
+    const provider = useProvider()
+    const dispatch = useDispatch()
 
     const [isLoading, setIsLoading] = useState(false)
     const [isAccepted, setIsAccepted] = useState(false)
@@ -353,16 +397,15 @@ function RepayLoans({
     pool,
     poolAddress,
     account,
+    loans,
 }: {
     pool: Pool
     poolAddress: string
     account: string | undefined
+    loans: Loan[]
 }) {
     const provider = useProvider()
-    const loans = useLoans(poolAddress, account)
     const dispatch = useDispatch()
-
-    useLoadAccountLoans(poolAddress, account, dispatch, pool)
 
     return loans
         .sort((a, b) => a.id - b.id)
