@@ -22,6 +22,9 @@ import {
     thirtyDays,
     oneDay,
     getInstallmentAmount,
+    getBorrowerInfo,
+    setBorrowerInfo,
+    fetchBorrowerInfoAuthenticated,
 } from '../../app'
 import {
     Alert,
@@ -76,8 +79,16 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
             {pool ? (
                 pool.managerAddress === account ? (
                     <>
-                        <StakeAndUnstake pool={pool} poolAddress={address} />
-                        <LoansAwaitingApproval pool={pool} />
+                        <StakeAndUnstake
+                            pool={pool}
+                            poolAddress={address}
+                            account={account}
+                        />
+                        <LoansAwaitingApproval
+                            pool={pool}
+                            poolAddress={address}
+                            account={account}
+                        />
                         <Loans pool={pool} poolAddress={address} />
                     </>
                 ) : (
@@ -100,13 +111,13 @@ const types = ['Stake', 'Unstake'] as const
 function StakeAndUnstake({
     pool: { managerAddress, liquidityTokenAddress, liquidityTokenDecimals },
     poolAddress,
+    account,
 }: {
     pool: Pool
     poolAddress: string
+    account: string
 }) {
     const [type, setType] = useState<typeof types[number]>('Stake')
-
-    const account = useAccount()
 
     const [stats] = useStatsState(poolAddress)
     const [info, refetchManagerInfo] = useManagerInfo(poolAddress)
@@ -176,6 +187,7 @@ interface BaseLoanRequest {
     name: string
     businessName: string
     status: LoanApplicationStatus
+    profileId: string
     phone?: string
     email?: string
 }
@@ -209,8 +221,12 @@ type LoanRequest =
           })
 function LoansAwaitingApproval({
     pool: { loanDeskAddress, liquidityTokenDecimals, block },
+    poolAddress,
+    account,
 }: {
     pool: Pool
+    poolAddress: string
+    account: string
 }) {
     const dispatch = useDispatch()
     const provider = useProvider()
@@ -248,9 +264,32 @@ function LoansAwaitingApproval({
                         )
                         .map((request) =>
                             Promise.all([
-                                fetch(
-                                    `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                                ).then((response) => response.json()),
+                                getBorrowerInfo(request.profileId).then(
+                                    (info) =>
+                                        info
+                                            ? info
+                                            : fetch(
+                                                  `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
+                                              )
+                                                  .then(
+                                                      (response) =>
+                                                          response.json() as Promise<{
+                                                              name: string
+                                                              businessName: string
+                                                              phone?: string
+                                                              email?: string
+                                                          }>,
+                                                  )
+                                                  .then(
+                                                      (info) => (
+                                                          setBorrowerInfo(
+                                                              request.profileId,
+                                                              info,
+                                                          ),
+                                                          info
+                                                      ),
+                                                  ),
+                                ),
                                 request.status ===
                                 LoanApplicationStatus.OFFER_MADE
                                     ? contract
@@ -499,6 +538,27 @@ function LoansAwaitingApproval({
                                 throw error
                             })
                     }}
+                    onFetchBorrowerInfo={async () => {
+                        const info = await fetchBorrowerInfoAuthenticated(
+                            account!,
+                            provider!.getSigner(),
+                            offerModalRequest.profileId,
+                            poolAddress,
+                        )
+                        const newOffer = {
+                            ...offerModalRequest,
+                            phone: info.phone,
+                            email: info.email,
+                        }
+                        setOfferModalRequest(newOffer)
+                        setRequests(
+                            requests!.map((request) =>
+                                request === offerModalRequest
+                                    ? newOffer
+                                    : request,
+                            ),
+                        )
+                    }}
                 />
             ) : null}
 
@@ -564,6 +624,7 @@ function OfferModal({
     liquidityTokenDecimals,
     onOffer,
     onReject,
+    onFetchBorrowerInfo,
 }: {
     loan: LoanRequest
     liquidityTokenDecimals: number
@@ -577,6 +638,7 @@ function OfferModal({
         graceDefaultPeriod: number,
     ): Promise<void | object>
     onReject(): Promise<void>
+    onFetchBorrowerInfo(): void
 }) {
     const isOfferActive = loan.status === LoanApplicationStatus.OFFER_MADE
 
@@ -710,6 +772,16 @@ function OfferModal({
                             <a href={`mailto:${loan.email}`}>{loan.email}</a>
                         </div>
                     </div>
+                ) : null}
+                {!loan.email && !loan.phone ? (
+                    <Button
+                        type="button"
+                        stone
+                        onClick={onFetchBorrowerInfo}
+                        style={{ marginTop: 16 }}
+                    >
+                        Get contact information
+                    </Button> // TODO: If auth is valid fetch automatically
                 ) : null}
                 <label>
                     <div className="label">Amount</div>

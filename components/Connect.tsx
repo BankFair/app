@@ -8,7 +8,7 @@ import {
     LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
     LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
     prefix,
-    RPC_NETWORK_ID,
+    CHAIN_ID,
     useError,
 } from '../app'
 import { useDispatch } from 'react-redux'
@@ -148,7 +148,7 @@ export function Connect() {
                         disabled={isActivating}
                         onClick={() => {
                             walletConnect
-                                .activate(RPC_NETWORK_ID)
+                                .activate(CHAIN_ID)
                                 .then(() => {
                                     dispatch(
                                         setLastConnectorName(

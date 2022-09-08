@@ -1,10 +1,11 @@
 import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 
-export const networks = {
+export const chains = {
     optimism: 10,
     kovan: 42,
     optimismKovan: 69,
+    polygon: 137,
     hardhat: 31337,
     mumbai: 80001,
 }
@@ -12,35 +13,39 @@ export const networks = {
 export const APP_NAME = 'Sapling'
 export const SIDEBAR_ALWAYS_VISIBLE_WIDTH = '700'
 
-export const RPC_NETWORK_ID = networks.mumbai
+export const CHAIN_ID = chains.mumbai
 export const RPC_URL =
-    (RPC_NETWORK_ID as number) === networks.optimism
-        ? 'https://mainnet.optimism.io/'
-        : RPC_NETWORK_ID === networks.optimismKovan
-        ? 'https://kovan.optimism.io/'
-        : RPC_NETWORK_ID === networks.kovan
-        ? 'https://kovan.poa.network/'
-        : RPC_NETWORK_ID === networks.mumbai
+    CHAIN_ID === chains.polygon
+        ? 'https://polygon-rpc.com/'
+        : CHAIN_ID === chains.mumbai
         ? 'https://matic-mumbai.chainstacklabs.com'
-        : RPC_NETWORK_ID === networks.hardhat
+        : CHAIN_ID === chains.optimism
+        ? 'https://mainnet.optimism.io/'
+        : CHAIN_ID === chains.optimismKovan
+        ? 'https://kovan.optimism.io/'
+        : CHAIN_ID === chains.kovan
+        ? 'https://kovan.poa.network/'
+        : CHAIN_ID === chains.hardhat
         ? 'http://127.0.0.1:8545/'
         : ''
 export const CHAIN = {
-    chainId: `0x${RPC_NETWORK_ID.toString(16)}`,
+    chainId: `0x${CHAIN_ID.toString(16)}`,
     chainName:
-        (RPC_NETWORK_ID as number) === networks.optimism
-            ? 'Optimism'
-            : RPC_NETWORK_ID === networks.optimismKovan
-            ? 'Optimism Kovan'
-            : RPC_NETWORK_ID === networks.kovan
-            ? 'Kovan'
-            : RPC_NETWORK_ID === networks.mumbai
+        CHAIN_ID === chains.polygon
+            ? 'Polygon'
+            : CHAIN_ID === chains.mumbai
             ? 'Mumbai'
-            : RPC_NETWORK_ID === networks.hardhat
+            : CHAIN_ID === chains.optimism
+            ? 'Optimism'
+            : CHAIN_ID === chains.optimismKovan
+            ? 'Optimism Kovan'
+            : CHAIN_ID === chains.kovan
+            ? 'Kovan'
+            : CHAIN_ID === chains.hardhat
             ? 'Hardhat'
             : 'Unknown Network',
     nativeCurrency:
-        RPC_NETWORK_ID === networks.mumbai
+        CHAIN_ID === chains.polygon || CHAIN_ID === chains.mumbai
             ? {
                   name: 'Matic',
                   symbol: 'MATIC',
@@ -53,15 +58,17 @@ export const CHAIN = {
               },
     rpcUrls: [RPC_URL],
     blockExplorerUrls:
-        (RPC_NETWORK_ID as number) === networks.optimism
-            ? ['https://optimistic.etherscan.io/']
-            : RPC_NETWORK_ID === networks.optimismKovan
-            ? ['https://kovan-optimistic.etherscan.io/']
-            : RPC_NETWORK_ID === networks.kovan
-            ? ['https://kovan.etherscan.io/']
-            : RPC_NETWORK_ID === networks.mumbai
+        CHAIN_ID === chains.polygon
+            ? ['https://polygonscan.com/']
+            : CHAIN_ID === chains.mumbai
             ? ['https://mumbai.polygonscan.com/']
-            : RPC_NETWORK_ID === networks.hardhat
+            : CHAIN_ID === chains.optimism
+            ? ['https://optimistic.etherscan.io/']
+            : CHAIN_ID === chains.optimismKovan
+            ? ['https://kovan-optimistic.etherscan.io/']
+            : CHAIN_ID === chains.kovan
+            ? ['https://kovan.etherscan.io/']
+            : CHAIN_ID === chains.hardhat
             ? ['http://invalid/']
             : [],
 }
@@ -69,6 +76,8 @@ export const CHAIN = {
 export const LOCAL_STORAGE_LAST_CONNECTOR_KEY = 'sapling_lastConnector'
 export const LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT = 'WalletConnect'
 export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'
+export const LOCAL_STORAGE_BORROWER_INFO_AUTH_KEY_PREFIX =
+    'sapling_borrowerInfoAuth_'
 
 type PoolsEnv = {
     name: string

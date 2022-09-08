@@ -3,7 +3,7 @@ import { parseUnits } from '@ethersproject/units'
 import { useMemo, useState } from 'react'
 
 import { useDispatch } from '../store'
-import { disabledBackground, useProvider } from '../app'
+import { disabledBackground } from '../app'
 import {
     CoreContract,
     fetchLoan,
