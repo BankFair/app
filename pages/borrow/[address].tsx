@@ -228,7 +228,7 @@ function Offer({
     pool: Pool
     poolAddress: string
     account: string | undefined
-    offer: Offer | null
+    offer: Offer | null | undefined
 }) {
     const provider = useProvider()
     const dispatch = useDispatch()
