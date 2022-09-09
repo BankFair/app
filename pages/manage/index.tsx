@@ -1,15 +1,8 @@
-import { formatUnits } from 'ethers/lib/utils'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import {
-    APP_NAME,
-    formatNoDecimals,
-    POOLS,
-    prefix,
-    useAccount,
-} from '../../app'
+import { APP_NAME, formatCurrency, POOLS, prefix, useAccount } from '../../app'
 import { PoolsList, Page, PageLoading, Skeleton } from '../../components'
 import { useFetchIntervalAllStats, usePools } from '../../features'
 
@@ -66,24 +59,21 @@ const ManagePools: NextPage = () => {
                         name: pool.name,
                         stats: pool.stats
                             ? [
-                                  `$${formatNoDecimals(
-                                      formatUnits(
-                                          pool.stats.poolFunds,
-                                          pool.liquidityTokenDecimals,
-                                      ),
-                                  )}`,
-                                  `$${formatNoDecimals(
-                                      formatUnits(
-                                          pool.stats.balanceStaked,
-                                          pool.liquidityTokenDecimals,
-                                      ),
-                                  )}`,
-                                  `$${formatNoDecimals(
-                                      formatUnits(
-                                          pool.stats.poolLiquidity,
-                                          pool.liquidityTokenDecimals,
-                                      ),
-                                  )}`,
+                                  formatCurrency(
+                                      pool.stats.poolFunds,
+                                      pool.liquidityTokenDecimals,
+                                      0,
+                                  ),
+                                  formatCurrency(
+                                      pool.stats.balanceStaked,
+                                      pool.liquidityTokenDecimals,
+                                      0,
+                                  ),
+                                  formatCurrency(
+                                      pool.stats.poolLiquidity,
+                                      pool.liquidityTokenDecimals,
+                                      0,
+                                  ),
                                   pool.stats.loans.toString(),
                               ]
                             : [

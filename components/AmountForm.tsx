@@ -1,11 +1,12 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { ContractTransaction } from '@ethersproject/contracts'
-import { parseUnits, formatUnits } from '@ethersproject/units'
+import { parseUnits } from '@ethersproject/units'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-    format,
+    formatInputAmount,
     getERC20Contract,
     infiniteAllowance,
+    InputAmount,
     TOKEN_SYMBOL,
     useAccount,
     useProvider,
@@ -45,7 +46,7 @@ export function useAmountForm<T extends Types>({
     disabled?: boolean
     type: T
 }) {
-    const [loading, setLoading] = useState('')
+    const [loading, setLoading] = useState<InputAmount>('')
 
     const isWithdraw = type === 'Unstake' || type === 'Withdraw'
 
@@ -76,7 +77,7 @@ export function useAmountForm<T extends Types>({
         if (account) setShowConnectModal(false)
     }, [account])
 
-    const [amount, setAmount] = useState('')
+    const [amount, setAmount] = useState<InputAmount>('')
     const { value, isValueBiggerThanZero, needsApproval, formattedMax } =
         useMemo(() => {
             const amountBigNumber = amount
@@ -86,7 +87,7 @@ export function useAmountForm<T extends Types>({
             const value =
                 loading ||
                 (max?.lt(amountBigNumber)
-                    ? format(formatUnits(max, liquidityTokenDecimals))
+                    ? formatInputAmount(max, liquidityTokenDecimals)
                     : amount)
 
             const valueBigNumber = parseUnits(
@@ -101,7 +102,7 @@ export function useAmountForm<T extends Types>({
                         ? BigNumber.from(allowance).lt(valueBigNumber)
                         : false,
                 formattedMax: max
-                    ? format(formatUnits(max, liquidityTokenDecimals))
+                    ? formatInputAmount(max, liquidityTokenDecimals)
                     : '',
             }
         }, [
@@ -145,11 +146,11 @@ export function useAmountForm<T extends Types>({
                         )
                         .then(() => refetchAllowanceAndBalance())
                         .then(() => {
-                            setLoading('')
+                            setLoading('' as InputAmount)
                         })
                         .catch((reason) => {
                             console.error(reason)
-                            setLoading('')
+                            setLoading('' as InputAmount)
                         })
 
                     return

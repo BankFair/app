@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { formatUnits, parseUnits } from '@ethersproject/units'
+import { parseUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import {
@@ -25,6 +25,9 @@ import {
     getBorrowerInfo,
     setBorrowerInfo,
     fetchBorrowerInfoAuthenticated,
+    InputAmount,
+    formatInputAmount,
+    formatToken,
 } from '../../app'
 import {
     Alert,
@@ -454,7 +457,7 @@ function LoansAwaitingApproval({
                                       )
                                       .then((tx) => ({
                                           tx,
-                                          name: `Offer a loan for ${formatUnits(
+                                          name: `Offer a loan for ${formatToken(
                                               amount,
                                               liquidityTokenDecimals,
                                           )} ${TOKEN_SYMBOL}`,
@@ -604,7 +607,7 @@ function mapLoanRequest(
             </div>
             <div className="description">
                 <span>
-                    {formatUnits(loan.amount, liquidityTokenDecimals)}{' '}
+                    {formatToken(loan.amount, liquidityTokenDecimals)}{' '}
                     {TOKEN_SYMBOL} for{' '}
                     {formatDurationInMonths(loan.duration.toNumber())} months
                 </span>
@@ -617,7 +620,7 @@ function mapLoanRequest(
 }
 
 const initialInterest = 35
-const initialInterestString = initialInterest.toString()
+const initialInterestString = initialInterest.toString() as InputAmount
 function OfferModal({
     loan,
     onClose,
@@ -650,24 +653,30 @@ function OfferModal({
         initialInterestValue,
         initialGraceDefaultPeriod,
     } = useMemo(() => {
-        const initialAmount = formatUnits(loan.amount, liquidityTokenDecimals)
+        const initialAmount = formatInputAmount(
+            loan.amount,
+            liquidityTokenDecimals,
+        )
         const duration = loan.duration.toNumber()
         const initialMonthsNumber = formatDurationInMonths(duration)
-        const initialMonths = initialMonthsNumber.toString()
+        const initialMonths = initialMonthsNumber.toString() as InputAmount
 
         if (isOfferActive) {
             return {
                 initialAmount,
                 initialMonths,
-                initialInstallments: loan.installments.toString(),
-                initialInstallmentAmount: formatUnits(
+                initialInstallments:
+                    loan.installments.toString() as InputAmount,
+                initialInstallmentAmount: formatInputAmount(
                     loan.installmentAmount,
                     liquidityTokenDecimals,
                 ),
-                initialInterestValue: (loan.interest / 10).toString(),
+                initialInterestValue: (
+                    loan.interest / 10
+                ).toString() as InputAmount,
                 initialGraceDefaultPeriod: (
                     loan.graceDefaultPeriod / oneDay
-                ).toString(),
+                ).toString() as InputAmount,
             }
         }
 
@@ -676,8 +685,8 @@ function OfferModal({
         return {
             initialAmount,
             initialMonths,
-            initialInstallments: initialInstallments.toString(),
-            initialInstallmentAmount: formatUnits(
+            initialInstallments: initialInstallments.toString() as InputAmount,
+            initialInstallmentAmount: formatInputAmount(
                 getInstallmentAmount(
                     loan.amount,
                     initialInterest,
@@ -687,17 +696,18 @@ function OfferModal({
                 liquidityTokenDecimals,
             ),
             initialInterestValue: initialInterestString,
-            initialGraceDefaultPeriod: '35',
+            initialGraceDefaultPeriod: '35' as InputAmount,
         }
     }, [isOfferActive, liquidityTokenDecimals, loan])
-    const [amount, setAmount] = useState(initialAmount)
-    const [duration, setDuration] = useState(initialMonths)
-    const [installments, setInstallments] = useState(initialInstallments)
-    const [installmentAmount, setInstallmentAmount] = useState(
+    const [amount, setAmount] = useState<InputAmount>(initialAmount)
+    const [duration, setDuration] = useState<InputAmount>(initialMonths)
+    const [installments, setInstallments] =
+        useState<InputAmount>(initialInstallments)
+    const [installmentAmount, setInstallmentAmount] = useState<InputAmount>(
         initialInstallmentAmount,
     )
-    const [interest, setInterest] = useState(initialInterestValue)
-    const [graceDefaultPeriod, setGraceDefaultPeriod] = useState(
+    const [interest, setInterest] = useState<InputAmount>(initialInterestValue)
+    const [graceDefaultPeriod, setGraceDefaultPeriod] = useState<InputAmount>(
         initialGraceDefaultPeriod,
     )
 
@@ -811,7 +821,7 @@ function OfferModal({
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
-                        decimals={4}
+                        decimals={100}
                         value={duration}
                         onChange={setDuration}
                         // onBlur={showDisplayAlert}

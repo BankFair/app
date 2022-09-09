@@ -1,6 +1,6 @@
+import { formatCurrency, formatPercent } from '../app'
 import { Pool, useStats } from '../features'
 import { Box } from './Box'
-import { formatMaxDecimals, formatNoDecimals, prefix } from '../app'
 import { Skeleton } from './Skeleton'
 
 export function PoolStats({
@@ -59,7 +59,11 @@ export function PoolStats({
                     <div className="label">Current pool size</div>
                     <div className="number">
                         {stats ? (
-                            `$${formatNoDecimals(stats.totalPoolSize)}`
+                            formatCurrency(
+                                stats.totalPoolSize,
+                                liquidityTokenDecimals,
+                                0,
+                            )
                         ) : (
                             <Skeleton width={50} />
                         )}
@@ -69,7 +73,11 @@ export function PoolStats({
                     <div className="label">Loans Outstanding</div>
                     <div className="number">
                         {stats ? (
-                            `$${formatNoDecimals(stats.loansOutstanding)}`
+                            formatCurrency(
+                                stats.loansOutstanding,
+                                liquidityTokenDecimals,
+                                0,
+                            )
                         ) : (
                             <Skeleton width={50} />
                         )}
@@ -82,7 +90,11 @@ export function PoolStats({
                     <div className="label">Space for additional funds</div>
                     <div className="number">
                         {stats ? (
-                            `$${formatNoDecimals(stats.availableForDeposits)}`
+                            formatCurrency(
+                                stats.availableForDeposits,
+                                liquidityTokenDecimals,
+                                0,
+                            )
                         ) : (
                             <Skeleton width={70} />
                         )}
@@ -92,7 +104,11 @@ export function PoolStats({
                     <div className="label">Withdrawable liquidity</div>
                     <div className="number">
                         {stats ? (
-                            `$${formatNoDecimals(stats.poolLiquidity)}`
+                            formatCurrency(
+                                stats.poolLiquidity,
+                                liquidityTokenDecimals,
+                                0,
+                            )
                         ) : (
                             <Skeleton width={70} />
                         )}
@@ -105,7 +121,11 @@ export function PoolStats({
                     <div className="label">First loss capital</div>
                     <div className="number">
                         {stats ? (
-                            `$${formatNoDecimals(stats.managerFunds)}`
+                            formatCurrency(
+                                stats.managerFunds,
+                                liquidityTokenDecimals,
+                                0,
+                            )
                         ) : (
                             <Skeleton width={50} />
                         )}
@@ -115,10 +135,7 @@ export function PoolStats({
                     <div className="label">Loss buffer</div>
                     <div className="number">
                         {stats ? (
-                            `${formatMaxDecimals(
-                                stats.lossBuffer.toString(),
-                                1,
-                            )}%`
+                            formatPercent(stats.lossBuffer)
                         ) : (
                             <Skeleton width={30} />
                         )}

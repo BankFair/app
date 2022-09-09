@@ -9,14 +9,19 @@ import {
     getBatchProviderAndLoanDeskContract,
     loanDeskContract,
 } from './contracts'
-import { createFetchInterval, oneHundredPercent, POOLS } from '../../app'
+import {
+    createFetchInterval,
+    Hexadecimal,
+    oneHundredPercent,
+    POOLS,
+} from '../../app'
 import { AppState, Action, AppDispatch } from '../../store'
 
 export interface Loan {
     id: number
     status: LoanStatus
     borrower: string
-    amount: string
+    amount: Hexadecimal
     duration: number
     borrowedTime: number
     apr: number
@@ -30,16 +35,16 @@ export interface Loan {
 export interface LoanDetails {
     totalAmountRepaid: string
     baseAmountRepaid: string
-    interestPaid: string
+    interestPaid: Hexadecimal
     interestPaidUntil: number
 }
 
 interface Stats {
     loans: number
-    balanceStaked: string
-    amountDepositable: string
-    poolFunds: string
-    poolLiquidity: string
+    balanceStaked: Hexadecimal
+    amountDepositable: Hexadecimal
+    poolFunds: Hexadecimal
+    poolLiquidity: Hexadecimal
     apy: number
     exitFeePercent: number
     blockNumber: number
@@ -52,8 +57,8 @@ interface ManagerInfo {
 }
 
 interface AccountInfo {
-    balance: string
-    withdrawable: string
+    balance: Hexadecimal
+    withdrawable: Hexadecimal
     blockNumber: number
 }
 
@@ -120,10 +125,10 @@ export const fetchStats = createAsyncThunk(
 
         const stats: Stats = {
             loans: loansCount.toNumber(),
-            balanceStaked: balanceStaked.toHexString(),
-            amountDepositable: amountDepositable.toHexString(),
-            poolFunds: poolFunds.toHexString(),
-            poolLiquidity: poolLiquidity.toHexString(),
+            balanceStaked: balanceStaked.toHexString() as Hexadecimal,
+            amountDepositable: amountDepositable.toHexString() as Hexadecimal,
+            poolFunds: poolFunds.toHexString() as Hexadecimal,
+            poolLiquidity: poolLiquidity.toHexString() as Hexadecimal,
             apy: (apy * 100) / oneHundredPercent,
             exitFeePercent:
                 (exitFeePercent.toNumber() * 100) / oneHundredPercent,
@@ -178,8 +183,8 @@ const fetchAccountInfo = createAsyncThunk(
         ])
 
         const accountInfo: AccountInfo = {
-            balance: balance.toHexString(),
-            withdrawable: withdrawable.toHexString(),
+            balance: balance.toHexString() as Hexadecimal,
+            withdrawable: withdrawable.toHexString() as Hexadecimal,
             blockNumber,
         }
 
@@ -618,7 +623,7 @@ export function transformToStateLoanDetails(
 ): LoanDetails {
     return {
         baseAmountRepaid: details.baseAmountRepaid.toString(),
-        interestPaid: details.interestPaid.toString(),
+        interestPaid: details.interestPaid.toString() as Hexadecimal,
         totalAmountRepaid: details.totalAmountRepaid.toString(),
         interestPaidUntil: details.interestPaidTillTime.toNumber(),
     }
@@ -640,7 +645,7 @@ export function transformToStateLoan(
         id: loan.id.toNumber(),
         status: loan.status,
         borrower: loan.borrower,
-        amount: loan.amount.toHexString(),
+        amount: loan.amount.toHexString() as Hexadecimal,
         duration: loan.duration.toNumber(),
         apr: (loan.apr / oneHundredPercent) * 100,
         borrowedTime: loan.borrowedTime.toNumber(),

@@ -9,7 +9,7 @@ import {
     COLOR_RED_DARKER,
     COLOR_YELLOW_DARK,
     COLOR_YELLOW_DARKER,
-    formatNoDecimals,
+    formatCurrency,
     rgb,
     rgba,
     rgbBlueDarker,
@@ -21,6 +21,7 @@ import {
     rgbRedLighter,
     rgbYellowDarker,
     rgbYellowLighter,
+    USDT_DECIMALS,
     useActiveConnector,
 } from '../app'
 import { useDispatch } from 'react-redux'
@@ -66,7 +67,11 @@ export function Account() {
                     <Stat
                         value={
                             accountStats ? (
-                                `$${formatNoDecimals(accountStats.lent)}`
+                                formatCurrency(
+                                    accountStats.lent,
+                                    USDT_DECIMALS,
+                                    0,
+                                )
                             ) : (
                                 <Skeleton
                                     width={100}
@@ -81,7 +86,11 @@ export function Account() {
                     <Stat
                         value={
                             accountStats ? (
-                                `$${formatNoDecimals(accountStats.earning)}`
+                                formatCurrency(
+                                    accountStats.earning,
+                                    USDT_DECIMALS,
+                                    0,
+                                )
                             ) : (
                                 <Skeleton
                                     width={80}

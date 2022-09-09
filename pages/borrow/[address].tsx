@@ -1,4 +1,4 @@
-import { parseUnits, formatUnits } from '@ethersproject/units'
+import { parseUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import { DateTime } from 'luxon'
 import { NextPage } from 'next'
@@ -18,11 +18,13 @@ import {
     APP_NAME,
     BORROWER_SERVICE_URL,
     fetchBorrowerInfoAuthenticated,
-    format,
+    formatCurrency,
+    formatToken,
     getAddress,
     getBorrowerInfo,
     getERC20Contract,
     infiniteAllowance,
+    InputAmount,
     oneDay,
     POOLS,
     prefix,
@@ -84,7 +86,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
     const loans = useLoans(address, account)
 
     useLoadAccountLoans(address, account, dispatch, pool)
-    const accountLoaded = pool?.loadedAccounts[account || '']
+    // const accountLoaded = pool?.loadedAccounts[account || '']
 
     if (!pool) {
         // TODO: Add `|| !accountLoaded || offer === undefined` when we migrate to an indexer
@@ -253,23 +255,16 @@ function Offer({
             <div className="field">
                 <div className="label">Amount</div>
                 <div>
-                    {format(
-                        formatUnits(
-                            offer.details.amount,
-                            liquidityTokenDecimals,
-                        ),
-                    )}{' '}
+                    {formatToken(offer.details.amount, liquidityTokenDecimals)}{' '}
                     {TOKEN_SYMBOL}
                 </div>
             </div>
             <div className="field">
                 <div className="label">Installment amount</div>
                 <div>
-                    {format(
-                        formatUnits(
-                            offer.details.installmentAmount,
-                            liquidityTokenDecimals,
-                        ),
+                    {formatToken(
+                        offer.details.installmentAmount,
+                        liquidityTokenDecimals,
                     )}{' '}
                     {TOKEN_SYMBOL}
                 </div>
@@ -437,7 +432,7 @@ function RepayLoan({
     dispatch: AppDispatch
     account: string | undefined
 }) {
-    const [amount, setAmount] = useState('')
+    const [amount, setAmount] = useState<InputAmount>('')
 
     const outstandingNow = useAmountWithInterest(
         loan.amount,
@@ -826,11 +821,9 @@ function RepayLoan({
                     <div className="stat">
                         <div className="label">Outstanding</div>
                         <div className="value">
-                            {format(
-                                formatUnits(
-                                    outstandingNow,
-                                    liquidityTokenDecimals,
-                                ),
+                            {formatToken(
+                                outstandingNow,
+                                liquidityTokenDecimals,
                             )}{' '}
                             {TOKEN_SYMBOL}
                         </div>
@@ -872,23 +865,19 @@ function RepayLoan({
 
                     <div className="field">
                         <span className="label">Initial loan amount:</span>{' '}
-                        {format(
-                            formatUnits(loan.amount, liquidityTokenDecimals),
-                        )}{' '}
+                        {formatToken(loan.amount, liquidityTokenDecimals)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                     <div className="field">
                         <span className="label">Repaid:</span>{' '}
-                        {format(formatUnits(repaid, liquidityTokenDecimals))}{' '}
+                        {formatToken(repaid, liquidityTokenDecimals)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                     <div className="field">
                         <span className="label">Total interest paid:</span>{' '}
-                        {format(
-                            formatUnits(
-                                loan.details.interestPaid,
-                                liquidityTokenDecimals,
-                            ),
+                        {formatToken(
+                            loan.details.interestPaid,
+                            liquidityTokenDecimals,
                         )}{' '}
                         {TOKEN_SYMBOL}
                     </div>
@@ -969,7 +958,7 @@ function RepayLoan({
                             item.skip ? null : (
                                 <Fragment key={index}>
                                     <div className={item.overdue ? 'red' : ''}>
-                                        {formatUnits(
+                                        {formatToken(
                                             item.amount,
                                             liquidityTokenDecimals,
                                         )}{' '}
@@ -1140,9 +1129,9 @@ function RequestLoan({
 
     const emailInputRef = useRef<HTMLInputElement>(null)
 
-    const [amount, setAmount] = useState(initialValue)
+    const [amount, setAmount] = useState<InputAmount>(initialValue)
 
-    const [duration, setDuration] = useState(initialDuration)
+    const [duration, setDuration] = useState<InputAmount>(initialDuration)
     const durationMultiplier = thirtyDays
 
     const { invalidAmountMessage, invalidDurationMessage } = useMemo(() => {
@@ -1166,11 +1155,9 @@ function RequestLoan({
         return {
             invalidAmountMessage: isAmountValid
                 ? ''
-                : `Minimum amount is ${format(
-                      formatUnits(
-                          BigNumber.from(borrowInfo.minLoanAmount),
-                          liquidityTokenDecimals,
-                      ),
+                : `Minimum amount is ${formatToken(
+                      BigNumber.from(borrowInfo.minLoanAmount),
+                      liquidityTokenDecimals,
                   )}`,
             invalidDurationMessage: isDurationTooLow
                 ? `Minimum duration is ${

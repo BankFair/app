@@ -1,8 +1,7 @@
-import { formatUnits } from '@ethersproject/units'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatNoDecimals, POOLS, prefix } from '../app'
+import { APP_NAME, formatCurrency, POOLS, prefix } from '../app'
 import { Page, Skeleton, PoolsListNew } from '../components'
 import { useFetchIntervalAllStats, usePools } from '../features'
 
@@ -39,18 +38,16 @@ const EarnPools: NextPage = () => {
                         stats:
                             pool && pool.stats
                                 ? [
-                                      `$${formatNoDecimals(
-                                          formatUnits(
-                                              pool.stats.poolFunds,
-                                              pool.liquidityTokenDecimals,
-                                          ),
-                                      )}`,
-                                      `$${formatNoDecimals(
-                                          formatUnits(
-                                              pool.stats.amountDepositable,
-                                              pool.liquidityTokenDecimals,
-                                          ),
-                                      )}`,
+                                      formatCurrency(
+                                          pool.stats.poolFunds,
+                                          pool.liquidityTokenDecimals,
+                                          0,
+                                      ),
+                                      formatCurrency(
+                                          pool.stats.amountDepositable,
+                                          pool.liquidityTokenDecimals,
+                                          0,
+                                      ),
                                       `${pool.stats.apy}%`,
                                       pool.stats.loans.toString(),
                                   ]

@@ -1,9 +1,8 @@
-import { formatUnits } from 'ethers/lib/utils'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatNoDecimals, POOLS, prefix } from '../../app'
-import { PoolsList, Page, Skeleton, PoolsListNew } from '../../components'
+import { APP_NAME, formatCurrency, POOLS, prefix } from '../../app'
+import { Page, Skeleton, PoolsListNew } from '../../components'
 import {
     useFetchIntervalAllBorrowInfo,
     useFetchIntervalAllStats,
@@ -39,12 +38,11 @@ const BorrowPools: NextPage = () => {
                         stats:
                             pool && pool.stats && pool.borrowInfo
                                 ? [
-                                      `$${formatNoDecimals(
-                                          formatUnits(
-                                              pool.stats.poolLiquidity,
-                                              pool.liquidityTokenDecimals,
-                                          ),
-                                      )}`,
+                                      formatCurrency(
+                                          pool.stats.poolLiquidity,
+                                          pool.liquidityTokenDecimals,
+                                          0,
+                                      ),
                                       `${pool.borrowInfo.apr}%`,
                                   ]
                                 : [

@@ -1,6 +1,9 @@
-import { DateTime } from 'luxon'
-
-import { capitalize, formatMaxDecimals, TOKEN_SYMBOL } from '../app'
+import {
+    capitalize,
+    formatTokenNumber,
+    TOKEN_SYMBOL,
+    USDT_DECIMALS,
+} from '../app'
 
 import { Alert } from './Alert'
 
@@ -20,9 +23,9 @@ export function ExitAlert({
                 feePercent ? `${feePercent}%` : ''
             } fee ${
                 value && value !== '-'
-                    ? `(${formatMaxDecimals(
-                          (Number(value) * (feePercent / 100)).toString(),
-                          6,
+                    ? `(${formatTokenNumber(
+                          Number(value) * (feePercent / 100),
+                          USDT_DECIMALS,
                       )} ${TOKEN_SYMBOL}) `
                     : ''
             } which is paid to the pool`}
