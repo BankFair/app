@@ -4,7 +4,7 @@ import {
     KeyboardEventHandler,
     useMemo,
 } from 'react'
-import { className, input, prefix, rgbGround, rgbStone, rgbWhite } from '../app'
+import { className, InputAmount, prefix } from '../app'
 
 export function AmountInput({
     decimals,
@@ -17,8 +17,8 @@ export function AmountInput({
     ...classModifiers
 }: {
     decimals: number
-    value: string
-    onChange: (newValue: string) => void
+    value: InputAmount
+    onChange: (newValue: InputAmount) => void
     onBlur?: FocusEventHandler<HTMLInputElement>
     onKeyDown?: KeyboardEventHandler<HTMLInputElement>
     label?: string
@@ -34,7 +34,7 @@ export function AmountInput({
             const value = event.target.value.replace(',', '.')
             if (!regexp.test(value)) return
 
-            onChange(value)
+            onChange(value as InputAmount)
         }
     }, [decimals, onChange])
 

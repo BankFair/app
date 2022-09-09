@@ -6,15 +6,13 @@ import '@formatjs/intl-pluralrules/locale-data/en'
 import '@formatjs/intl-listformat/polyfill'
 import '@formatjs/intl-listformat/locale-data/en'
 
-import { formatUnits } from '@ethersproject/units'
 import { BigNumber } from 'ethers'
 import { Duration } from 'luxon'
 import { useEffect, useMemo, useState } from 'react'
 import TimeAgo from 'timeago-react'
 
 import {
-    format,
-    formatMaxDecimals,
+    formatToken,
     noop,
     oneHundredMillion,
     rgbaLimeGreen21,
@@ -55,7 +53,7 @@ export function LoanView({
     onRepay?(id: number, debt: BigNumber): void
 }) {
     const formattedAmount = useMemo(
-        () => format(formatUnits(amount, liquidityTokenDecimals)),
+        () => formatToken(amount, liquidityTokenDecimals),
         [amount, liquidityTokenDecimals],
     )
     const formattedStatus = useMemo(() => formatStatus(status), [status])
@@ -158,14 +156,10 @@ export function LoanView({
 
             <h4 className="amount">
                 {hasDebt
-                    ? `Debt: ${format(
-                          formatUnits(debt, liquidityTokenDecimals),
-                      )}`
+                    ? `Debt: ${formatToken(debt, liquidityTokenDecimals)}`
                     : `Amount: ${
                           isRepaid
-                              ? format(
-                                    formatUnits(repaid, liquidityTokenDecimals),
-                                )
+                              ? formatToken(repaid, liquidityTokenDecimals)
                               : formattedAmount
                       }`}{' '}
                 {TOKEN_SYMBOL}
@@ -227,26 +221,16 @@ export function LoanView({
                     <div className="item">
                         <div className="label">Amount</div>
                         <div className="value">
-                            {format(
-                                formatMaxDecimals(
-                                    formatUnits(amount, liquidityTokenDecimals),
-                                    liquidityTokenDecimals,
-                                ),
-                            )}{' '}
+                            {formatToken(amount, liquidityTokenDecimals)}{' '}
                             {TOKEN_SYMBOL}
                         </div>
                     </div>
                     <div className="item">
                         <div className="label">Interest paid</div>
                         <div className="value">
-                            {format(
-                                formatMaxDecimals(
-                                    formatUnits(
-                                        details.interestPaid,
-                                        liquidityTokenDecimals,
-                                    ),
-                                    liquidityTokenDecimals,
-                                ),
+                            {formatToken(
+                                details.interestPaid,
+                                liquidityTokenDecimals,
                             )}{' '}
                             {TOKEN_SYMBOL}
                         </div>

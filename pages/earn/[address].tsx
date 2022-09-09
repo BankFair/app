@@ -1,4 +1,4 @@
-import { parseUnits, formatUnits } from '@ethersproject/units'
+import { parseUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NextPage } from 'next'
 import Head from 'next/head'
@@ -17,9 +17,10 @@ import {
     getAddress,
     zero,
     POOLS,
-    format,
     prefix,
     TOKEN_SYMBOL,
+    formatCurrency,
+    formatToken,
 } from '../../app'
 import {
     Page,
@@ -275,12 +276,10 @@ function YourMoney({
                     <div className="value">
                         {account ? (
                             info ? (
-                                `$${format(
-                                    formatUnits(
-                                        info.balance,
-                                        liquidityTokenDecimals,
-                                    ),
-                                )}`
+                                formatCurrency(
+                                    info.balance,
+                                    liquidityTokenDecimals,
+                                )
                             ) : (
                                 <Skeleton width={50} />
                             )
@@ -294,12 +293,10 @@ function YourMoney({
                     <div className="value">
                         {account ? (
                             info ? (
-                                `$${format(
-                                    formatUnits(
-                                        info.withdrawable,
-                                        liquidityTokenDecimals,
-                                    ),
-                                )}`
+                                formatCurrency(
+                                    info.withdrawable,
+                                    liquidityTokenDecimals,
+                                )
                             ) : (
                                 <Skeleton width={50} />
                             )
@@ -408,11 +405,9 @@ function Earnings({
                     Your earnings:{' '}
                     {earnings &&
                         earnings.account === account &&
-                        format(
-                            formatUnits(
-                                earnings.amount,
-                                liquidityTokenDecimals,
-                            ),
+                        formatToken(
+                            earnings.amount,
+                            liquidityTokenDecimals,
                         )}{' '}
                     {TOKEN_SYMBOL}
                 </div>

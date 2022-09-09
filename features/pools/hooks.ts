@@ -1,4 +1,3 @@
-import { formatUnits, parseUnits } from '@ethersproject/units'
 import { useEffect, useMemo, useState } from 'react'
 import { AppDispatch, useSelector, AppState, useDispatch } from '../../store'
 import {
@@ -8,7 +7,6 @@ import {
     ERC20Contract,
     useAccount,
     zero,
-    USDT_DECIMALS,
     ONE_HUNDRED_PERCENT,
     oneMillion,
 } from '../../app'
@@ -104,21 +102,12 @@ export function useStats(poolAddress: string, liquidityTokenDecimals: number) {
         lossBuffer: poolFunds.eq(zero)
             ? 0
             : balanceStaked.mul(oneMillion).div(poolFunds).toNumber() / 10_000,
-        managerFunds: formatUnits(balanceStaked, liquidityTokenDecimals),
-        availableForDeposits: formatUnits(
-            stats.amountDepositable,
-            liquidityTokenDecimals,
-        ),
-        totalPoolSize: formatUnits(stats.poolFunds, liquidityTokenDecimals),
-        loansOutstanding: formatUnits(
-            poolFunds.sub(stats.poolLiquidity),
-            liquidityTokenDecimals,
-        ),
-        maxPoolSize: formatUnits(
-            poolFunds.add(stats.amountDepositable),
-            liquidityTokenDecimals,
-        ),
-        poolLiquidity: formatUnits(stats.poolLiquidity, liquidityTokenDecimals),
+        managerFunds: balanceStaked,
+        availableForDeposits: stats.amountDepositable,
+        totalPoolSize: stats.poolFunds,
+        loansOutstanding: poolFunds.sub(stats.poolLiquidity),
+        // maxPoolSize: poolFunds.add(stats.amountDepositable),
+        poolLiquidity: stats.poolLiquidity,
     }
 }
 
@@ -192,12 +181,9 @@ export function useAccountStats() {
                   .reduce((accumulator, item) => accumulator.add(item), zero)
 
         return {
-            lent: formatUnits(lent, USDT_DECIMALS),
+            lent,
             apy: apy.toNumber() / 10,
-            earning: formatUnits(
-                lent.mul(apy).div(ONE_HUNDRED_PERCENT),
-                USDT_DECIMALS,
-            ),
+            earning: lent.mul(apy).div(ONE_HUNDRED_PERCENT),
             pools: poolsInvestedIn,
         }
     }, [pools, account])

@@ -4414,6 +4414,7 @@ __metadata:
     react-transition-group: 4.4.2
     redux: 4.2.0
     sass: ^1.50.1
+    taghiro: 0.3.5
     timeago-react: 3.0.4
     typescript: ~4.6.3
   languageName: unknown
@@ -4718,6 +4719,13 @@ __metadata:
   version: 1.0.0
   resolution: "supports-preserve-symlinks-flag@npm:1.0.0"
   checksum: 53b1e247e68e05db7b3808b99b892bd36fb096e6fba213a06da7fab22045e97597db425c724f2bbd6c99a3c295e1e73f3e4de78592289f38431049e1277ca0ae
+  languageName: node
+  linkType: hard
+
+"taghiro@npm:0.3.5":
+  version: 0.3.5
+  resolution: "taghiro@npm:0.3.5"
+  checksum: 799d065e44cf1d89324341b64d5f88cb499e4f6f624ffc0514ff5b25f18f1fb831e977125de6c56642c887eaf111e1254d0f289c1600db177c7acf7fa1c8c74b
   languageName: node
   linkType: hard
 
