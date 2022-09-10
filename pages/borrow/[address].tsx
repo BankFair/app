@@ -18,7 +18,6 @@ import {
     APP_NAME,
     BORROWER_SERVICE_URL,
     fetchBorrowerInfoAuthenticated,
-    formatCurrency,
     formatToken,
     getAddress,
     getBorrowerInfo,
@@ -798,14 +797,16 @@ function RepayLoan({
                 paid = true
             }
 
+            const isAmountZero = amount.eq(zero)
             array[index] = {
                 date: actualDate.toLocaleString(),
                 dateTime: actualDate,
-                overdue: overdue
-                    ? !now.startOf('day').equals(date.startOf('day'))
-                    : false,
+                overdue:
+                    overdue && !isAmountZero
+                        ? !now.startOf('day').equals(date.startOf('day'))
+                        : false,
                 amount,
-                skip: amount.eq(zero),
+                skip: isAmountZero && (overdue ? nextDate < now : paid),
                 expectedBaseAmountRepaid,
                 expectedTimestamp: timestamp,
             }
