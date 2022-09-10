@@ -28,6 +28,10 @@ import {
     InputAmount,
     formatInputAmount,
     formatToken,
+    zeroHex,
+    zero,
+    rgbYellowDarker,
+    rgbYellowLighter,
 } from '../../app'
 import {
     Alert,
@@ -42,6 +46,7 @@ import {
     Modal,
     Page,
     PageLoading,
+    ScheduleSummary,
     Tabs,
     useAmountForm,
 } from '../../components'
@@ -53,6 +58,7 @@ import {
     refetchStatsIfUsed,
     trackTransaction,
     useManagerInfo,
+    useSchedule,
     useStatsState,
 } from '../../features'
 import { useDispatch, useSelector } from '../../store'
@@ -714,6 +720,57 @@ function OfferModal({
     const [isOfferLoading, setIsOfferLoading] = useState(false)
     const [isRejectLoading, setIsRejectLoading] = useState(false)
 
+    const [amountBigNumber, monthly, scheduleArg] = useMemo<
+        [BigNumber, boolean, Parameters<typeof useSchedule>[0]]
+    >(() => {
+        const now = Math.trunc(Date.now() / 1000)
+
+        if (
+            !amount ||
+            !duration ||
+            !interest ||
+            !installments ||
+            !installmentAmount
+        ) {
+            return [zero, false, null]
+        }
+
+        const amountBigNumber = parseUnits(amount, liquidityTokenDecimals)
+
+        const durationNumber = Number(duration)
+        const installmentsNumber = parseInt(installments, 10)
+
+        return [
+            amountBigNumber,
+            durationNumber % 1 === 0 && installmentsNumber === durationNumber,
+            {
+                amount: amountBigNumber,
+                duration: Number(duration) * thirtyDays,
+                apr: Number(interest),
+                borrowedTime: now,
+                installments: installmentsNumber,
+                installmentAmount: parseUnits(
+                    installmentAmount,
+                    liquidityTokenDecimals,
+                ),
+                details: {
+                    baseAmountRepaid: zeroHex,
+                    totalAmountRepaid: zeroHex,
+                    interestPaid: zeroHex,
+                    interestPaidUntil: now,
+                },
+            },
+        ]
+    }, [
+        amount,
+        liquidityTokenDecimals,
+        duration,
+        interest,
+        installments,
+        installmentAmount,
+    ])
+    const schedule = useSchedule(scheduleArg)
+
     const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (event) => {
             event.preventDefault()
@@ -904,6 +961,15 @@ function OfferModal({
                     />
                 </label>
 
+                <div className="schedule-container">
+                    <ScheduleSummary
+                        amount={amountBigNumber}
+                        monthly={monthly}
+                        schedule={schedule}
+                        liquidityTokenDecimals={liquidityTokenDecimals}
+                    />
+                </div>
+
                 {/* {displayAlert && alert ? (
             <div className="alert-positioner">
                 <Alert style="error-filled" title={alert} />
@@ -959,6 +1025,14 @@ function OfferModal({
                             > :global(button) {
                                 margin: 16px 8px 0 0;
                             }
+                        }
+
+                        > .schedule-container {
+                            color: ${rgbYellowDarker};
+                            background-color: ${rgbYellowLighter};
+                            margin-top: 16px;
+                            padding: 12px 16px;
+                            border-radius: 8px;
                         }
                     }
                 `}</style>

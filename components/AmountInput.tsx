@@ -34,7 +34,7 @@ export function AmountInput({
             const value = event.target.value.replace(',', '.')
             if (!regexp.test(value)) return
 
-            onChange(value as InputAmount)
+            onChange((value === '.' ? '0.' : value) as InputAmount)
         }
     }, [decimals, onChange])
 

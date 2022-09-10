@@ -10,9 +10,9 @@ import {
     loanDeskContract,
 } from './contracts'
 import {
+    convertPercent,
     createFetchInterval,
     Hexadecimal,
-    oneHundredPercent,
     POOLS,
 } from '../../app'
 import { AppState, Action, AppDispatch } from '../../store'
@@ -28,13 +28,13 @@ export interface Loan {
     gracePeriod: number
     applicationId: number
     installments: number
-    installmentAmount: string
+    installmentAmount: Hexadecimal
     details: LoanDetails
 }
 
 export interface LoanDetails {
-    totalAmountRepaid: string
-    baseAmountRepaid: string
+    totalAmountRepaid: Hexadecimal
+    baseAmountRepaid: Hexadecimal
     interestPaid: Hexadecimal
     interestPaidUntil: number
 }
@@ -129,9 +129,8 @@ export const fetchStats = createAsyncThunk(
             amountDepositable: amountDepositable.toHexString() as Hexadecimal,
             poolFunds: poolFunds.toHexString() as Hexadecimal,
             poolLiquidity: poolLiquidity.toHexString() as Hexadecimal,
-            apy: (apy * 100) / oneHundredPercent,
-            exitFeePercent:
-                (exitFeePercent.toNumber() * 100) / oneHundredPercent,
+            apy: convertPercent(apy),
+            exitFeePercent: convertPercent(exitFeePercent.toNumber()),
             blockNumber,
         }
 
@@ -272,7 +271,7 @@ const fetchBorrowInfo = createAsyncThunk(
             minLoanAmount: minLoanAmount.toHexString(),
             minLoanDuration: minLoanDuration.toNumber(),
             maxLoanDuration: maxLoanDuration.toNumber(),
-            apr: (apr / oneHundredPercent) * 100,
+            apr: convertPercent(apr),
             blockNumber,
         }
 
@@ -622,9 +621,9 @@ export function transformToStateLoanDetails(
     details: EVMLoanDetails,
 ): LoanDetails {
     return {
-        baseAmountRepaid: details.baseAmountRepaid.toString(),
+        baseAmountRepaid: details.baseAmountRepaid.toString() as Hexadecimal,
         interestPaid: details.interestPaid.toString() as Hexadecimal,
-        totalAmountRepaid: details.totalAmountRepaid.toString(),
+        totalAmountRepaid: details.totalAmountRepaid.toString() as Hexadecimal,
         interestPaidUntil: details.interestPaidTillTime.toNumber(),
     }
 }
@@ -647,11 +646,11 @@ export function transformToStateLoan(
         borrower: loan.borrower,
         amount: loan.amount.toHexString() as Hexadecimal,
         duration: loan.duration.toNumber(),
-        apr: (loan.apr / oneHundredPercent) * 100,
+        apr: convertPercent(loan.apr),
         borrowedTime: loan.borrowedTime.toNumber(),
         gracePeriod: loan.gracePeriod.toNumber(),
         applicationId: loan.applicationId.toNumber(),
-        installmentAmount: loan.installmentAmount.toString(),
+        installmentAmount: loan.installmentAmount.toHexString() as Hexadecimal,
         installments: loan.installments,
         details: transformToStateLoanDetails(details),
     }
