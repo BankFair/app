@@ -17,8 +17,8 @@ import {
     amountWithInterest,
     APP_NAME,
     BORROWER_SERVICE_URL,
+    convertPercent,
     fetchBorrowerInfoAuthenticated,
-    formatCurrency,
     formatToken,
     getAddress,
     getBorrowerInfo,
@@ -29,6 +29,8 @@ import {
     POOLS,
     prefix,
     rgbRed,
+    rgbYellowDarker,
+    rgbYellowLighter,
     setBorrowerInfo,
     shortenAddress,
     thirtyDays,
@@ -37,6 +39,7 @@ import {
     useAmountWithInterest,
     useProvider,
     zero,
+    zeroHex,
 } from '../../app'
 import {
     Alert,
@@ -47,6 +50,7 @@ import {
     ConnectModal,
     Page,
     PageLoading,
+    ScheduleSummary,
 } from '../../components'
 import {
     Pool,
@@ -63,6 +67,7 @@ import {
     useLoadAccountLoans,
     useAllowanceAndBalance,
     Loan,
+    useSchedule,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
 
@@ -84,6 +89,10 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
 
     const offer = useOffer(account, provider, pool)
     const loans = useLoans(address, account)
+    const outstandingLoans = useMemo(
+        () => loans.filter((l) => l.status === LoanStatus.OUTSTANDING),
+        [loans],
+    )
 
     useLoadAccountLoans(address, account, dispatch, pool)
     // const accountLoaded = pool?.loadedAccounts[account || '']
@@ -111,7 +120,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
                 account={account}
                 offer={offer}
             />
-            {!offer && !loans.length ? (
+            {!offer && !outstandingLoans.length ? (
                 <RequestLoan
                     pool={pool}
                     poolAddress={address}
@@ -238,6 +247,35 @@ function Offer({
     const [isLoading, setIsLoading] = useState(false)
     const [isAccepted, setIsAccepted] = useState(false)
 
+    const [monthly, scheduleArg] = useMemo<
+        [boolean, Parameters<typeof useSchedule>[0]]
+    >(() => {
+        if (!offer) return [false, null]
+        const { amount, apr, duration, installments, installmentAmount } =
+            offer.details
+        const now = Math.trunc(Date.now() / 1000)
+        const durationNumber = duration.toNumber()
+        return [
+            durationNumber % thirtyDays === 0 &&
+                installments === durationNumber / thirtyDays,
+            {
+                amount,
+                apr: convertPercent(apr),
+                installments,
+                installmentAmount,
+                duration: durationNumber,
+                borrowedTime: now,
+                details: {
+                    baseAmountRepaid: zeroHex,
+                    totalAmountRepaid: zeroHex,
+                    interestPaid: zeroHex,
+                    interestPaidUntil: now,
+                },
+            },
+        ]
+    }, [offer])
+    const schedule = useSchedule(scheduleArg)
+
     if (
         !offer ||
         offer.account !== account ||
@@ -317,6 +355,20 @@ function Offer({
                 </div>
             ) : null}
 
+            <div className="schedule-container">
+                <ScheduleSummary
+                    amount={offer.details.amount}
+                    monthly={monthly}
+                    schedule={schedule}
+                    liquidityTokenDecimals={liquidityTokenDecimals}
+                />
+
+                <div className="schedule-notice">
+                    If the details above are incorrect do not proceed. Contact
+                    the pool manager to update the offer.
+                </div>
+            </div>
+
             <Button
                 disabled={isAccepted || isLoading}
                 loading={isLoading}
@@ -381,6 +433,19 @@ function Offer({
                         color: var(--color-secondary);
                         font-weight: 400;
                         margin-bottom: 8px;
+                    }
+                }
+
+                .schedule-container {
+                    color: ${rgbYellowDarker};
+                    background-color: ${rgbYellowLighter};
+                    margin-top: 16px;
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    font-weight: 600;
+
+                    > .schedule-notice {
+                        margin-top: 16px;
                     }
                 }
             `}</style>
@@ -577,241 +642,7 @@ function RepayLoan({
 
     const wasRepaid = loan.status === LoanStatus.REPAID
 
-    interface ScheduleItem {
-        date: string
-        dateTime: DateTime
-        overdue: boolean
-        amount: BigNumber
-        skip: boolean
-        expectedBaseAmountRepaid: BigNumber
-        expectedTimestamp: number
-    }
-    const schedule = useMemo(() => {
-        if (wasRepaid) return []
-        const installmentAmount = BigNumber.from(loan.installmentAmount)
-        const now = DateTime.now()
-        const installmentDuration = loan.duration / loan.installments
-        const amountBigNumber = BigNumber.from(loan.amount)
-
-        let baseAmountRepaid = BigNumber.from(loan.details.baseAmountRepaid)
-        let interestPaidUntil = loan.details.interestPaidUntil
-        let paid = false
-
-        return Array.from({
-            length: loan.installments,
-        }).reduce<ScheduleItem[]>((array, _, index) => {
-            const installmentNumber = index + 1
-            const timestamp =
-                loan.borrowedTime + installmentDuration * installmentNumber
-            const date = DateTime.fromSeconds(timestamp)
-
-            if (paid) {
-                array[index] = {
-                    date: date.toLocaleString(),
-                    dateTime: date,
-                    overdue: false,
-                    amount: zero,
-                    skip: true,
-                    expectedBaseAmountRepaid: zero,
-                    expectedTimestamp: 0,
-                }
-                return array
-            }
-
-            const overdue = now > date
-            const nextDate = DateTime.fromSeconds(
-                timestamp + installmentDuration,
-            )
-            const previous = array[index - 1] as ScheduleItem | undefined
-            let actualDate = date
-            let skip = false
-            let amount = installmentAmount
-
-            const {
-                principalOutstanding: expectedPrincipalOutstanding,
-                interestOutstanding: expectedInterestOutstanding,
-            } = amountWithInterest(
-                amountBigNumber,
-                previous ? previous.expectedBaseAmountRepaid : 0,
-                previous ? previous.expectedTimestamp : loan.borrowedTime,
-                loan.apr,
-                timestamp,
-            )
-
-            let { principalOutstanding, interestOutstanding, daysPassed } =
-                baseAmountRepaid.gte(amountBigNumber)
-                    ? {
-                          principalOutstanding: zero,
-                          interestOutstanding: zero,
-                          daysPassed: 0,
-                      }
-                    : amountWithInterest(
-                          amountBigNumber,
-                          baseAmountRepaid,
-                          interestPaidUntil,
-                          loan.apr,
-                          timestamp,
-                      )
-
-            const outstanding = principalOutstanding.add(interestOutstanding)
-
-            if (installmentAmount.gt(outstanding)) {
-                amount = outstanding
-            }
-
-            const expectedBaseAmountRepaid = installmentAmount
-                .sub(expectedInterestOutstanding)
-                .add(previous ? previous.expectedBaseAmountRepaid : zero)
-
-            if (overdue) {
-                if (nextDate) {
-                    if (nextDate > now) {
-                        if (
-                            principalOutstanding.lte(
-                                expectedPrincipalOutstanding,
-                            )
-                        ) {
-                            skip = true
-                        } else {
-                            const {
-                                principalOutstanding:
-                                    nextExpectedPrincipalOutstanding,
-                            } = amountWithInterest(
-                                amountBigNumber,
-                                expectedBaseAmountRepaid,
-                                timestamp,
-                                loan.apr,
-                                timestamp + installmentDuration,
-                            )
-
-                            actualDate = now
-
-                            const {
-                                interestOutstanding: currentInterestOutstanding,
-                                daysPassed: currentDaysPassed,
-                            } = amountWithInterest(
-                                amountBigNumber,
-                                loan.details.baseAmountRepaid,
-                                loan.details.interestPaidUntil,
-                                loan.apr,
-                                Math.trunc(now.toSeconds()),
-                            )
-                            amount = principalOutstanding
-                                .sub(nextExpectedPrincipalOutstanding)
-                                .add(currentInterestOutstanding)
-
-                            daysPassed = currentDaysPassed
-                            interestOutstanding = currentInterestOutstanding
-                        }
-                    } else {
-                        skip = true
-                    }
-                }
-            } else {
-                const previous = array[index - 1]
-                if (
-                    ((previous && previous.amount.eq(zero)) ||
-                        installmentNumber === 1) &&
-                    principalOutstanding.lt(expectedPrincipalOutstanding) &&
-                    interestOutstanding.lt(expectedInterestOutstanding)
-                ) {
-                    const {
-                        principalOutstanding: nextExpectedPrincipalOutstanding,
-                    } = amountWithInterest(
-                        amountBigNumber,
-                        expectedBaseAmountRepaid,
-                        timestamp,
-                        loan.apr,
-                        timestamp + installmentDuration,
-                    )
-
-                    const {
-                        interestOutstanding: currentInterestOutstanding,
-                        daysPassed: currentDaysPassed,
-                    } = amountWithInterest(
-                        amountBigNumber,
-                        loan.details.baseAmountRepaid,
-                        loan.details.interestPaidUntil,
-                        loan.apr,
-                        timestamp,
-                    )
-
-                    amount = principalOutstanding
-                        .sub(nextExpectedPrincipalOutstanding)
-                        .add(currentInterestOutstanding)
-
-                    if (amount.lt(zero)) {
-                        skip = true
-                    } else {
-                        daysPassed = currentDaysPassed
-                        interestOutstanding = currentInterestOutstanding
-                    }
-                } else if (
-                    previous &&
-                    previous.amount.gt(installmentAmount) &&
-                    now.equals(previous.dateTime)
-                ) {
-                    const {
-                        interestOutstanding: currentInterestOutstanding,
-                        daysPassed: currentDaysPassed,
-                    } = amountWithInterest(
-                        amountBigNumber,
-                        baseAmountRepaid,
-                        interestPaidUntil,
-                        loan.apr,
-                        timestamp,
-                    )
-                    interestOutstanding = currentInterestOutstanding
-                    daysPassed = currentDaysPassed
-                    amount = expectedBaseAmountRepaid
-                        .sub(baseAmountRepaid)
-                        .add(currentInterestOutstanding)
-                }
-            }
-
-            if (skip) {
-                amount = zero
-            } else if (amount.lt(interestOutstanding)) {
-                const payableInterestDays = amount
-                    .mul(daysPassed)
-                    .div(interestOutstanding)
-
-                amount = interestOutstanding
-                    .mul(payableInterestDays)
-                    .div(daysPassed)
-                interestPaidUntil += payableInterestDays.toNumber() * oneDay
-            } else {
-                baseAmountRepaid = baseAmountRepaid.add(
-                    amount.sub(interestOutstanding),
-                )
-                interestPaidUntil += daysPassed * oneDay
-            }
-
-            if (
-                installmentNumber === loan.installments &&
-                outstanding.gt(amount)
-            ) {
-                amount = outstanding
-            }
-
-            if (baseAmountRepaid.gte(amountBigNumber)) {
-                paid = true
-            }
-
-            array[index] = {
-                date: actualDate.toLocaleString(),
-                dateTime: actualDate,
-                overdue: overdue
-                    ? !now.startOf('day').equals(date.startOf('day'))
-                    : false,
-                amount,
-                skip: amount.eq(zero),
-                expectedBaseAmountRepaid,
-                expectedTimestamp: timestamp,
-            }
-            return array
-        }, [])
-    }, [loan, wasRepaid])
+    const schedule = useSchedule(wasRepaid ? null : loan)
 
     return (
         <>
