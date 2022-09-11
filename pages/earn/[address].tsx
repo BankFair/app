@@ -178,8 +178,7 @@ function AddFunds({
 
     const { form, allowance, balance } = useAmountForm({
         type: 'Deposit',
-        onSumbit: (contract, amount) =>
-            contract.deposit(parseUnits(amount, liquidityTokenDecimals)),
+        onSumbit: (contract, amount) => contract.deposit(amount),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,
         liquidityTokenAddress,
@@ -256,8 +255,7 @@ function YourMoney({
 
     const { form, value } = useAmountForm({
         type: 'Withdraw',
-        onSumbit: (contract, amount) =>
-            contract.withdraw(parseUnits(amount, liquidityTokenDecimals)),
+        onSumbit: (contract, amount) => contract.withdraw(amount),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,
         liquidityTokenAddress,

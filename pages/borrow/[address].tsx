@@ -14,7 +14,6 @@ import {
 } from 'react'
 
 import {
-    amountWithInterest,
     APP_NAME,
     BORROWER_SERVICE_URL,
     convertPercent,
@@ -23,7 +22,6 @@ import {
     getAddress,
     getBorrowerInfo,
     getERC20Contract,
-    infiniteAllowance,
     InputAmount,
     oneDay,
     POOLS,
@@ -584,10 +582,12 @@ function RepayLoan({
 
             const signer = provider!.getSigner()
 
+            const amountBigNumber = parseUnits(amount, liquidityTokenDecimals)
+
             if (needsApproval) {
                 getERC20Contract(liquidityTokenAddress)
                     .connect(signer)
-                    .approve(poolAddress, infiniteAllowance)
+                    .approve(poolAddress, amountBigNumber)
                     .then((tx) =>
                         trackTransaction(dispatch, {
                             name: `Approve ${TOKEN_SYMBOL}`,
@@ -609,10 +609,7 @@ function RepayLoan({
             contract
                 .connect(signer)
                 .attach(poolAddress)
-                .repay(
-                    BigNumber.from(loan.id),
-                    parseUnits(amount, liquidityTokenDecimals),
-                )
+                .repay(BigNumber.from(loan.id), amountBigNumber)
                 .then((tx) =>
                     trackTransaction(dispatch, { tx, name: 'Repay loan' }),
                 )
@@ -643,6 +640,8 @@ function RepayLoan({
     const wasRepaid = loan.status === LoanStatus.REPAID
 
     const schedule = useSchedule(wasRepaid ? null : loan)
+
+    const largerThanZero = Number(amount) > 0
 
     return (
         <>
@@ -679,12 +678,11 @@ function RepayLoan({
                     <Button
                         type="submit"
                         loading={isLoading}
-                        disabled={
-                            (Number(amount) === 0 && !needsApproval) ||
-                            isLoading
-                        }
+                        disabled={!largerThanZero || isLoading}
                     >
-                        {needsApproval ? `Approve ${TOKEN_SYMBOL}` : 'Repay'}
+                        {needsApproval && largerThanZero
+                            ? `Approve ${TOKEN_SYMBOL}`
+                            : 'Repay'}
                     </Button>
                     <Alert
                         style="warning"

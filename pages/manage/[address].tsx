@@ -145,12 +145,8 @@ function StakeAndUnstake({
         type,
         onSumbit:
             type === 'Stake'
-                ? (contract, amount) =>
-                      contract.stake(parseUnits(amount, liquidityTokenDecimals))
-                : (contract, amount) =>
-                      contract.unstake(
-                          parseUnits(amount, liquidityTokenDecimals),
-                      ),
+                ? (contract, amount) => contract.stake(amount)
+                : (contract, amount) => contract.unstake(amount),
         refetch: () =>
             Promise.all([
                 refetchManagerInfo(),
