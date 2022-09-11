@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     formatInputAmount,
     getERC20Contract,
-    infiniteAllowance,
     InputAmount,
     TOKEN_SYMBOL,
     useAccount,
@@ -39,7 +38,7 @@ export function useAmountForm<T extends Types>({
     poolAddress: string
     onSumbit: (
         contract: CoreContract,
-        amount: string,
+        amount: BigNumber,
     ) => Promise<ContractTransaction>
     refetch: () => Promise<unknown>
     max?: BigNumber
@@ -134,10 +133,12 @@ export function useAmountForm<T extends Types>({
 
                 setLoading(value)
 
+                const valueBigNumber = parseUnits(value, liquidityTokenDecimals)
+
                 if (needsApproval) {
                     getERC20Contract(liquidityTokenAddress)
                         .connect(signer)
-                        .approve(poolAddress, infiniteAllowance)
+                        .approve(poolAddress, valueBigNumber)
                         .then((tx) =>
                             trackTransaction(dispatch, {
                                 name: `Approve ${TOKEN_SYMBOL}`,
@@ -156,7 +157,10 @@ export function useAmountForm<T extends Types>({
                     return
                 }
 
-                onSumbit(contract.attach(poolAddress).connect(signer), value)
+                onSumbit(
+                    contract.attach(poolAddress).connect(signer),
+                    valueBigNumber,
+                )
                     .then((tx) =>
                         trackTransaction(dispatch, {
                             name: `${type} ${value} ${TOKEN_SYMBOL}`,

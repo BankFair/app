@@ -106,7 +106,8 @@ export function useStats(poolAddress: string, liquidityTokenDecimals: number) {
         loans: stats.loans,
         lossBuffer: poolFunds.eq(zero)
             ? 0
-            : balanceStaked.mul(oneMillion).div(poolFunds).toNumber() / 10_000,
+            : balanceStaked.mul(oneMillion).div(poolFunds).toNumber() /
+              1_000_000,
         managerFunds: balanceStaked,
         availableForDeposits: stats.amountDepositable,
         totalPoolSize: stats.poolFunds,

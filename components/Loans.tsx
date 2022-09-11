@@ -226,11 +226,8 @@ function RepayModal({
         liquidityTokenAddress,
         liquidityTokenDecimals,
         poolAddress,
-        onSumbit: (contract: CoreContract, amount: string) =>
-            contract.repay(
-                BigNumber.from(loanId),
-                parseUnits(amount, liquidityTokenDecimals),
-            ),
+        onSumbit: (contract: CoreContract, amount: BigNumber) =>
+            contract.repay(BigNumber.from(loanId), amount),
         refetch: () =>
             dispatch(fetchLoan({ poolAddress, loanId })).then(onClose),
         max,

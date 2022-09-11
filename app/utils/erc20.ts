@@ -1,4 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber'
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { ContractTransaction } from '@ethersproject/contracts'
 import { CustomBaseContract, ContractFunction } from './ethers'
 
@@ -7,7 +7,7 @@ export interface ERC20Contract extends CustomBaseContract {
     decimals: ContractFunction<number>
     approve: ContractFunction<
         ContractTransaction,
-        [spender: string, allowance: BigNumber]
+        [spender: string, allowance: BigNumberish]
     >
     balanceOf: ContractFunction<BigNumber, [owner: string]>
 }
