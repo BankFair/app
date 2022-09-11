@@ -1,0 +1,36 @@
+name: Build
+
+on:
+    pull_request:
+        types: [opened, reopened]
+
+jobs:
+    build_and_deploy:
+        name: Build
+        runs-on: ubuntu-latest
+        env:
+            BUILDING_FOR_GITHUB_PAGES: 1
+        steps:
+            - uses: actions/checkout@v3
+            - name: Download Yarn
+              run: '${GITHUB_WORKSPACE}/download-yarn.sh'
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: '16'
+                  cache: 'yarn'
+            - uses: actions/cache@v3
+              with:
+                  path: ${{ github.workspace }}/.next/cache
+                  # Generate a new cache whenever packages or source files change
+                  key: ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+                  # If source files changed but packages didn't, rebuild from a prior cache
+                  restore-keys: |
+                      ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn.lock') }}-
+            - name: Install packages
+              run: yarn install
+            - name: Build project
+              run: |
+                  yarn next telemetry disable
+                  yarn build
+            - name: Export static files
+              run: yarn next export
