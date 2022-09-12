@@ -1,28 +1,26 @@
-import { ReactNode, useEffect, useLayoutEffect } from 'react'
+import { ReactNode } from 'react'
 import { Oval } from 'react-loading-icons'
-import { rgbGreen } from '../app'
+import { rgbGreen, SIDEBAR_ALWAYS_VISIBLE_WIDTH } from '../app'
+import { NAV_HEIGHT, SIDEBAR_MAX_WIDTH } from './navigation/constants'
 
 export function PageLoading({ children }: { children?: ReactNode }) {
-    useEffect(() => {
-        const rootElement = document.getElementById('__next')
-
-        rootElement!.style.height = '100vh'
-        rootElement!.style.marginBottom = '0'
-
-        return () => {
-            rootElement!.style.removeProperty('height')
-            rootElement!.style.removeProperty('margin-bottom')
-        }
-    }, [])
     return (
         <div className="container">
             <style jsx>{`
                 .container {
-                    width: 100%;
-                    height: 100%;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
                     display: flex;
                     justify-content: center;
                     align-items: center;
+                    padding-top: ${NAV_HEIGHT}px;
+
+                    @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
+                        padding-left: ${SIDEBAR_MAX_WIDTH}px;
+                    }
                 }
             `}</style>
 
