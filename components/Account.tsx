@@ -10,11 +10,11 @@ import {
     COLOR_YELLOW_DARK,
     COLOR_YELLOW_DARKER,
     formatCurrency,
+    formatPercent,
     rgb,
     rgba,
     rgbBlueDarker,
     rgbBlueLighter,
-    rgbGreen,
     rgbGreenDarker,
     rgbGreenLighter,
     rgbRedDarker,
@@ -107,7 +107,7 @@ export function Account() {
                     <Stat
                         value={
                             accountStats ? (
-                                `${accountStats.apy}%`
+                                formatPercent(accountStats.apy / 100)
                             ) : (
                                 <Skeleton
                                     width={60}

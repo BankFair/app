@@ -19,6 +19,7 @@ import {
     checkAmountValidity,
     convertPercent,
     fetchBorrowerInfoAuthenticated,
+    formatPercent,
     formatToken,
     getAddress,
     getBorrowerInfo,
@@ -319,7 +320,7 @@ function Offer({
             </div>
             <div className="field">
                 <div className="label">Interest APR</div>
-                <div>{offer.details.apr / 10}%</div>
+                <div>{formatPercent(offer.details.apr / 1000)}</div>
             </div>
             <div className="field">
                 <div className="label">Grace Default Period</div>
@@ -720,7 +721,8 @@ function RepayLoan({
                         {loan.duration / thirtyDays} months
                     </div>
                     <div className="field">
-                        <span className="label">Interest APR:</span> {loan.apr}%
+                        <span className="label">Interest APR:</span>{' '}
+                        {formatPercent(loan.apr / 100)}
                     </div>
                     <div className="field">
                         <span className="label">Grace default period:</span>{' '}
@@ -890,7 +892,6 @@ function RepayLoan({
 
 const initialValue = ''
 const initialDuration = ''
-const initialDisplayAlert = false
 function RequestLoan({
     pool: { managerAddress, loanDeskAddress, liquidityTokenDecimals },
     poolAddress,
@@ -903,9 +904,6 @@ function RequestLoan({
     const provider = useProvider()
 
     const dispatch = useDispatch()
-
-    const [displayAlert, setDisplayAlert] = useState(initialDisplayAlert)
-    const showDisplayAlert = useCallback(() => setDisplayAlert(true), [])
 
     const [showConnectModal, setShowConnectModal] = useState(false)
     useEffect(() => {
@@ -956,8 +954,6 @@ function RequestLoan({
     const [phone, setPhone] = useState('')
     const [email, setEmail] = useState('')
 
-    const emailInputRef = useRef<HTMLInputElement>(null)
-
     const [amount, setAmount] = useState<InputAmount>(initialValue)
 
     const [duration, setDuration] = useState<InputAmount>(initialDuration)
@@ -1006,36 +1002,34 @@ function RequestLoan({
         amount,
     ])
 
-    const alert = useMemo(
-        () =>
-            !checkValidityNotEmpty(name)
-                ? 'Please enter your name'
-                : !checkValidityNotEmpty(businessName)
-                ? 'Please enter your business name'
-                : !checkValidityNotEmpty(email) && !checkValidityNotEmpty(phone)
-                ? 'Please enter an email or phone number'
-                : !emailInputRef.current?.checkValidity()
-                ? 'Invalid email'
-                : isLoanPendingApproval
-                ? 'x'
-                : invalidAmountMessage || invalidDurationMessage || null,
-        [
-            businessName,
-            email,
-            invalidAmountMessage,
-            invalidDurationMessage,
-            isLoanPendingApproval,
-            name,
-            phone,
-        ],
-    )
+    const [nameBlurred, setNameBlurred] = useState(false)
+    const isNameInvalid = !checkValidityNotEmpty(name)
+    const [businessNameBlurred, setBusinessNameBlurred] = useState(false)
+    const isBusinessNameInvalid = !checkValidityNotEmpty(businessName)
+    const [phoneBlurred, setPhoneBlurred] = useState(false)
+    const [emailBlurred, setEmailBlurred] = useState(false)
+    const isPhoneAndEmailEmpty =
+        !checkValidityNotEmpty(email) && !checkValidityNotEmpty(phone)
+    const [isEmailInvalid, setIsEmailInvalid] = useState(false)
+    const [amountBlurred, setAmountBlurred] = useState(false)
+    const [durationBlurred, setDurationBlurred] = useState(false)
 
     const isManager = managerAddress === account
     const componentIsLoading =
         !borrowInfo || Boolean(account && !loanPendingApproval)
     const disabled = isManager || componentIsLoading
     const disabledSubmit = Boolean(
-        loading || disabled || !amount || alert || isSubmitted,
+        loading ||
+            disabled ||
+            !amount ||
+            isNameInvalid ||
+            isBusinessNameInvalid ||
+            isPhoneAndEmailEmpty ||
+            isEmailInvalid ||
+            invalidAmountMessage ||
+            invalidDurationMessage ||
+            isLoanPendingApproval ||
+            isSubmitted,
     )
 
     const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
@@ -1181,6 +1175,14 @@ function RequestLoan({
                             font-weight: 400;
                             margin-bottom: 8px;
                         }
+
+                        > input {
+                            display: block;
+                        }
+
+                        > :global(.alert) {
+                            margin-top: 8px;
+                        }
                     }
 
                     > .alert-positioner {
@@ -1235,86 +1237,118 @@ function RequestLoan({
                     <div className="label">Name</div>
                     <input
                         type="text"
+                        className={
+                            nameBlurred && isNameInvalid ? 'invalid' : ''
+                        }
                         required={Boolean(account)}
                         placeholder="John Smith"
                         value={name}
                         onChange={(event) => setName(event.target.value)}
-                        onBlur={() =>
-                            !checkValidityNotEmpty(name) &&
-                            setDisplayAlert(true)
-                        }
+                        onBlur={() => setNameBlurred(true)}
                     />
+                    {nameBlurred && isNameInvalid ? (
+                        <Alert
+                            style="error-filled"
+                            title="Please enter your name"
+                        />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Business Name</div>
                     <input
                         type="text"
+                        className={
+                            businessNameBlurred && isBusinessNameInvalid
+                                ? 'invalid'
+                                : ''
+                        }
                         required={Boolean(account)}
                         placeholder="Green LLC"
                         value={businessName}
                         onChange={(event) =>
                             setBusinessName(event.target.value)
                         }
-                        onBlur={() =>
-                            !checkValidityNotEmpty(businessName) &&
-                            setDisplayAlert(true)
-                        }
+                        onBlur={() => setBusinessNameBlurred(true)}
                     />
+                    {businessNameBlurred && isBusinessNameInvalid ? (
+                        <Alert
+                            style="error-filled"
+                            title="Please enter your business name"
+                        />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Phone</div>
                     <input
                         type="tel"
+                        className={
+                            phoneBlurred && emailBlurred && isPhoneAndEmailEmpty
+                                ? 'invalid'
+                                : ''
+                        }
                         placeholder="+1 (555) 343-3411"
                         value={phone}
                         onChange={(event) => setPhone(event.target.value)}
-                        onBlur={() =>
-                            !checkValidityNotEmpty(email) &&
-                            !checkValidityNotEmpty(phone) &&
-                            setDisplayAlert(true)
-                        }
+                        onBlur={() => setPhoneBlurred(true)}
                     />
                 </label>
                 <label>
                     <div className="label">Email</div>
                     <input
-                        ref={emailInputRef}
                         type="email"
+                        className={
+                            phoneBlurred &&
+                            emailBlurred &&
+                            (isPhoneAndEmailEmpty || isEmailInvalid)
+                                ? 'invalid'
+                                : ''
+                        }
                         placeholder="johnsmith@gmail.com"
                         value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        onBlur={() =>
-                            ((!checkValidityNotEmpty(email) &&
-                                !checkValidityNotEmpty(phone)) ||
-                                !emailInputRef.current?.checkValidity()) &&
-                            setDisplayAlert(true)
-                        }
+                        onChange={(event) => {
+                            const newValue = event.target.value
+                            setEmail(newValue)
+
+                            setIsEmailInvalid(
+                                Boolean(
+                                    newValue && !event.target.checkValidity(),
+                                ),
+                            )
+                        }}
+                        onBlur={() => setEmailBlurred(true)}
                     />
+                    {phoneBlurred && emailBlurred ? (
+                        isPhoneAndEmailEmpty ? (
+                            <Alert
+                                style="error-filled"
+                                title="Please enter an email or phone number"
+                            />
+                        ) : isEmailInvalid ? (
+                            <Alert style="error-filled" title="Invalid email" />
+                        ) : null
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Amount</div>
                     <AmountInput
+                        invalid={amountBlurred && Boolean(invalidAmountMessage)}
                         decimals={liquidityTokenDecimals}
                         value={amount}
                         onChange={setAmount}
                         disabled={disabled}
-                        onBlur={() =>
-                            !checkAmountValidity(
-                                amount,
-                                liquidityTokenDecimals,
-                                borrowInfo!.minLoanAmount,
-                            ) && setDisplayAlert(true)
-                        }
+                        onBlur={() => setAmountBlurred(true)}
                         onKeyDown={(event) =>
                             event.key === 'Enter'
-                                ? !checkAmountValidity(
-                                      amount,
-                                      liquidityTokenDecimals,
-                                      borrowInfo!.minLoanAmount,
-                                  ) && setDisplayAlert(true)
+                                ? setAmountBlurred(true)
                                 : undefined
                         }
                     />
+                    {amountBlurred && invalidAmountMessage ? (
+                        <Alert
+                            style="error-filled"
+                            title={invalidAmountMessage}
+                        />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Duration</div>
@@ -1322,24 +1356,27 @@ function RequestLoan({
                         decimals={4}
                         value={duration}
                         onChange={setDuration}
-                        onBlur={showDisplayAlert}
+                        invalid={
+                            durationBlurred && Boolean(invalidDurationMessage)
+                        }
+                        onBlur={() => setDurationBlurred(true)}
                         disabled={disabled}
                         noToken
                         label="months"
                         paddingRight={60}
                         onKeyDown={(event) =>
                             event.key === 'Enter'
-                                ? setDisplayAlert(true)
+                                ? setDurationBlurred(true)
                                 : undefined
                         }
                     />
+                    {durationBlurred && invalidDurationMessage ? (
+                        <Alert
+                            style="error-filled"
+                            title={invalidDurationMessage}
+                        />
+                    ) : null}
                 </label>
-
-                {displayAlert && alert ? (
-                    <div className="alert-positioner">
-                        <Alert style="error-filled" title={alert} />
-                    </div>
-                ) : null}
 
                 <div className="button-container">
                     <Button
@@ -1352,7 +1389,17 @@ function RequestLoan({
 
                     {/* Disabled elements prevent any click events to be fired resulting in inputs not being blurred */}
                     {account && disabledSubmit ? (
-                        <div className="clickable" onClick={showDisplayAlert} />
+                        <div
+                            className="clickable"
+                            onClick={() => {
+                                setNameBlurred(true)
+                                setBusinessNameBlurred(true)
+                                setPhoneBlurred(true)
+                                setEmailBlurred(true)
+                                setAmountBlurred(true)
+                                setDurationBlurred(true)
+                            }}
+                        />
                     ) : null}
                 </div>
             </form>

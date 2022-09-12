@@ -1,7 +1,13 @@
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatCurrency, POOLS, prefix } from '../../app'
+import {
+    APP_NAME,
+    formatCurrency,
+    formatPercent,
+    POOLS,
+    prefix,
+} from '../../app'
 import { Page, Skeleton, PoolsListNew } from '../../components'
 import {
     useFetchIntervalAllBorrowInfo,
@@ -43,7 +49,7 @@ const BorrowPools: NextPage = () => {
                                           pool.liquidityTokenDecimals,
                                           0,
                                       ),
-                                      `${pool.borrowInfo.apr}%`,
+                                      formatPercent(pool.borrowInfo.apr / 100),
                                   ]
                                 : [
                                       <Skeleton key="1" width={50} />,
