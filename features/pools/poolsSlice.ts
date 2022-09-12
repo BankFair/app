@@ -239,7 +239,7 @@ export const { hook: useFetchIntervalManagerInfo } = createFetchInterval(
     oneHour,
 )
 
-const fetchBorrowInfo = createAsyncThunk(
+export const fetchBorrowInfo = createAsyncThunk(
     'pools/fetchBorrowConstraints',
     async ({
         loanDeskAddress,

@@ -8,6 +8,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -51,6 +52,7 @@ import {
     useAmountForm,
 } from '../../components'
 import {
+    fetchBorrowInfo,
     getBatchProviderAndLoanDeskContract,
     LoanApplicationStatus,
     loanDeskContract,
@@ -70,6 +72,20 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
     const account = useAccount()
 
+    const dispatch = useDispatch()
+    const dispatchRef = useRef('')
+    useEffect(() => {
+        if (!pool) return
+        if (dispatchRef.current === address) return
+        dispatchRef.current = address
+        dispatch(
+            fetchBorrowInfo({
+                poolAddress: address,
+                loanDeskAddress: pool.loanDeskAddress,
+            }),
+        )
+    }, [address, dispatch, pool])
+
     const head = (
         <Head>
             <title>{title}</title>
@@ -77,7 +93,7 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
         </Head>
     )
 
-    if (!pool) return <PageLoading>{head}</PageLoading>
+    if (!pool || !pool.borrowInfo) return <PageLoading>{head}</PageLoading>
 
     return (
         <Page>
@@ -225,7 +241,7 @@ type LoanRequest =
               status: LoanApplicationStatus.OFFER_ACCEPTED
           })
 function LoansAwaitingApproval({
-    pool: { loanDeskAddress, liquidityTokenDecimals, block },
+    pool: { loanDeskAddress, liquidityTokenDecimals, block, borrowInfo },
     poolAddress,
     account,
 }: {
@@ -414,6 +430,7 @@ function LoansAwaitingApproval({
                 <OfferModal
                     loan={offerModalRequest}
                     liquidityTokenDecimals={liquidityTokenDecimals}
+                    poolInterestRate={borrowInfo!.apr}
                     onClose={() => setOfferModalRequest(null)}
                     onOffer={(
                         amount,
@@ -621,18 +638,18 @@ function mapLoanRequest(
     ))
 }
 
-const initialInterest = 35
-const initialInterestString = initialInterest.toString() as InputAmount
 function OfferModal({
     loan,
-    onClose,
+    poolInterestRate,
     liquidityTokenDecimals,
+    onClose,
     onOffer,
     onReject,
     onFetchBorrowerInfo,
 }: {
     loan: LoanRequest
     liquidityTokenDecimals: number
+    poolInterestRate: number
     onClose(): void
     onOffer(
         amount: BigNumber,
@@ -691,16 +708,16 @@ function OfferModal({
             initialInstallmentAmount: formatInputAmount(
                 getInstallmentAmount(
                     loan.amount,
-                    initialInterest,
+                    poolInterestRate,
                     initialInstallments,
                     duration,
                 ),
                 liquidityTokenDecimals,
             ),
-            initialInterestValue: initialInterestString,
+            initialInterestValue: poolInterestRate.toString() as InputAmount,
             initialGraceDefaultPeriod: '35' as InputAmount,
         }
-    }, [isOfferActive, liquidityTokenDecimals, loan])
+    }, [isOfferActive, liquidityTokenDecimals, loan, poolInterestRate])
     const [amount, setAmount] = useState<InputAmount>(initialAmount)
     const [duration, setDuration] = useState<InputAmount>(initialMonths)
     const [installments, setInstallments] =
