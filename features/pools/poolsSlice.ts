@@ -62,8 +62,8 @@ interface AccountInfo {
     blockNumber: number
 }
 
-interface BorrowInfo {
-    minLoanAmount: string
+export interface BorrowInfo {
+    minLoanAmount: Hexadecimal
     minLoanDuration: number
     maxLoanDuration: number
     apr: number
@@ -268,7 +268,7 @@ export const fetchBorrowInfo = createAsyncThunk(
         ])
 
         const info: BorrowInfo = {
-            minLoanAmount: minLoanAmount.toHexString(),
+            minLoanAmount: minLoanAmount.toHexString() as Hexadecimal,
             minLoanDuration: minLoanDuration.toNumber(),
             maxLoanDuration: maxLoanDuration.toNumber(),
             apr: convertPercent(apr),

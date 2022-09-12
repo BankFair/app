@@ -17,6 +17,8 @@ import {
     rgbGrey600,
     rgbGround,
     rgbNewWhite,
+    rgbRed,
+    rgbRedDarker,
     rgbRichBlack,
     rgbStone,
     rgbWhite,
@@ -112,6 +114,14 @@ export default function App({ Component, pageProps }: AppProps) {
                             color: var(--color-disabled);
                         }
 
+                        &.invalid {
+                            border-color: ${rgbRedDarker};
+
+                            &:focus-visible {
+                                outline-color: ${rgbRed};
+                            }
+                        }
+
                         @media (prefers-color-scheme: dark) {
                             background-color: ${rgbGround};
                         }
@@ -171,6 +181,11 @@ export default function App({ Component, pageProps }: AppProps) {
                             background-color: ${rgbGround};
                             color: var(--color);
                         }
+                    }
+
+                    :focus-visible {
+                        outline: var(--greenery) solid 2px;
+                        outline-offset: -2px;
                     }
 
                     @media (prefers-color-scheme: dark) {

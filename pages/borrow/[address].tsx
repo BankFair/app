@@ -16,6 +16,7 @@ import {
 import {
     APP_NAME,
     BORROWER_SERVICE_URL,
+    checkAmountValidity,
     convertPercent,
     fetchBorrowerInfoAuthenticated,
     formatToken,
@@ -24,6 +25,7 @@ import {
     getERC20Contract,
     InputAmount,
     oneDay,
+    oneYear,
     POOLS,
     prefix,
     rgbRed,
@@ -886,8 +888,6 @@ function RepayLoan({
     )
 }
 
-const oneWeek = oneDay * 7
-const oneYear = oneWeek * 52 + oneDay
 const initialValue = ''
 const initialDuration = ''
 const initialDisplayAlert = false
@@ -1366,14 +1366,4 @@ function RequestLoan({
 
 function checkValidityNotEmpty(value: string) {
     return Boolean(value.trim())
-}
-
-function checkAmountValidity(
-    value: string,
-    liquidityTokenDecimals: number,
-    minLoanAmount: string,
-) {
-    return value
-        ? parseUnits(value, liquidityTokenDecimals).gte(minLoanAmount)
-        : false
 }
