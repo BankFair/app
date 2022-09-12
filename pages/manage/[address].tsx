@@ -8,6 +8,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -32,6 +33,9 @@ import {
     zero,
     rgbYellowDarker,
     rgbYellowLighter,
+    checkAmountValidity,
+    Hexadecimal,
+    oneYear,
 } from '../../app'
 import {
     Alert,
@@ -51,6 +55,8 @@ import {
     useAmountForm,
 } from '../../components'
 import {
+    BorrowInfo,
+    fetchBorrowInfo,
     getBatchProviderAndLoanDeskContract,
     LoanApplicationStatus,
     loanDeskContract,
@@ -70,6 +76,20 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
     const account = useAccount()
 
+    const dispatch = useDispatch()
+    const dispatchRef = useRef('')
+    useEffect(() => {
+        if (!pool) return
+        if (dispatchRef.current === address) return
+        dispatchRef.current = address
+        dispatch(
+            fetchBorrowInfo({
+                poolAddress: address,
+                loanDeskAddress: pool.loanDeskAddress,
+            }),
+        )
+    }, [address, dispatch, pool])
+
     const head = (
         <Head>
             <title>{title}</title>
@@ -77,7 +97,7 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
         </Head>
     )
 
-    if (!pool) return <PageLoading>{head}</PageLoading>
+    if (!pool || !pool.borrowInfo) return <PageLoading>{head}</PageLoading>
 
     return (
         <Page>
@@ -225,7 +245,7 @@ type LoanRequest =
               status: LoanApplicationStatus.OFFER_ACCEPTED
           })
 function LoansAwaitingApproval({
-    pool: { loanDeskAddress, liquidityTokenDecimals, block },
+    pool: { loanDeskAddress, liquidityTokenDecimals, block, borrowInfo },
     poolAddress,
     account,
 }: {
@@ -414,6 +434,7 @@ function LoansAwaitingApproval({
                 <OfferModal
                     loan={offerModalRequest}
                     liquidityTokenDecimals={liquidityTokenDecimals}
+                    borrowInfo={borrowInfo!}
                     onClose={() => setOfferModalRequest(null)}
                     onOffer={(
                         amount,
@@ -621,18 +642,18 @@ function mapLoanRequest(
     ))
 }
 
-const initialInterest = 35
-const initialInterestString = initialInterest.toString() as InputAmount
 function OfferModal({
     loan,
-    onClose,
     liquidityTokenDecimals,
+    borrowInfo,
+    onClose,
     onOffer,
     onReject,
     onFetchBorrowerInfo,
 }: {
     loan: LoanRequest
     liquidityTokenDecimals: number
+    borrowInfo: BorrowInfo
     onClose(): void
     onOffer(
         amount: BigNumber,
@@ -691,16 +712,16 @@ function OfferModal({
             initialInstallmentAmount: formatInputAmount(
                 getInstallmentAmount(
                     loan.amount,
-                    initialInterest,
+                    borrowInfo.apr,
                     initialInstallments,
                     duration,
                 ),
                 liquidityTokenDecimals,
             ),
-            initialInterestValue: initialInterestString,
+            initialInterestValue: borrowInfo.apr.toString() as InputAmount,
             initialGraceDefaultPeriod: '35' as InputAmount,
         }
-    }, [isOfferActive, liquidityTokenDecimals, loan])
+    }, [isOfferActive, liquidityTokenDecimals, loan, borrowInfo])
     const [amount, setAmount] = useState<InputAmount>(initialAmount)
     const [duration, setDuration] = useState<InputAmount>(initialMonths)
     const [installments, setInstallments] =
@@ -801,6 +822,55 @@ function OfferModal({
         })
     }, [onReject])
 
+    const isAmountInvalid = useMemo(
+        () =>
+            !checkAmountValidity(
+                amount,
+                liquidityTokenDecimals,
+                borrowInfo.minLoanAmount,
+            ),
+        [amount, borrowInfo.minLoanAmount, liquidityTokenDecimals],
+    )
+    const durationInvalidMessage = useMemo(() => {
+        const inSeconds = Number(duration) * thirtyDays
+
+        return inSeconds < borrowInfo.minLoanDuration
+            ? `Minimum duration is ${borrowInfo.minLoanDuration / oneDay} day`
+            : inSeconds > borrowInfo.maxLoanDuration
+            ? `Maximum duration is ${
+                  borrowInfo.maxLoanDuration / oneYear
+              } years`
+            : ''
+    }, [duration, borrowInfo.minLoanDuration, borrowInfo.maxLoanDuration])
+    const isInstallmentAmountInvalid = useMemo(
+        () =>
+            !checkAmountValidity(
+                installmentAmount,
+                liquidityTokenDecimals,
+                zero,
+            ),
+        [installmentAmount, liquidityTokenDecimals],
+    )
+    const isInterestInvalid = useMemo(() => {
+        return Number(interest) <= 0
+    }, [interest])
+    const installmentsInvalidMessage = useMemo(() => {
+        const installmentsNumber = parseInt(installments, 10)
+        return installmentsNumber < 1
+            ? 'Installments must be at least 1'
+            : installmentsNumber > (Number(duration) * thirtyDays) / oneDay
+            ? 'Installments can not be more than the duration in days'
+            : ''
+    }, [duration, installments])
+    const graceDefaultPeriodInvalidMessage = useMemo(() => {
+        const graceDefaultPeriodNumber = Number(graceDefaultPeriod)
+        return graceDefaultPeriodNumber < 3
+            ? 'Grace default period must be at least 3'
+            : graceDefaultPeriodNumber > 365
+            ? 'Grace default period must be less than 365'
+            : ''
+    }, [graceDefaultPeriod])
+
     return (
         <Modal onClose={onClose}>
             <form onSubmit={handleSubmit}>
@@ -852,24 +922,18 @@ function OfferModal({
                         decimals={liquidityTokenDecimals}
                         value={amount}
                         onChange={setAmount}
-                        // disabled={disabled}
-                        // onBlur={() =>
-                        //     !checkAmountValidity(
-                        //         amount,
-                        //         liquidityTokenDecimals,
-                        //         borrowInfo!.minLoanAmount,
-                        //     ) && setDisplayAlert(true)
-                        // }
-                        // onKeyDown={(event) =>
-                        //     event.key === 'Enter'
-                        //         ? !checkAmountValidity(
-                        //               amount,
-                        //               liquidityTokenDecimals,
-                        //               borrowInfo!.minLoanAmount,
-                        //           ) && setDisplayAlert(true)
-                        //         : undefined
-                        // }
+                        disabled={isOfferLoading}
+                        invalid={isAmountInvalid}
                     />
+                    {isAmountInvalid ? (
+                        <Alert
+                            style="error-filled"
+                            title={`Minimum amount is ${formatToken(
+                                BigNumber.from(borrowInfo.minLoanAmount),
+                                liquidityTokenDecimals,
+                            )}`}
+                        />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Duration</div>
@@ -877,17 +941,18 @@ function OfferModal({
                         decimals={100}
                         value={duration}
                         onChange={setDuration}
-                        // onBlur={showDisplayAlert}
-                        // disabled={disabled}
+                        disabled={isOfferLoading}
+                        invalid={Boolean(durationInvalidMessage)}
                         noToken
                         label="months"
                         paddingRight={60}
-                        // onKeyDown={(event) =>
-                        //     event.key === 'Enter'
-                        //         ? setDisplayAlert(true)
-                        //         : undefined
-                        // }
                     />
+                    {durationInvalidMessage ? (
+                        <Alert
+                            style="error-filled"
+                            title={durationInvalidMessage}
+                        />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Installments</div>
@@ -895,15 +960,16 @@ function OfferModal({
                         decimals={0}
                         value={installments}
                         onChange={setInstallments}
-                        // onBlur={showDisplayAlert}
-                        // disabled={disabled}
+                        disabled={isOfferLoading}
+                        invalid={Boolean(installmentsInvalidMessage)}
                         noToken
-                        // onKeyDown={(event) =>
-                        //     event.key === 'Enter'
-                        //         ? setDisplayAlert(true)
-                        //         : undefined
-                        // }
                     />
+                    {installmentsInvalidMessage ? (
+                        <Alert
+                            style="error-filled"
+                            title={installmentsInvalidMessage}
+                        />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Interest p/a</div>
@@ -911,17 +977,15 @@ function OfferModal({
                         decimals={1}
                         value={interest}
                         onChange={setInterest}
-                        // onBlur={showDisplayAlert}
-                        // disabled={disabled}
+                        disabled={isOfferLoading}
+                        invalid={isInterestInvalid}
                         noToken
                         label="%"
                         paddingRight={26}
-                        // onKeyDown={(event) =>
-                        //     event.key === 'Enter'
-                        //         ? setDisplayAlert(true)
-                        //         : undefined
-                        // }
                     />
+                    {isInterestInvalid ? (
+                        <Alert style="error-filled" title="Invalid interest" />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Installment amount</div>
@@ -929,14 +993,15 @@ function OfferModal({
                         decimals={liquidityTokenDecimals}
                         value={installmentAmount}
                         onChange={setInstallmentAmount}
-                        // onBlur={showDisplayAlert}
-                        // disabled={disabled}
-                        // onKeyDown={(event) =>
-                        //     event.key === 'Enter'
-                        //         ? setDisplayAlert(true)
-                        //         : undefined
-                        // }
+                        disabled={isOfferLoading}
+                        invalid={isInstallmentAmountInvalid}
                     />
+                    {isInstallmentAmountInvalid ? (
+                        <Alert
+                            style="error-filled"
+                            title="Invalid installment amount"
+                        />
+                    ) : null}
                 </label>
                 <label>
                     <div className="label">Grace Default Period</div>
@@ -944,17 +1009,18 @@ function OfferModal({
                         decimals={2}
                         value={graceDefaultPeriod}
                         onChange={setGraceDefaultPeriod}
-                        // onBlur={showDisplayAlert}
-                        // disabled={disabled}
+                        disabled={isOfferLoading}
+                        invalid={Boolean(graceDefaultPeriodInvalidMessage)}
                         noToken
                         label="days"
                         paddingRight={44}
-                        // onKeyDown={(event) =>
-                        //     event.key === 'Enter'
-                        //         ? setDisplayAlert(true)
-                        //         : undefined
-                        // }
                     />
+                    {graceDefaultPeriodInvalidMessage ? (
+                        <Alert
+                            style="error-filled"
+                            title={graceDefaultPeriodInvalidMessage}
+                        />
+                    ) : null}
                 </label>
 
                 <div className="schedule-container">
@@ -966,15 +1032,18 @@ function OfferModal({
                     />
                 </div>
 
-                {/* {displayAlert && alert ? (
-            <div className="alert-positioner">
-                <Alert style="error-filled" title={alert} />
-            </div>
-        ) : null} */}
-
                 <div className="buttons">
                     <Button
-                        disabled={isOfferLoading || isRejectLoading}
+                        disabled={Boolean(
+                            isOfferLoading ||
+                                isRejectLoading ||
+                                isAmountInvalid ||
+                                durationInvalidMessage ||
+                                installmentsInvalidMessage ||
+                                isInterestInvalid ||
+                                isInstallmentAmountInvalid ||
+                                graceDefaultPeriodInvalidMessage,
+                        )}
                         loading={isOfferLoading}
                         type="submit"
                     >
@@ -990,10 +1059,6 @@ function OfferModal({
                         {isOfferActive ? 'Cancel Offer' : 'Reject Application'}
                     </Button>
                 </div>
-                {/* Disabled elements prevent any click events to be fired resulting in inputs not being blurred */}
-                {/* {account && disabledSubmit ? (
-                        <div className="clickable" onClick={showDisplayAlert} />
-                    ) : null} */}
 
                 <style jsx>{`
                     form {
@@ -1012,6 +1077,10 @@ function OfferModal({
                                 color: var(--color-secondary);
                                 font-weight: 400;
                                 margin-bottom: 8px;
+                            }
+
+                            > :global(.alert) {
+                                margin-top: 8px;
                             }
                         }
 

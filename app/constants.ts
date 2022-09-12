@@ -114,3 +114,4 @@ export const commonDarkBoxShadow = `0px 28px 32px -16px #000000, ${commonBoxShad
 
 export const oneDay = 86400
 export const thirtyDays = oneDay * 30
+export const oneYear = 365 * oneDay

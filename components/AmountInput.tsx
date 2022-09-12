@@ -14,6 +14,7 @@ export function AmountInput({
     onKeyDown,
     label,
     paddingRight,
+    invalid,
     ...classModifiers
 }: {
     decimals: number
@@ -24,6 +25,7 @@ export function AmountInput({
     label?: string
     paddingRight?: number
     disabled?: boolean
+    invalid?: boolean
     noToken?: boolean
     s?: boolean
     center?: boolean
@@ -127,6 +129,7 @@ export function AmountInput({
             `}</style>
 
             <input
+                className={invalid ? 'invalid' : ''}
                 type="text"
                 inputMode="decimal"
                 disabled={classModifiers.disabled}
