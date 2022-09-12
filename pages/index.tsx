@@ -1,7 +1,7 @@
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatCurrency, POOLS, prefix } from '../app'
+import { APP_NAME, formatCurrency, formatPercent, POOLS, prefix } from '../app'
 import { Page, Skeleton, PoolsListNew } from '../components'
 import { useFetchIntervalAllStats, usePools } from '../features'
 
@@ -48,7 +48,7 @@ const EarnPools: NextPage = () => {
                                           pool.liquidityTokenDecimals,
                                           0,
                                       ),
-                                      `${pool.stats.apy}%`,
+                                      formatPercent(pool.stats.apy / 100),
                                       pool.stats.loans.toString(),
                                   ]
                                 : [

@@ -1,5 +1,6 @@
 import {
     capitalize,
+    formatPercent,
     formatTokenNumber,
     TOKEN_SYMBOL,
     USDT_DECIMALS,
@@ -20,7 +21,7 @@ export function ExitAlert({
         <Alert
             style="warning"
             title={`${capitalize(verb)} funds incures a ${
-                feePercent ? `${feePercent}%` : ''
+                feePercent ? formatPercent(feePercent / 100) : ''
             } fee ${
                 value && value !== '-'
                     ? `(${formatTokenNumber(

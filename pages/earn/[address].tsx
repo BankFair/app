@@ -1,4 +1,3 @@
-import { parseUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
 import type { NextPage } from 'next'
 import Head from 'next/head'
@@ -21,6 +20,7 @@ import {
     TOKEN_SYMBOL,
     formatCurrency,
     formatToken,
+    formatPercent,
 } from '../../app'
 import {
     Page,
@@ -218,7 +218,11 @@ function AddFunds({
                 <div className="stat">
                     <div className="label">APY</div>
                     <div className="value">
-                        {stats ? `${stats.apy}%` : <Skeleton width={50} />}
+                        {stats ? (
+                            formatPercent(stats.apy / 100)
+                        ) : (
+                            <Skeleton width={50} />
+                        )}
                     </div>
                 </div>
             </div>

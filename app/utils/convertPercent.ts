@@ -4,5 +4,5 @@ import { oneHundredPercent } from '../constants'
  * Takes a percentage as it is stored in the smart contracts and converts it to fractional percent
  */
 export function convertPercent(value: number) {
-    return (value / oneHundredPercent) * 100
+    return (value / oneHundredPercent) * 100 // TODO: Remove multiplication by 100
 }

@@ -19,6 +19,7 @@ import {
     checkAmountValidity,
     convertPercent,
     fetchBorrowerInfoAuthenticated,
+    formatPercent,
     formatToken,
     getAddress,
     getBorrowerInfo,
@@ -319,7 +320,7 @@ function Offer({
             </div>
             <div className="field">
                 <div className="label">Interest APR</div>
-                <div>{offer.details.apr / 10}%</div>
+                <div>{formatPercent(offer.details.apr / 1000)}</div>
             </div>
             <div className="field">
                 <div className="label">Grace Default Period</div>
@@ -720,7 +721,8 @@ function RepayLoan({
                         {loan.duration / thirtyDays} months
                     </div>
                     <div className="field">
-                        <span className="label">Interest APR:</span> {loan.apr}%
+                        <span className="label">Interest APR:</span>{' '}
+                        {formatPercent(loan.apr / 100)}
                     </div>
                     <div className="field">
                         <span className="label">Grace default period:</span>{' '}
