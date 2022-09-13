@@ -7,8 +7,8 @@ import {
     NEW_COLOR_RICH_BLACK,
     NEW_COLOR_WHITE,
     rgba,
-    rgbaBlack5,
-    rgbaWhite5,
+    rgbaBlack90,
+    rgbaWhite90,
     rgbBlue,
     rgbChineseSilver,
     rgbGreeneryDark,
@@ -43,7 +43,7 @@ export default function App({ Component, pageProps }: AppProps) {
                         --bg-color: ${rgbNewWhite};
                         --bg-overlay: ${rgba(NEW_COLOR_WHITE, 0.9)};
                         --bg-modal-overlay: rgba(0, 0, 0, 0.7);
-                        --bg-section: ${rgbaWhite5};
+                        --bg-section: ${rgbaWhite90};
                         --color: ${rgbGround};
                         --color-secondary: ${rgbStone};
                         --color-disabled: ${rgbGrey500};
@@ -193,7 +193,7 @@ export default function App({ Component, pageProps }: AppProps) {
                             --bg-color: ${rgbRichBlack};
                             --bg-overlay: ${rgba(NEW_COLOR_RICH_BLACK, 0.9)};
                             --bg-modal-overlay: rgba(20, 20, 20, 0.7);
-                            --bg-section: ${rgbaBlack5};
+                            --bg-section: ${rgbaBlack90};
                             --color: ${rgbChineseSilver};
                             --color-disabled: ${rgbGrey600};
                             --shadow: rgba(0, 0, 0, 0.16);

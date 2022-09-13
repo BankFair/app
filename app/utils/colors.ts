@@ -95,4 +95,6 @@ export const rgbaLimeGreen21 = rgba(NEW_COLOR_LIME_GREEN, 0.21)
 
 export const rgbaWhite5 = rgba(COLOR_WHITE, 0.05)
 export const rgbaBlack5 = rgba(COLOR_BLACK, 0.05)
+export const rgbaWhite90 = rgba(COLOR_WHITE, 0.9)
+export const rgbaBlack90 = rgba(COLOR_BLACK, 0.9)
 // #endregion
