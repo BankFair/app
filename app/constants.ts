@@ -14,6 +14,7 @@ export const APP_NAME = 'Sapling'
 export const SIDEBAR_ALWAYS_VISIBLE_WIDTH = '700'
 
 export const CHAIN_ID =
+    process.env.BUILDING_CLOUDFLARE_PREVIEW ||
     process.env.BUILDING_FOR_GITHUB_PAGES ||
     process.env.NODE_ENV === 'development'
         ? chains.mumbai
