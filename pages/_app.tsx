@@ -188,6 +188,15 @@ export default function App({ Component, pageProps }: AppProps) {
                         outline-offset: -2px;
                     }
 
+                    svg.top-align {
+                        vertical-align: top;
+                    }
+
+                    .tooltip-container {
+                        text-align: center;
+                        max-width: 300px;
+                    }
+
                     @media (prefers-color-scheme: dark) {
                         :root {
                             --bg-color: ${rgbRichBlack};
