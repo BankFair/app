@@ -14,7 +14,11 @@ export const chains = {
 export const APP_NAME = 'Sapling'
 export const SIDEBAR_ALWAYS_VISIBLE_WIDTH = '700'
 
-export const CHAIN_ID = chains.mumbai
+export const CHAIN_ID =
+    process.env.BUILDING_FOR_GITHUB_PAGES ||
+    process.env.NODE_ENV === 'development'
+        ? chains.mumbai
+        : chains.polygon
 export const RPC_URL =
     CHAIN_ID === chains.polygon
         ? 'https://polygon-rpc.com/'
@@ -99,8 +103,17 @@ export const oneHundredPercent = 1000
 export const ONE_HUNDRED_PERCENT = BigNumber.from(oneHundredPercent)
 
 export const BORROWER_SERVICE_URL =
-    'https://test-borrower-api.sapling.workers.dev'
-// export const BORROWER_SERVICE_URL = 'http://localhost:8787'
+    process.env.NODE_ENV === 'development'
+        ? 'http://localhost:8010/proxy'
+        : CHAIN_ID === chains.mumbai
+        ? 'https://test-borrower-api.sapling.workers.dev'
+        : 'https://api.sapling.finance/borrower'
+export const LENDER_SERVICE_URL =
+    process.env.NODE_ENV === 'development'
+        ? 'http://localhost:8011/proxy'
+        : CHAIN_ID === chains.mumbai
+        ? 'https://test-lender-api.sapling.workers.dev'
+        : 'https://api.sapling.finance/lender'
 
 export const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
 

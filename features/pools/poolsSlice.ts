@@ -10,6 +10,7 @@ import {
     loanDeskContract,
 } from './contracts'
 import {
+    Address,
     convertPercent,
     createFetchInterval,
     Hexadecimal,
@@ -70,7 +71,7 @@ export interface BorrowInfo {
     blockNumber: number
 }
 
-type Loading = 'stats' | `accountInfo_${string}`
+type Loading = 'stats' | `accountInfo_${Address}`
 
 export interface Pool {
     name: string

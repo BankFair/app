@@ -11,6 +11,7 @@ import {
     LOCAL_STORAGE_LAST_CONNECTOR_WALLETCONNECT,
     LOCAL_STORAGE_LAST_CONNECTOR_EIP1193,
 } from '../constants'
+import { Address } from '../types'
 
 export const connectors: [
     EIP1193 | WalletConnect | GnosisSafe | Network,
@@ -71,9 +72,13 @@ export function useAccount() {
     const isWalletConnectActive = walletConnectHooks.useIsActive()
     const isEip1193Active = eip1193Hooks.useIsActive()
 
-    const gnosisSafeAccount = gnosisSafeHooks.useAccount()
-    const walletConnectAccount = walletConnectHooks.useAccount()
-    const eip1193Account = eip1193Hooks.useAccount()
+    const gnosisSafeAccount = gnosisSafeHooks.useAccount() as
+        | Address
+        | undefined
+    const walletConnectAccount = walletConnectHooks.useAccount() as
+        | Address
+        | undefined
+    const eip1193Account = eip1193Hooks.useAccount() as Address | undefined
 
     if (isGnosisSafeActive) {
         return gnosisSafeAccount

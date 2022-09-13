@@ -3,14 +3,7 @@ import { useMemo } from 'react'
 import { ButtonHTMLAttributes } from 'react'
 import { CSSProperties, MouseEventHandler, ReactNode } from 'react'
 import { Oval } from 'react-loading-icons'
-import {
-    className,
-    COLOR_WHITE,
-    rgba,
-    rgbGreen,
-    rgbStone,
-    rgbStoneDarker,
-} from '../app'
+import { className, COLOR_WHITE, rgba, rgbStone, rgbStoneDarker } from '../app'
 
 export function Button({
     href,
@@ -20,6 +13,7 @@ export function Button({
     loading,
     width,
     type,
+    target,
     ...classModifiers
 }: {
     href?: string
@@ -32,6 +26,7 @@ export function Button({
     disabled?: boolean
     whiteTransaprent?: boolean
     stone?: boolean
+    target?: '_blank'
 }) {
     const { disabled } = classModifiers
 
@@ -44,13 +39,14 @@ export function Button({
         return { ...style, width }
     }, [style, width])
 
-    const anchor = (
+    const element = (
         <Element
             onClick={disabled ? undefined : onClick}
             disabled={disabled}
             className={className(classModifiers)}
             style={styleProp}
             type={type}
+            target={target}
         >
             <style jsx>{`
                 a,
@@ -115,7 +111,7 @@ export function Button({
         </Element>
     )
 
-    return href ? <Link href={href}>{anchor}</Link> : anchor
+    return href ? <Link href={href}>{element}</Link> : element
 }
 
 export type Button = typeof Button
