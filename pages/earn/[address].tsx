@@ -8,6 +8,7 @@ import {
     useMemo,
     useState,
 } from 'react'
+
 import { useDispatch, useSelector } from '../../store'
 import {
     APP_NAME,
@@ -37,6 +38,7 @@ import {
     BackToPools,
     PoolInfo,
     Alert,
+    InfoWithTooltip,
 } from '../../components'
 import {
     contract,
@@ -175,6 +177,12 @@ function Main({ children }: { children: ReactNode }) {
     )
 }
 
+const estimatedAPYTooltip = (
+    <InfoWithTooltip
+        size={19}
+        text="Snapshot of current return based APR of loans outstanding."
+    />
+)
 function ApplyForLenderAccess({
     pool: { managerAddress },
     poolAddress,
@@ -196,7 +204,9 @@ function ApplyForLenderAccess({
 
             <div className="stats">
                 <div className="stat">
-                    <div className="label">Estimated APY</div>
+                    <div className="label">
+                        Estimated APY {estimatedAPYTooltip}
+                    </div>
                     <div className="value">
                         {stats ? `${stats.apy}%` : <Skeleton width={50} />}
                     </div>
@@ -293,7 +303,9 @@ function AddFunds({
 
             <div className="stats">
                 <div className="stat">
-                    <div className="label">Estimated APY</div>
+                    <div className="label">
+                        Estimated APY {estimatedAPYTooltip}
+                    </div>
                     <div className="value">
                         {stats ? (
                             formatPercent(stats.apy / 100)
@@ -351,7 +363,13 @@ function YourMoney({
 
             <div className="stats">
                 <div className="stat">
-                    <div className="label">Balance</div>
+                    <div className="label">
+                        Balance{' '}
+                        <InfoWithTooltip
+                            size={19}
+                            text="Your funds in the Pool including any interested earned. Note that interest earned is only shown when Borrowers make repayments. Generally, this number will rise once a month, not everyday."
+                        />
+                    </div>
                     <div className="value">
                         {account ? (
                             info ? (
@@ -368,7 +386,13 @@ function YourMoney({
                     </div>
                 </div>
                 <div className="stat">
-                    <div className="label">Withdrawable</div>
+                    <div className="label">
+                        Withdrawable{' '}
+                        <InfoWithTooltip
+                            size={19}
+                            text="Funds that you can withdraw today. Dependant on how much un-loaned funds are in the pool at any one time."
+                        />
+                    </div>
                     <div className="value">
                         {account ? (
                             info ? (
