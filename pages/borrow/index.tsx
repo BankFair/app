@@ -5,7 +5,7 @@ import {
     APP_NAME,
     formatCurrency,
     formatPercent,
-    POOLS,
+    poolsConfig,
     prefix,
 } from '../../app'
 import { Page, Skeleton, PoolsListNew } from '../../components'
@@ -21,7 +21,7 @@ const labels = ['Available liquidity', 'Interest rate']
 const BorrowPools: NextPage = () => {
     const pools = usePools()
     const dispatch = useDispatch()
-    const poolsLoaded = Object.keys(pools).length === POOLS.length
+    const poolsLoaded = Object.keys(pools).length === poolsConfig.length
     const hookArg = poolsLoaded ? { dispatch, pools } : null
     useFetchIntervalAllStats(poolsLoaded ? { dispatch } : null)
     useFetchIntervalAllBorrowInfo(hookArg)
@@ -35,7 +35,7 @@ const BorrowPools: NextPage = () => {
 
             <h1>Pools</h1>
             <PoolsListNew
-                items={POOLS.map(({ address, name }) => {
+                items={poolsConfig.map(({ address, name }) => {
                     const pool = pools[address]
                     return {
                         address,

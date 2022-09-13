@@ -16,7 +16,7 @@ import {
     useProvider,
     getAddress,
     zero,
-    POOLS,
+    poolsConfig,
     prefix,
     TOKEN_SYMBOL,
     formatCurrency,
@@ -50,7 +50,8 @@ import {
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
-    const name = POOLS.find((pool) => pool.address === address)?.name || ''
+    const name =
+        poolsConfig.find((pool) => pool.address === address)?.name || ''
 
     const title = name ? `${name} - ${APP_NAME}` : APP_NAME
 

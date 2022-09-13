@@ -1,7 +1,13 @@
 import { NextPage } from 'next'
 import Head from 'next/head'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatCurrency, formatPercent, POOLS, prefix } from '../app'
+import {
+    APP_NAME,
+    formatCurrency,
+    formatPercent,
+    poolsConfig,
+    prefix,
+} from '../app'
 import { Page, Skeleton, PoolsListNew } from '../components'
 import { useFetchIntervalAllStats, usePools } from '../features'
 
@@ -16,7 +22,7 @@ const labels = [
 const EarnPools: NextPage = () => {
     const pools = usePools()
     const dispatch = useDispatch()
-    const poolsLoaded = Object.keys(pools).length === POOLS.length
+    const poolsLoaded = Object.keys(pools).length === poolsConfig.length
     useFetchIntervalAllStats(poolsLoaded ? { dispatch } : null)
 
     return (
@@ -29,7 +35,7 @@ const EarnPools: NextPage = () => {
             <h1>Pools</h1>
             <PoolsListNew
                 showMoreAndOpenPage
-                items={POOLS.map(({ address, name }) => {
+                items={poolsConfig.map(({ address, name }) => {
                     const pool = pools[address]
                     return {
                         address,

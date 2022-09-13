@@ -27,7 +27,7 @@ import {
     InputAmount,
     oneDay,
     oneYear,
-    POOLS,
+    poolsConfig,
     prefix,
     rgbRed,
     rgbYellowDarker,
@@ -79,7 +79,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
     const provider = useProvider()
     const dispatch = useDispatch()
     const pool = useSelector((s) => s.pools[address])
-    const name = POOLS.find((pool) => pool.address === address)?.name
+    const name = poolsConfig.find((pool) => pool.address === address)?.name
 
     const head = (
         <Head>

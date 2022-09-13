@@ -2,7 +2,13 @@ import { NextPage } from 'next'
 import Head from 'next/head'
 import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { APP_NAME, formatCurrency, POOLS, prefix, useAccount } from '../../app'
+import {
+    APP_NAME,
+    formatCurrency,
+    poolsConfig,
+    prefix,
+    useAccount,
+} from '../../app'
 import { PoolsList, Page, PageLoading, Skeleton } from '../../components'
 import { useFetchIntervalAllStats, usePools } from '../../features'
 
@@ -11,7 +17,7 @@ const labels = ['Pool size', 'Manager funds', 'Avialable liquidity', 'Loans']
 const ManagePools: NextPage = () => {
     const account = useAccount()
     const allPools = usePools()
-    const allPoolsLoaded = Object.keys(allPools).length === POOLS.length
+    const allPoolsLoaded = Object.keys(allPools).length === poolsConfig.length
     const pools = useMemo(
         () =>
             Object.values(allPools).filter(

@@ -14,7 +14,7 @@ import {
     convertPercent,
     createFetchInterval,
     Hexadecimal,
-    POOLS,
+    poolsConfig,
 } from '../../app'
 import { AppState, Action, AppDispatch } from '../../store'
 
@@ -146,7 +146,7 @@ export const fetchAllStats = createAsyncThunk(
     'pools/fetchAllStats',
     ({
         dispatch,
-        pools = POOLS,
+        pools = poolsConfig,
     }: {
         dispatch: AppDispatch
         pools?: { address: string }[]
@@ -201,7 +201,7 @@ export const fetchAccountInfoAllPools = createAsyncThunk(
     'pools/fetchAccountInfoAllPools',
     ({ dispatch, account }: { dispatch: AppDispatch; account: string }) => {
         return Promise.all(
-            POOLS.map(({ address: poolAddress }) =>
+            poolsConfig.map(({ address: poolAddress }) =>
                 fetchIntervalAccountInfo(dispatch, { poolAddress, account }),
             ),
         )
