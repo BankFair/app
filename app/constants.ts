@@ -1,4 +1,3 @@
-import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Hexadecimal } from './types'
 
@@ -84,26 +83,27 @@ export const LOCAL_STORAGE_LAST_CONNECTOR_EIP1193 = 'EIP1193'
 export const LOCAL_STORAGE_BORROWER_INFO_AUTH_KEY_PREFIX =
     'sapling_borrowerInfoAuth_'
 
-export const poolsConfig = chains.polygon
-    ? [
-          {
-              name: 'Kitale Community Pool (Uganda)',
-              address: '0x0000000000000000000000000000000000000000',
-              block: 20000000,
-          },
-      ]
-    : [
-          {
-              name: 'Kitale Community Pool (Uganda)',
-              address: '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19',
-              block: 27778687,
-          },
-          {
-              name: 'Kitale Community Training Pool',
-              address: '0x063527eeB60ba6E6240b898315cee9E637CABe13',
-              block: 27974361,
-          },
-      ]
+export const poolsConfig =
+    CHAIN_ID === chains.polygon
+        ? [
+              {
+                  name: 'Kitale Community Pool (Uganda)',
+                  address: '0x0000000000000000000000000000000000000000',
+                  block: 20000000,
+              },
+          ]
+        : [
+              {
+                  name: 'Kitale Community Pool (Uganda)',
+                  address: '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19',
+                  block: 27778687,
+              },
+              {
+                  name: 'Kitale Community Training Pool',
+                  address: '0x063527eeB60ba6E6240b898315cee9E637CABe13',
+                  block: 27974361,
+              },
+          ]
 
 export const TOKEN_SYMBOL = 'USDT'
 export const USDT_DECIMALS = 6
