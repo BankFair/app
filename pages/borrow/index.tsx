@@ -35,12 +35,12 @@ const BorrowPools: NextPage = () => {
 
             <h1>Pools</h1>
             <PoolsListNew
-                items={POOLS.map(({ address, name, description }) => {
+                items={POOLS.map(({ address, name }) => {
                     const pool = pools[address]
                     return {
+                        address,
                         link: `/borrow/${address}`,
                         name,
-                        description,
                         stats:
                             pool && pool.stats && pool.borrowInfo
                                 ? [

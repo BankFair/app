@@ -5,11 +5,9 @@ import { PoolDescription } from './PoolDescription'
 export function PoolInfo({
     poolAddress,
     name,
-    description,
 }: {
     poolAddress: string
     name: string
-    description: string
 }) {
     return (
         <Box>
@@ -35,7 +33,7 @@ export function PoolInfo({
                 }
             `}</style>
             <h2>{name}</h2>
-            {description && <PoolDescription text={description} />}
+            <PoolDescription address={poolAddress} />
             <div className="subtitle">
                 <img src={`${prefix}/usdt.svg`} alt="USDT logo" />
                 USDT

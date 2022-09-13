@@ -45,9 +45,7 @@ import {
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
-    const { name, description } = POOLS.find(
-        (pool) => pool.address === address,
-    ) || { name: '', description: '' }
+    const name = POOLS.find((pool) => pool.address === address)?.name || ''
 
     const title = name ? `${name} - ${APP_NAME}` : APP_NAME
 
@@ -65,11 +63,7 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             {head}
 
             <BackToPools href="/" />
-            <PoolInfo
-                poolAddress={address}
-                name={name}
-                description={description}
-            />
+            <PoolInfo poolAddress={address} name={name} />
             <PoolStats pool={pool} poolAddress={address} />
             <Main>
                 <AddFunds pool={pool} poolAddress={address} />

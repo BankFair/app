@@ -206,7 +206,6 @@ async function fetchAndSetPoolInfo([
         name: string
         block: number
         address: string
-        description: string
     },
     string,
     string,
