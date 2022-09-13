@@ -84,14 +84,12 @@ type PoolsEnv = {
     name: string
     block: number
     address: string
-    description: string
 }[]
 export const POOLS = (JSON.parse(process.env.POOLS!) as PoolsEnv).map(
-    ({ name, block, address, description }) => ({
+    ({ name, block, address }) => ({
         name,
         block,
         address: getAddress(address),
-        description,
     }),
 )
 
