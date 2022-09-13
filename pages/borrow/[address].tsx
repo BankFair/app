@@ -1247,10 +1247,7 @@ function RequestLoan({
                         onBlur={() => setNameBlurred(true)}
                     />
                     {nameBlurred && isNameInvalid ? (
-                        <Alert
-                            style="error-filled"
-                            title="Please enter your name"
-                        />
+                        <Alert style="error" title="Please enter your name" />
                     ) : null}
                 </label>
                 <label>
@@ -1272,7 +1269,7 @@ function RequestLoan({
                     />
                     {businessNameBlurred && isBusinessNameInvalid ? (
                         <Alert
-                            style="error-filled"
+                            style="error"
                             title="Please enter your business name"
                         />
                     ) : null}
@@ -1320,11 +1317,11 @@ function RequestLoan({
                     {phoneBlurred && emailBlurred ? (
                         isPhoneAndEmailEmpty ? (
                             <Alert
-                                style="error-filled"
+                                style="error"
                                 title="Please enter an email or phone number"
                             />
                         ) : isEmailInvalid ? (
-                            <Alert style="error-filled" title="Invalid email" />
+                            <Alert style="error" title="Invalid email" />
                         ) : null
                     ) : null}
                 </label>
@@ -1344,10 +1341,7 @@ function RequestLoan({
                         }
                     />
                     {amountBlurred && invalidAmountMessage ? (
-                        <Alert
-                            style="error-filled"
-                            title={invalidAmountMessage}
-                        />
+                        <Alert style="error" title={invalidAmountMessage} />
                     ) : null}
                 </label>
                 <label>
@@ -1371,10 +1365,7 @@ function RequestLoan({
                         }
                     />
                     {durationBlurred && invalidDurationMessage ? (
-                        <Alert
-                            style="error-filled"
-                            title={invalidDurationMessage}
-                        />
+                        <Alert style="error" title={invalidDurationMessage} />
                     ) : null}
                 </label>
 

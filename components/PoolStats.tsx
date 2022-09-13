@@ -70,7 +70,7 @@ export function PoolStats({
                     </div>
                 </div>
                 <div className="stat">
-                    <div className="label">Loans Outstanding</div>
+                    <div className="label">Loans outstanding</div>
                     <div className="number">
                         {stats ? (
                             formatCurrency(

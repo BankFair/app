@@ -190,7 +190,7 @@ function StakeAndUnstake({
 
             {type === 'Stake' ? (
                 <Alert
-                    style="warning-filled"
+                    style="warning"
                     title="You should not stake unless you are prepared to sustain a total loss of the money you have invested plus any commission or other transaction charges"
                 />
             ) : (
@@ -927,7 +927,7 @@ function OfferModal({
                     />
                     {isAmountInvalid ? (
                         <Alert
-                            style="error-filled"
+                            style="error"
                             title={`Minimum amount is ${formatToken(
                                 BigNumber.from(borrowInfo.minLoanAmount),
                                 liquidityTokenDecimals,
@@ -948,10 +948,7 @@ function OfferModal({
                         paddingRight={60}
                     />
                     {durationInvalidMessage ? (
-                        <Alert
-                            style="error-filled"
-                            title={durationInvalidMessage}
-                        />
+                        <Alert style="error" title={durationInvalidMessage} />
                     ) : null}
                 </label>
                 <label>
@@ -966,7 +963,7 @@ function OfferModal({
                     />
                     {installmentsInvalidMessage ? (
                         <Alert
-                            style="error-filled"
+                            style="error"
                             title={installmentsInvalidMessage}
                         />
                     ) : null}
@@ -984,7 +981,7 @@ function OfferModal({
                         paddingRight={26}
                     />
                     {isInterestInvalid ? (
-                        <Alert style="error-filled" title="Invalid interest" />
+                        <Alert style="error" title="Invalid interest" />
                     ) : null}
                 </label>
                 <label>
@@ -998,7 +995,7 @@ function OfferModal({
                     />
                     {isInstallmentAmountInvalid ? (
                         <Alert
-                            style="error-filled"
+                            style="error"
                             title="Invalid installment amount"
                         />
                     ) : null}
@@ -1017,7 +1014,7 @@ function OfferModal({
                     />
                     {graceDefaultPeriodInvalidMessage ? (
                         <Alert
-                            style="error-filled"
+                            style="error"
                             title={graceDefaultPeriodInvalidMessage}
                         />
                     ) : null}

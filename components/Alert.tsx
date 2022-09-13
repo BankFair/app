@@ -21,12 +21,7 @@ export function Alert({
     title,
     body,
 }: {
-    style:
-        | 'warning-filled'
-        | 'warning'
-        | 'error-filled'
-        | 'info'
-        | 'info-outlined'
+    style: 'warning' | 'warning-blue' | 'error'
     title: string
     body?: string
 }) {
@@ -48,43 +43,26 @@ export function Alert({
                         flex-shrink: 0;
                     }
 
-                    &.warning {
-                        color: ${rgbYellowDarker};
-                        background-color: ${rgbYellowLighter};
+                    &.warning,
+                    &.warning-blue {
+                        color: #686868;
 
                         > svg {
-                            color: ${rgbYellow};
+                            color: #ff9431;
                         }
                     }
 
-                    &.warning-filled {
-                        color: ${rgbTextPrimaryLight};
-                        background-color: ${rgbYellow};
+                    &.warning {
+                        background-color: #fff4ea;
                     }
 
-                    &.error-filled {
+                    &.warning-blue {
+                        background-color: #eaf8fb;
+                    }
+
+                    &.error {
                         color: ${rgbTextPrimaryDark};
                         background-color: ${rgbRed};
-                    }
-
-                    &.info {
-                        color: ${rgbBlueDarker};
-                        background-color: ${rgbBlueLighter};
-
-                        > svg {
-                            color: ${rgbBlue};
-                        }
-                    }
-
-                    &.info-outlined {
-                        color: ${rgbBlueDarker};
-                        background-color: ${rgba(COLOR_BLUE_LIGHTER, 0.48)};
-                        border: 1px solid ${rgbBlueLight};
-                        padding: 10px 14px;
-
-                        > svg {
-                            color: ${rgbBlue};
-                        }
                     }
                 }
 

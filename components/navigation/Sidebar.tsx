@@ -19,6 +19,8 @@ import { useMemo } from 'react'
 import { selectPools } from '../../features'
 import { FlexGrow } from '../FlexGrow'
 
+const sidePadding = 32
+
 export function Sidebar({
     isVisible,
     hideSidebar,
@@ -58,7 +60,7 @@ export function Sidebar({
                         top: 0;
                         bottom: 0;
                         margin-top: ${NAV_HEIGHT}px;
-                        margin-left: ${SIDEBAR_MAX_WIDTH}px;
+                        margin-left: ${SIDEBAR_MAX_WIDTH + sidePadding}px;
                         width: 100%;
                         height: 100vh;
                         background-color: var(--bg-modal-overlay);
@@ -68,7 +70,7 @@ export function Sidebar({
                 .list {
                     display: flex;
                     flex-direction: column;
-                    padding: 24px 32px;
+                    padding: 24px ${sidePadding}px;
                     height: 100%;
                 }
 
@@ -94,9 +96,10 @@ export function Sidebar({
                     }
                 }
 
-                @media screen and (min-width: ${SIDEBAR_MAX_WIDTH}px) {
+                @media screen and (min-width: ${SIDEBAR_MAX_WIDTH +
+                    sidePadding}px) {
                     .sidebar {
-                        width: ${SIDEBAR_MAX_WIDTH}px;
+                        width: ${SIDEBAR_MAX_WIDTH + sidePadding}px;
 
                         > .overlay {
                             display: block;
@@ -108,10 +111,15 @@ export function Sidebar({
                     .sidebar {
                         display: block;
                         background-color: transparent;
+                        width: ${SIDEBAR_MAX_WIDTH}px;
 
                         > .overlay {
                             display: none;
                         }
+                    }
+
+                    .list {
+                        padding-right: 0;
                     }
 
                     :global(#__next) {

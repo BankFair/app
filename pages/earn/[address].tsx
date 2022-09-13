@@ -230,7 +230,7 @@ function AddFunds({
             {form}
 
             <Alert
-                style="warning-filled"
+                style="warning"
                 title="You should not deposit unless you are prepared to sustain a total loss of the money you have invested plus any commission or other transaction charges"
             />
         </Box>
