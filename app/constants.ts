@@ -107,13 +107,13 @@ export const BORROWER_SERVICE_URL =
         ? 'http://localhost:8010/proxy'
         : CHAIN_ID === chains.mumbai
         ? 'https://test-borrower-api.sapling.workers.dev'
-        : 'https://api.sapling.finance/borrower'
+        : 'https://borrower-api.sapling.finance'
 export const LENDER_SERVICE_URL =
     process.env.NODE_ENV === 'development'
         ? 'http://localhost:8011/proxy'
         : CHAIN_ID === chains.mumbai
         ? 'https://test-lender-api.sapling.workers.dev'
-        : 'https://api.sapling.finance/lender'
+        : 'https://lender-api.sapling.finance'
 
 export const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
 
