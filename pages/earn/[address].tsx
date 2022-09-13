@@ -21,6 +21,9 @@ import {
     formatCurrency,
     formatToken,
     formatPercent,
+    fetchLenderAccess,
+    CHAIN_ID,
+    chains,
 } from '../../app'
 import {
     Page,
@@ -56,7 +59,24 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
         </Head>
     )
 
-    if (!pool) return <PageLoading>{head}</PageLoading>
+    // #region Account has access
+    // Use empty string for a loading state, use `no` if user doesn't have access, use the account when they have access
+    const [hasAccess, setHasAccess] = useState('')
+    const account = useAccount()
+    useEffect(() => {
+        if (!account) {
+            setHasAccess('no')
+            return
+        }
+
+        setHasAccess('')
+        fetchLenderAccess(account).then((hasAccess) => {
+            setHasAccess(hasAccess ? account : 'no')
+        })
+    }, [account])
+    // #endregion
+
+    if (!pool || !hasAccess) return <PageLoading>{head}</PageLoading>
 
     return (
         <Page>
@@ -65,10 +85,16 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             <BackToPools href="/" />
             <PoolInfo poolAddress={address} name={name} />
             <PoolStats pool={pool} poolAddress={address} />
-            <Main>
-                <AddFunds pool={pool} poolAddress={address} />
-                <YourMoney pool={pool} poolAddress={address} />
-            </Main>
+            {hasAccess === account ? (
+                <Main>
+                    <AddFunds pool={pool} poolAddress={address} />
+                    <YourMoney pool={pool} poolAddress={address} />
+                </Main>
+            ) : (
+                <Main>
+                    <ApplyForLenderAccess pool={pool} poolAddress={address} />
+                </Main>
+            )}
             <Earnings pool={pool} poolAddress={address} />
             {/* <div>
                 Pool address: <EtherscanLink address={address} />
@@ -125,6 +151,11 @@ function Main({ children }: { children: ReactNode }) {
                         > :global(:last-child) {
                             margin-left: 8px;
                         }
+
+                        > :global(:first-child:last-child) {
+                            margin-left: 0;
+                            margin-right: 8px;
+                        }
                     }
                     @media screen and (min-width: 950px) {
                         > :global(.box) {
@@ -141,6 +172,58 @@ function Main({ children }: { children: ReactNode }) {
             `}</style>
             {children}
         </div>
+    )
+}
+
+function ApplyForLenderAccess({
+    pool: { managerAddress },
+    poolAddress,
+}: {
+    pool: Pool
+    poolAddress: string
+}) {
+    const account = useAccount()
+
+    const [stats] = useStatsState(poolAddress)
+
+    const isManager = managerAddress === account
+
+    const overlay = isManager ? "Manager can't deposit" : undefined
+
+    return (
+        <Box overlay={overlay ? overlay : null}>
+            <h2>Apply for access to lend (takes 1 min)</h2>
+
+            <div className="stats">
+                <div className="stat">
+                    <div className="label">Estimated APY</div>
+                    <div className="value">
+                        {stats ? `${stats.apy}%` : <Skeleton width={50} />}
+                    </div>
+                </div>
+            </div>
+
+            <div style={{ marginBottom: 8 }} />
+
+            <Button
+                href={`${
+                    CHAIN_ID === chains.mumbai
+                        ? `https://plcw7zwnspa.typeform.com/to/OBHwt5ow`
+                        : `https://plcw7zwnspa.typeform.com/to/trkCl5gk`
+                }#wallet_address=${account}`}
+                target="_blank"
+                style={{ padding: '0 24px' }}
+            >
+                Apply
+            </Button>
+
+            <div style={{ marginBottom: 16 }} />
+
+            <Alert
+                style="warning"
+                title="This is an unaudited, size limited alpha proof of concept version. Please only add limited funds that you are prepared to lose. There is also limited liquidity to remove funds. Thank you for your support!"
+            />
+        </Box>
     )
 }
 
