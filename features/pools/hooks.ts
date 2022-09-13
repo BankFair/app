@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AppDispatch, useSelector, AppState, useDispatch } from '../../store'
 import {
     getERC20Contract,
-    POOLS,
+    poolsConfig,
     useProvider,
     ERC20Contract,
     useAccount,
@@ -127,7 +127,7 @@ export function useAccountStats() {
     const pools = usePools()
     const dispatch = useDispatch()
     const account = useAccount()
-    const poolsLoaded = Object.keys(pools).length === POOLS.length
+    const poolsLoaded = Object.keys(pools).length === poolsConfig.length
     useFetchIntervalAllStats(poolsLoaded ? { dispatch } : null)
     useFetchIntervalAccountInfoAllPools(
         poolsLoaded && account ? { dispatch, account } : null,
@@ -136,7 +136,7 @@ export function useAccountStats() {
     return useMemo(() => {
         const poolsArray = Object.values(pools)
         if (
-            poolsArray.length !== POOLS.length ||
+            poolsArray.length !== poolsConfig.length ||
             !account ||
             poolsArray.filter(
                 (pool) =>
@@ -147,7 +147,7 @@ export function useAccountStats() {
             return null
         }
 
-        const data = POOLS.map(({ address }) => {
+        const data = poolsConfig.map(({ address }) => {
             const pool = pools[address]
             const accountInfo = pool?.accountInfo[account]
             const stats = pool?.stats
@@ -239,7 +239,7 @@ export function useFetchPoolsPropertiesOnce() {
         if (typeof window !== 'object' || ref.current) return
         ref.current = true
 
-        for (const pool of POOLS) {
+        for (const pool of poolsConfig) {
             const attachedContract = contract.attach(pool.address)
 
             Promise.all([
