@@ -15,6 +15,7 @@ export function formatCurrency(
         {
             style: 'currency',
             currency,
+            minimumFractionDigits: 0,
             maximumFractionDigits,
         },
     )
