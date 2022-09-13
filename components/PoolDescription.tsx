@@ -54,6 +54,7 @@ const kitaleDescription = (
 )
 
 const descriptions: Record<string, JSX.Element> = {
+    '0x0000000000000000000000000000000000000000': kitaleDescription,
     '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19': kitaleDescription,
     '0x063527eeB60ba6E6240b898315cee9E637CABe13': <>Training Pool</>,
 }
