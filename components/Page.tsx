@@ -6,7 +6,7 @@ export function Page({ children, xl }: { children: ReactNode; xl?: boolean }) {
             <style jsx>{`
                 .page {
                     width: 100%;
-                    max-width: 800px;
+                    max-width: 1104px;
                     margin: 32px 0;
                     padding: 0 32px;
 

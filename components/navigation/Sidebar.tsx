@@ -68,7 +68,7 @@ export function Sidebar({
                 .list {
                     display: flex;
                     flex-direction: column;
-                    padding: 24px 32px;
+                    padding: 24px 0 24px 32px;
                     height: 100%;
                 }
 
