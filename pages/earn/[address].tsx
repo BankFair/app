@@ -216,7 +216,7 @@ function AddFunds({
 
             <div className="stats">
                 <div className="stat">
-                    <div className="label">APY</div>
+                    <div className="label">Estimated APY</div>
                     <div className="value">
                         {stats ? (
                             formatPercent(stats.apy / 100)
