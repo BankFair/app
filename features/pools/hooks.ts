@@ -528,7 +528,7 @@ export function useSchedule(
                 interestOutstanding: expectedInterestOutstanding,
             } = amountWithInterest(
                 amountBigNumber,
-                previous ? previous.expectedBaseAmountRepaid : 0,
+                previous ? previous.expectedBaseAmountRepaid : zero,
                 previous ? previous.expectedTimestamp : loan.borrowedTime,
                 loan.apr,
                 timestamp,

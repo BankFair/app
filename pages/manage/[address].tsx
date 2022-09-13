@@ -34,8 +34,8 @@ import {
     rgbYellowDarker,
     rgbYellowLighter,
     checkAmountValidity,
-    Hexadecimal,
     oneYear,
+    amountWithInterest,
 } from '../../app'
 import {
     Alert,
@@ -737,6 +737,32 @@ function OfferModal({
     const [isOfferLoading, setIsOfferLoading] = useState(false)
     const [isRejectLoading, setIsRejectLoading] = useState(false)
 
+    const [interestOnly, setInterestOnly] = useState(false)
+    const [previousInstallmentAmount, setPreviousInstallmentAmount] = useState(
+        '' as InputAmount,
+    )
+    const installmentAmountValue = useMemo(
+        () =>
+            interestOnly
+                ? calculateInterestOnly(
+                      parseUnits(amount, liquidityTokenDecimals),
+                      Number(interest),
+                      Number(duration) * thirtyDays,
+                      parseInt(installments, 10),
+                      liquidityTokenDecimals,
+                  )
+                : installmentAmount,
+        [
+            interestOnly,
+            amount,
+            liquidityTokenDecimals,
+            interest,
+            duration,
+            installments,
+            installmentAmount,
+        ],
+    )
+
     const [amountBigNumber, monthly, scheduleArg] = useMemo<
         [BigNumber, boolean, Parameters<typeof useSchedule>[0]]
     >(() => {
@@ -747,7 +773,7 @@ function OfferModal({
             !duration ||
             !interest ||
             !installments ||
-            !installmentAmount
+            !installmentAmountValue
         ) {
             return [zero, false, null]
         }
@@ -767,7 +793,7 @@ function OfferModal({
                 borrowedTime: now,
                 installments: installmentsNumber,
                 installmentAmount: parseUnits(
-                    installmentAmount,
+                    installmentAmountValue,
                     liquidityTokenDecimals,
                 ),
                 details: {
@@ -784,7 +810,7 @@ function OfferModal({
         duration,
         interest,
         installments,
-        installmentAmount,
+        installmentAmountValue,
     ])
     const schedule = useSchedule(scheduleArg)
 
@@ -795,7 +821,7 @@ function OfferModal({
             onOffer(
                 parseUnits(amount, liquidityTokenDecimals),
                 BigNumber.from(Number(duration) * thirtyDays),
-                parseUnits(installmentAmount, liquidityTokenDecimals),
+                parseUnits(installmentAmountValue, liquidityTokenDecimals),
                 parseInt(installments, 10),
                 Number(interest) * 10,
                 Number(graceDefaultPeriod) * oneDay,
@@ -807,7 +833,7 @@ function OfferModal({
             amount,
             duration,
             graceDefaultPeriod,
-            installmentAmount,
+            installmentAmountValue,
             installments,
             interest,
             liquidityTokenDecimals,
@@ -845,11 +871,11 @@ function OfferModal({
     const isInstallmentAmountInvalid = useMemo(
         () =>
             !checkAmountValidity(
-                installmentAmount,
+                installmentAmountValue,
                 liquidityTokenDecimals,
                 zero,
             ),
-        [installmentAmount, liquidityTokenDecimals],
+        [installmentAmountValue, liquidityTokenDecimals],
     )
     const isInterestInvalid = useMemo(() => {
         return Number(interest) <= 0
@@ -988,11 +1014,31 @@ function OfferModal({
                     <div className="label">Installment amount</div>
                     <AmountInput
                         decimals={liquidityTokenDecimals}
-                        value={installmentAmount}
+                        value={installmentAmountValue}
                         onChange={setInstallmentAmount}
-                        disabled={isOfferLoading}
+                        disabled={isOfferLoading || interestOnly}
                         invalid={isInstallmentAmountInvalid}
                     />
+                    <label className="checkbox">
+                        <input
+                            type="checkbox"
+                            checked={interestOnly}
+                            onChange={() => {
+                                if (interestOnly) {
+                                    setInstallmentAmount(
+                                        previousInstallmentAmount,
+                                    )
+                                    setInterestOnly(false)
+                                } else {
+                                    setPreviousInstallmentAmount(
+                                        installmentAmount,
+                                    )
+                                    setInterestOnly(true)
+                                }
+                            }}
+                        />
+                        Interest only
+                    </label>
                     {isInstallmentAmountInvalid ? (
                         <Alert
                             style="error"
@@ -1076,6 +1122,17 @@ function OfferModal({
                                 margin-bottom: 8px;
                             }
 
+                            > .checkbox {
+                                display: flex;
+                                align-items: center;
+
+                                > input[type='checkbox'] {
+                                    width: 16px;
+                                    height: 16px;
+                                    margin-right: 4px;
+                                }
+                            }
+
                             > :global(.alert) {
                                 margin-top: 8px;
                             }
@@ -1100,5 +1157,25 @@ function OfferModal({
                 `}</style>
             </form>
         </Modal>
+    )
+}
+
+function calculateInterestOnly(
+    amount: BigNumber,
+    interest: number,
+    duration: number,
+    installments: number,
+    liquidityTokenDecimals: number,
+) {
+    const now = Math.trunc(Date.now() / 1000)
+    return formatInputAmount(
+        amountWithInterest(
+            amount,
+            zero,
+            now,
+            interest,
+            now + duration / installments,
+        ).interestOutstanding,
+        liquidityTokenDecimals,
     )
 }

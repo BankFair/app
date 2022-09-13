@@ -2,14 +2,15 @@ import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { useEffect, useMemo, useState } from 'react'
 
 import { oneDay, zero } from '../constants'
+import { Hexadecimal } from '../types'
 
 import { noop } from './noop'
-import { oneHundredThousand, oneMillion } from './precision'
+import { oneMillion } from './precision'
 
 const halfHour = 30 * 60 * 1000
 export function useAmountWithInterest(
-    amount: string,
-    baseAmountRepaid: string,
+    amount: Hexadecimal,
+    baseAmountRepaid: Hexadecimal,
     interestPaidUntil: number,
     interestRate: number,
 ): BigNumber {
@@ -47,8 +48,8 @@ function countInterestDays(from: number, to: number) {
 }
 
 export function amountWithInterest(
-    amount: BigNumberish,
-    baseAmountRepaid: BigNumberish,
+    amount: BigNumber | Hexadecimal,
+    baseAmountRepaid: BigNumber | Hexadecimal,
     interestPaidUntil: number,
     interestRate: number,
     at = Math.trunc(Date.now() / 1000),
@@ -74,7 +75,7 @@ export function amountWithInterest(
 }
 
 export function getInstallmentAmount(
-    amount: BigNumberish,
+    amount: BigNumber | Hexadecimal,
     apr: number,
     installments: number,
     duration: number,
