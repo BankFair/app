@@ -19,7 +19,7 @@ export function ExitAlert({
 }) {
     return (
         <Alert
-            style="warning"
+            style="warning-blue"
             title={`${capitalize(verb)} funds incures a ${
                 feePercent ? formatPercent(feePercent / 100) : ''
             } fee ${
