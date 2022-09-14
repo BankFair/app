@@ -263,18 +263,16 @@ function LoansAwaitingApproval({
             .attach(loanDeskAddress)
             .connect(provider!)
 
-        contract
-            .queryFilter(contract.filters.LoanRequested(), block)
-            .then((events) => {
-                if (canceled) return []
+        const { contract: attached } = getBatchProviderAndLoanDeskContract(
+            20,
+            contract,
+        )
 
-                const { contract: attached } =
-                    getBatchProviderAndLoanDeskContract(events.length, contract)
-
-                return Promise.all(
-                    events.map(({ data }) => attached.loanApplications(data)),
-                )
-            })
+        Promise.all(
+            Array.from({ length: 20 }).map((_, i) =>
+                attached.loanApplications(i + 1),
+            ),
+        )
             .then((requests) => {
                 if (canceled) return []
 
@@ -383,14 +381,18 @@ function LoansAwaitingApproval({
                 <h2>Loans awaiting approval</h2>
                 <div className={requests === null ? undefined : 'grid'}>
                     {requests ? (
-                        mapLoanRequest(
-                            requests.filter(
-                                (request) =>
-                                    request.status ===
-                                    LoanApplicationStatus.APPLIED,
-                            ),
-                            setOfferModalRequest,
-                            liquidityTokenDecimals,
+                        requests.length ? (
+                            mapLoanRequest(
+                                requests.filter(
+                                    (request) =>
+                                        request.status ===
+                                        LoanApplicationStatus.APPLIED,
+                                ),
+                                setOfferModalRequest,
+                                liquidityTokenDecimals,
+                            )
+                        ) : (
+                            'No loans awaiting approval'
                         )
                     ) : (
                         <div className="loading">
@@ -409,14 +411,18 @@ function LoansAwaitingApproval({
                 <h2>Active offers</h2>
                 <div className={requests === null ? undefined : 'grid'}>
                     {requests ? (
-                        mapLoanRequest(
-                            requests.filter(
-                                (request) =>
-                                    request.status ===
-                                    LoanApplicationStatus.OFFER_MADE,
-                            ),
-                            setOfferModalRequest,
-                            liquidityTokenDecimals,
+                        requests.length ? (
+                            mapLoanRequest(
+                                requests.filter(
+                                    (request) =>
+                                        request.status ===
+                                        LoanApplicationStatus.OFFER_MADE,
+                                ),
+                                setOfferModalRequest,
+                                liquidityTokenDecimals,
+                            )
+                        ) : (
+                            'No active offers'
                         )
                     ) : (
                         <div className="loading">
