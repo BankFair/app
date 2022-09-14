@@ -271,15 +271,15 @@ export function useLoadAccountLoans(
         map[key] = true
 
         const attached = contract.attach(poolAddress)
-        attached
-            .queryFilter(
-                attached.filters.LoanBorrowed(null, account),
-                pool.block,
-            )
+        Promise.all(
+            Array.from({ length: 20 }).map((_, i) => attached.loans(i + 1)),
+        )
             .then((loans) =>
                 fetchLoans(
                     attached,
-                    loans.map((loan) => loan.args.loanId),
+                    loans
+                        .filter((loan) => loan.borrower === account)
+                        .map((loan) => loan.id),
                 ),
             )
             .then(([loans, details, blockNumber]) => {
