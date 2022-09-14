@@ -49,6 +49,7 @@ import {
     Box,
     Button,
     ConnectModal,
+    Modal,
     Page,
     PageLoading,
     ScheduleSummary,
@@ -1021,6 +1022,14 @@ function RequestLoan({
             isSubmitted,
     )
 
+    const [stepTwo, setStepTwo] = useState<{
+        parsedAmount: BigNumber
+        parsedDuration: BigNumber
+        id: string
+        digest: string
+    } | null>(null)
+    const [stepTwoLoading, setStepTwoLoading] = useState(false)
+
     const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (event) => {
             event.preventDefault()
@@ -1080,27 +1089,14 @@ function RequestLoan({
                             phone,
                             email,
                         }),
-                        loanDeskContract
-                            .attach(loanDeskAddress)
-                            .connect(signer)
-                            .requestLoan(
-                                parsedAmount,
-                                parsedDuration,
-                                id,
-                                digest,
-                            )
+                        setStepTwo({
+                            parsedAmount,
+                            parsedDuration,
+                            id,
+                            digest,
+                        })
                     ),
                 )
-                .then((tx) =>
-                    trackTransaction(dispatch, {
-                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
-                        tx,
-                    }),
-                )
-                .then(() => {
-                    setIsSubmitted(true)
-                    setLoading(false)
-                })
                 .catch((error) => {
                     console.error(error)
                     setLoading(false)
@@ -1119,8 +1115,6 @@ function RequestLoan({
             phone,
             email,
             poolAddress,
-            loanDeskAddress,
-            dispatch,
         ],
     )
 
@@ -1387,6 +1381,57 @@ function RequestLoan({
             {showConnectModal ? (
                 <ConnectModal onClose={() => setShowConnectModal(false)} />
             ) : null}
+
+            {stepTwo ? (
+                <Modal
+                    onClose={() => {
+                        setStepTwoLoading(false)
+                        setLoading(false)
+                        setStepTwo(null)
+                    }}
+                >
+                    <p style={{ textAlign: 'center' }}>
+                        Signature accepted. Press submit request to continue.
+                    </p>
+                    <Button
+                        type="button"
+                        loading={stepTwoLoading}
+                        style={{ display: 'block', margin: '0 auto 20px' }}
+                        onClick={() => {
+                            setStepTwoLoading(true)
+                            loanDeskContract
+                                .attach(loanDeskAddress)
+                                .connect(provider!.getSigner())
+                                .requestLoan(
+                                    stepTwo.parsedAmount,
+                                    stepTwo.parsedDuration,
+                                    stepTwo.id,
+                                    stepTwo.digest,
+                                )
+                                .then((tx) =>
+                                    trackTransaction(dispatch, {
+                                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
+                                        tx,
+                                    }),
+                                )
+                                .then(() => {
+                                    setIsSubmitted(true)
+                                    setLoading(false)
+                                    setStepTwo(null)
+                                    setStepTwoLoading(false)
+                                })
+                                .catch((error) => {
+                                    console.error(error)
+                                    setStepTwoLoading(false)
+                                })
+                        }}
+                    >
+                        Submit Request
+                    </Button>
+                </Modal>
+            ) : (
+                false
+            )}
         </Box>
     )
 }
