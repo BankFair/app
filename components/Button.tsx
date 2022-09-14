@@ -58,10 +58,10 @@ export function Button({
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
-                    background-image: var(--gradient);
+                    background-color: var(--old-gradient);
 
                     &:not(.disabled):hover {
-                        background-image: var(--gradient-hover);
+                        background-color: var(--old-gradient-hover);
                     }
 
                     &.disabled {

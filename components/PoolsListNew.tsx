@@ -30,7 +30,7 @@ export function PoolsListNew({
                     display: block;
                     color: var(--color);
                     background-color: var(--bg-section);
-                    backdrop-filter: blur(16px);
+                    // backdrop-filter: blur(16px);
                     border: 1px solid ${rgbaLimeGreen21};
                     border-radius: 8px;
                     padding: 16px;

@@ -92,7 +92,7 @@ export function Sidebar({
                     &.current,
                     &:hover {
                         color: var(--greenery);
-                        background: var(--gradient-hover);
+                        background-color: var(--old-gradient-hover);
                     }
                 }
 

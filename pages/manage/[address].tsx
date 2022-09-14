@@ -263,13 +263,14 @@ function LoansAwaitingApproval({
             .attach(loanDeskAddress)
             .connect(provider!)
 
+        const toLoad = 20
         const { contract: attached } = getBatchProviderAndLoanDeskContract(
-            20,
+            toLoad,
             contract,
         )
 
         Promise.all(
-            Array.from({ length: 20 }).map((_, i) =>
+            Array.from({ length: toLoad }).map((_, i) =>
                 attached.loanApplications(i + 1),
             ),
         )
