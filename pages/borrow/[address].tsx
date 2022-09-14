@@ -49,6 +49,7 @@ import {
     Box,
     Button,
     ConnectModal,
+    Modal,
     Page,
     PageLoading,
     ScheduleSummary,
@@ -165,67 +166,56 @@ function useOffer(
             .attach(pool.loanDeskAddress)
             .connect(provider)
 
-        contract
-            .queryFilter(
-                contract.filters.LoanOffered(null, account),
-                pool.block,
-            )
-            .then(async (events) => {
-                if (!events.length) return
+        for (let i = 1; i <= 20; i++) {
+            contract
+                .loanApplications(i)
+                .then(async (request) => {
+                    if (request.borrower !== account) return
+                    if (request.status !== LoanApplicationStatus.OFFER_MADE) {
+                        setOffer(null)
+                        return
+                    }
 
-                events.sort(
-                    (a, b) =>
-                        b.args.applicationId.toNumber() -
-                        a.args.applicationId.toNumber(),
-                )
-
-                const { applicationId } = events[0].args
-                const request = await contract.loanApplications(applicationId)
-
-                if (request.status !== LoanApplicationStatus.OFFER_MADE) {
-                    setOffer(null)
-                    return
-                }
-
-                const [offer, contactDetails] = await Promise.all([
-                    contract.loanOffers(applicationId),
-                    getBorrowerInfo(request.profileId).then((info) =>
-                        info
-                            ? info
-                            : fetch(
-                                  `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                              )
-                                  .then(
-                                      (response) =>
-                                          response.json() as Promise<{
-                                              name: string
-                                              businessName: string
-                                              phone?: string
-                                              email?: string
-                                          }>,
+                    const [offer, contactDetails] = await Promise.all([
+                        contract.loanOffers(request.id),
+                        getBorrowerInfo(request.profileId).then((info) =>
+                            info
+                                ? info
+                                : fetch(
+                                      `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
                                   )
-                                  .then(
-                                      (info) => (
-                                          setBorrowerInfo(
-                                              request.profileId,
-                                              info,
+                                      .then(
+                                          (response) =>
+                                              response.json() as Promise<{
+                                                  name: string
+                                                  businessName: string
+                                                  phone?: string
+                                                  email?: string
+                                              }>,
+                                      )
+                                      .then(
+                                          (info) => (
+                                              setBorrowerInfo(
+                                                  request.profileId,
+                                                  info,
+                                              ),
+                                              info
                                           ),
-                                          info
                                       ),
-                                  ),
-                    ),
-                ])
+                        ),
+                    ])
 
-                setOffer({
-                    details: offer,
-                    account,
-                    loanDeskAddress: pool.loanDeskAddress,
-                    contactDetails: contactDetails || {},
+                    setOffer({
+                        details: offer,
+                        account,
+                        loanDeskAddress: pool.loanDeskAddress,
+                        contactDetails: contactDetails || {},
+                    })
                 })
-            })
-            .catch((error) => {
-                console.error(error)
-            })
+                .catch((error) => {
+                    console.error(error)
+                })
+        }
     }, [account, pool, provider])
 
     return offer
@@ -1032,6 +1022,14 @@ function RequestLoan({
             isSubmitted,
     )
 
+    const [stepTwo, setStepTwo] = useState<{
+        parsedAmount: BigNumber
+        parsedDuration: BigNumber
+        id: string
+        digest: string
+    } | null>(null)
+    const [stepTwoLoading, setStepTwoLoading] = useState(false)
+
     const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (event) => {
             event.preventDefault()
@@ -1091,27 +1089,14 @@ function RequestLoan({
                             phone,
                             email,
                         }),
-                        loanDeskContract
-                            .attach(loanDeskAddress)
-                            .connect(signer)
-                            .requestLoan(
-                                parsedAmount,
-                                parsedDuration,
-                                id,
-                                digest,
-                            )
+                        setStepTwo({
+                            parsedAmount,
+                            parsedDuration,
+                            id,
+                            digest,
+                        })
                     ),
                 )
-                .then((tx) =>
-                    trackTransaction(dispatch, {
-                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
-                        tx,
-                    }),
-                )
-                .then(() => {
-                    setIsSubmitted(true)
-                    setLoading(false)
-                })
                 .catch((error) => {
                     console.error(error)
                     setLoading(false)
@@ -1130,8 +1115,6 @@ function RequestLoan({
             phone,
             email,
             poolAddress,
-            loanDeskAddress,
-            dispatch,
         ],
     )
 
@@ -1398,6 +1381,57 @@ function RequestLoan({
             {showConnectModal ? (
                 <ConnectModal onClose={() => setShowConnectModal(false)} />
             ) : null}
+
+            {stepTwo ? (
+                <Modal
+                    onClose={() => {
+                        setStepTwoLoading(false)
+                        setLoading(false)
+                        setStepTwo(null)
+                    }}
+                >
+                    <p style={{ textAlign: 'center' }}>
+                        Signature accepted. Press submit request to continue.
+                    </p>
+                    <Button
+                        type="button"
+                        loading={stepTwoLoading}
+                        style={{ display: 'block', margin: '0 auto 20px' }}
+                        onClick={() => {
+                            setStepTwoLoading(true)
+                            loanDeskContract
+                                .attach(loanDeskAddress)
+                                .connect(provider!.getSigner())
+                                .requestLoan(
+                                    stepTwo.parsedAmount,
+                                    stepTwo.parsedDuration,
+                                    stepTwo.id,
+                                    stepTwo.digest,
+                                )
+                                .then((tx) =>
+                                    trackTransaction(dispatch, {
+                                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
+                                        tx,
+                                    }),
+                                )
+                                .then(() => {
+                                    setIsSubmitted(true)
+                                    setLoading(false)
+                                    setStepTwo(null)
+                                    setStepTwoLoading(false)
+                                })
+                                .catch((error) => {
+                                    console.error(error)
+                                    setStepTwoLoading(false)
+                                })
+                        }}
+                    >
+                        Submit Request
+                    </Button>
+                </Modal>
+            ) : (
+                false
+            )}
         </Box>
     )
 }
