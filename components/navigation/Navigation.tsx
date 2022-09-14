@@ -43,11 +43,11 @@ export function Navigation() {
                     align-items: center;
                     height: ${NAV_HEIGHT}px;
                     background-color: var(--old-gradient);
-                    box-shadow: 0px 4px 24px rgba(64, 195, 135, 0.5);
+                    // box-shadow: 0px 4px 24px rgba(64, 195, 135, 0.5);
 
-                    @media (prefers-color-scheme: dark) {
-                        box-shadow: 0px 4px 24px rgba(64, 195, 135, 0.3);
-                    }
+                    // @media (prefers-color-scheme: dark) {
+                    //     box-shadow: 0px 4px 24px rgba(64, 195, 135, 0.3);
+                    // }
 
                     > :global(.logo) {
                         margin-right: -120px;
