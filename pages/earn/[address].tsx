@@ -88,7 +88,7 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             <BackToPools href="/" />
             <PoolInfo poolAddress={address} name={name} />
             <PoolStats pool={pool} poolAddress={address} />
-            {hasAccess === account ? (
+            {!account || hasAccess === account ? (
                 <Main>
                     <AddFunds pool={pool} poolAddress={address} />
                     <YourMoney pool={pool} poolAddress={address} />
