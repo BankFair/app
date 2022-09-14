@@ -165,67 +165,56 @@ function useOffer(
             .attach(pool.loanDeskAddress)
             .connect(provider)
 
-        contract
-            .queryFilter(
-                contract.filters.LoanOffered(null, account),
-                pool.block,
-            )
-            .then(async (events) => {
-                if (!events.length) return
+        for (let i = 1; i <= 20; i++) {
+            contract
+                .loanApplications(i)
+                .then(async (request) => {
+                    if (request.borrower !== account) return
+                    if (request.status !== LoanApplicationStatus.OFFER_MADE) {
+                        setOffer(null)
+                        return
+                    }
 
-                events.sort(
-                    (a, b) =>
-                        b.args.applicationId.toNumber() -
-                        a.args.applicationId.toNumber(),
-                )
-
-                const { applicationId } = events[0].args
-                const request = await contract.loanApplications(applicationId)
-
-                if (request.status !== LoanApplicationStatus.OFFER_MADE) {
-                    setOffer(null)
-                    return
-                }
-
-                const [offer, contactDetails] = await Promise.all([
-                    contract.loanOffers(applicationId),
-                    getBorrowerInfo(request.profileId).then((info) =>
-                        info
-                            ? info
-                            : fetch(
-                                  `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                              )
-                                  .then(
-                                      (response) =>
-                                          response.json() as Promise<{
-                                              name: string
-                                              businessName: string
-                                              phone?: string
-                                              email?: string
-                                          }>,
+                    const [offer, contactDetails] = await Promise.all([
+                        contract.loanOffers(request.id),
+                        getBorrowerInfo(request.profileId).then((info) =>
+                            info
+                                ? info
+                                : fetch(
+                                      `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
                                   )
-                                  .then(
-                                      (info) => (
-                                          setBorrowerInfo(
-                                              request.profileId,
-                                              info,
+                                      .then(
+                                          (response) =>
+                                              response.json() as Promise<{
+                                                  name: string
+                                                  businessName: string
+                                                  phone?: string
+                                                  email?: string
+                                              }>,
+                                      )
+                                      .then(
+                                          (info) => (
+                                              setBorrowerInfo(
+                                                  request.profileId,
+                                                  info,
+                                              ),
+                                              info
                                           ),
-                                          info
                                       ),
-                                  ),
-                    ),
-                ])
+                        ),
+                    ])
 
-                setOffer({
-                    details: offer,
-                    account,
-                    loanDeskAddress: pool.loanDeskAddress,
-                    contactDetails: contactDetails || {},
+                    setOffer({
+                        details: offer,
+                        account,
+                        loanDeskAddress: pool.loanDeskAddress,
+                        contactDetails: contactDetails || {},
+                    })
                 })
-            })
-            .catch((error) => {
-                console.error(error)
-            })
+                .catch((error) => {
+                    console.error(error)
+                })
+        }
     }, [account, pool, provider])
 
     return offer
