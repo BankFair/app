@@ -27,7 +27,7 @@ export function Box({
                     border-radius: 8px;
                     border: 1px solid ${rgbaLimeGreen21};
                     background-color: var(--bg-section);
-                    backdrop-filter: blur(16px);
+                    // backdrop-filter: blur(16px);
                     box-shadow: ${commonBoxShadow};
                     margin: 16px auto;
                     padding: 24px;
@@ -56,7 +56,7 @@ export function Box({
                     padding: inherit;
                     text-align: center;
                     background-color: var(--bg-overlay);
-                    backdrop-filter: blur(5px);
+                    // backdrop-filter: blur(5px);
                 }
             `}</style>
 

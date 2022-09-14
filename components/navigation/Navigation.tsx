@@ -42,7 +42,7 @@ export function Navigation() {
                     display: flex;
                     align-items: center;
                     height: ${NAV_HEIGHT}px;
-                    background: var(--gradient);
+                    background-color: var(--old-gradient);
                     box-shadow: 0px 4px 24px rgba(64, 195, 135, 0.5);
 
                     @media (prefers-color-scheme: dark) {

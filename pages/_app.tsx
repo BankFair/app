@@ -7,8 +7,7 @@ import {
     NEW_COLOR_RICH_BLACK,
     NEW_COLOR_WHITE,
     rgba,
-    rgbaBlack90,
-    rgbaWhite90,
+    rgbBlack,
     rgbBlue,
     rgbChineseSilver,
     rgbGreeneryDark,
@@ -43,7 +42,7 @@ export default function App({ Component, pageProps }: AppProps) {
                         --bg-color: ${rgbNewWhite};
                         --bg-overlay: ${rgba(NEW_COLOR_WHITE, 0.9)};
                         --bg-modal-overlay: rgba(0, 0, 0, 0.7);
-                        --bg-section: ${rgbaWhite90};
+                        --bg-section: ${rgbWhite};
                         --color: ${rgbGround};
                         --color-secondary: ${rgbStone};
                         --color-disabled: ${rgbGrey500};
@@ -52,16 +51,8 @@ export default function App({ Component, pageProps }: AppProps) {
                         --divider: ${rgba(COLOR_GREY_500, 0.24)};
                         --shadow: ${rgba(COLOR_GREY_500, 0.16)};
                         --greenery: ${rgbGreeneryLight};
-                        --gradient: linear-gradient(
-                            90.05deg,
-                            #47cc4c 3.95%,
-                            #35b5d1 104.32%
-                        );
-                        --gradient-hover: linear-gradient(
-                            90deg,
-                            #d1ffda 0%,
-                            #baf7e1 111.89%
-                        );
+                        --old-gradient: #47cc4c;
+                        --old-gradient-hover: #d1ffda;
                     }
 
                     html,
@@ -202,16 +193,12 @@ export default function App({ Component, pageProps }: AppProps) {
                             --bg-color: ${rgbRichBlack};
                             --bg-overlay: ${rgba(NEW_COLOR_RICH_BLACK, 0.9)};
                             --bg-modal-overlay: rgba(20, 20, 20, 0.7);
-                            --bg-section: ${rgbaBlack90};
+                            --bg-section: ${rgbBlack};
                             --color: ${rgbChineseSilver};
                             --color-disabled: ${rgbGrey600};
                             --shadow: rgba(0, 0, 0, 0.16);
                             --greenery: ${rgbGreeneryDark};
-                            --gradient-hover: linear-gradient(
-                                90deg,
-                                #183f20 0%,
-                                #002f39 111.89%
-                            );
+                            --old-gradient-hover: #183f20;
                         }
 
                         select {
@@ -225,7 +212,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 `}</style>
                 <SwitchNetworkModal />
                 <Navigation />
-                <Background />
+                {/* <Background /> */}
                 <Component {...pageProps} />
                 <TransactionNotifications />
             </Web3ReactProvider>

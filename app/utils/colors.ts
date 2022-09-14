@@ -37,6 +37,7 @@ export const COLOR_GREY_800: Color = { r: 33, g: 43, b: 54 }
 export const COLOR_GREY_900: Color = { r: 22, g: 28, b: 36 }
 
 export const rgbWhite = rgb(COLOR_WHITE)
+export const rgbBlack = rgb(COLOR_BLACK)
 export const rgbBlueLighter = rgb(COLOR_BLUE_LIGHTER)
 export const rgbBlueLight = rgb(COLOR_BLUE_LIGHT)
 export const rgbBlue = rgb(COLOR_BLUE)

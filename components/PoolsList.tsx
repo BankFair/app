@@ -21,7 +21,7 @@ export function PoolsList({
                 a {
                     color: var(--color);
                     background-color: var(--bg-section);
-                    backdrop-filter: blur(16px);
+                    // backdrop-filter: blur(16px);
                     border: 1px solid ${rgbaLimeGreen21};
                     display: flex;
                     border-radius: 8px;
