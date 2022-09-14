@@ -35,11 +35,11 @@ export function PoolsListNew({
                     border-radius: 8px;
                     padding: 16px;
                     margin: 24px 0;
-                    box-shadow: ${commonBoxShadow};
+                    // box-shadow: ${commonBoxShadow};
 
-                    @media (prefers-color-scheme: dark) {
-                        box-shadow: ${commonDarkBoxShadow};
-                    }
+                    // @media (prefers-color-scheme: dark) {
+                    //     box-shadow: ${commonDarkBoxShadow};
+                    // }
                 }
 
                 h2 {

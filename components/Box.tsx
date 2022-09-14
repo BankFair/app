@@ -28,14 +28,14 @@ export function Box({
                     border: 1px solid ${rgbaLimeGreen21};
                     background-color: var(--bg-section);
                     // backdrop-filter: blur(16px);
-                    box-shadow: ${commonBoxShadow};
+                    // box-shadow: ${commonBoxShadow};
                     margin: 16px auto;
                     padding: 24px;
                     position: relative;
 
-                    @media (prefers-color-scheme: dark) {
-                        box-shadow: ${commonDarkBoxShadow};
-                    }
+                    // @media (prefers-color-scheme: dark) {
+                    //     box-shadow: ${commonDarkBoxShadow};
+                    // }
 
                     &.s {
                         max-width: 400px;
