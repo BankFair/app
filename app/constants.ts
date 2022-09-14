@@ -89,7 +89,7 @@ export const poolsConfig =
         ? [
               {
                   name: 'Kitale Community Pool (Uganda)',
-                  address: '0x0000000000000000000000000000000000000000',
+                  address: '0xA3e07757131E5587ebB58ABB08de10783FC090Be',
                   block: 20000000,
               },
           ]
