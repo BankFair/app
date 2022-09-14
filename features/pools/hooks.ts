@@ -180,7 +180,7 @@ export function useAccountStats() {
             ? zero
             : data
                   .map((item) =>
-                      BigNumber.from(item.apy * 10)
+                      BigNumber.from(Math.trunc(item.apy) * 10)
                           .mul(item.lentUSDT)
                           .div(lent),
                   )
