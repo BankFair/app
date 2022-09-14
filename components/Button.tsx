@@ -11,7 +11,6 @@ export function Button({
     children,
     style,
     loading,
-    width,
     type,
     target,
     ...classModifiers
@@ -22,7 +21,6 @@ export function Button({
     loading?: boolean
     type?: ButtonHTMLAttributes<HTMLButtonElement>['type']
     style?: CSSProperties
-    width?: number
     disabled?: boolean
     whiteTransaprent?: boolean
     stone?: boolean
@@ -32,19 +30,12 @@ export function Button({
 
     const Element = type ? 'button' : href ? 'a' : 'button'
 
-    const styleProp = useMemo(() => {
-        if (!style && !width) return undefined
-        if (style && !width) return style
-        if (width && !style) return { width }
-        return { ...style, width }
-    }, [style, width])
-
     const element = (
         <Element
             onClick={disabled ? undefined : onClick}
             disabled={disabled}
             className={className(classModifiers)}
-            style={styleProp}
+            style={style}
             type={type}
             target={target}
         >

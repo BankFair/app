@@ -22,6 +22,7 @@ import { AmountInput } from './AmountInput'
 import { Button } from './Button'
 import { ConnectModal } from './ConnectModal'
 
+const buttonStyle = { minWidth: 180, alignSelf: 'flex-start' }
 type Types = 'Deposit' | 'Withdraw' | 'Stake' | 'Unstake' | 'Repay'
 export function useAmountForm<T extends Types>({
     liquidityTokenDecimals,
@@ -224,7 +225,7 @@ export function useAmountForm<T extends Types>({
                     account && (inputDisabled || !isValueBiggerThanZero),
                 )}
                 type="submit"
-                width={170}
+                style={buttonStyle}
                 loading={Boolean(loading)}
             >
                 {account
