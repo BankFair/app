@@ -49,7 +49,7 @@ export function Modal({
                     left: 0;
                     width: 100vw;
                     height: 100vh;
-                    z-index: 10;
+                    z-index: 8;
                     background-color: var(--bg-modal-overlay);
                 }
 

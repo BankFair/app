@@ -6,12 +6,14 @@ import {
     oneDay,
 } from '../constants'
 import { setBorrowerInfo } from '../idb'
+import { Address } from '../types'
 
 export async function fetchBorrowerInfoAuthenticated(
-    account: string,
-    signer: JsonRpcSigner,
+    poolAddress: Address,
+    applicationId: number,
     profileId: string,
-    poolAddress: string,
+    account: Address,
+    signer: JsonRpcSigner,
 ) {
     const key = `${LOCAL_STORAGE_BORROWER_INFO_AUTH_KEY_PREFIX}_${account}`
     let item: { time: string; signature: string }
@@ -20,7 +22,7 @@ export async function fetchBorrowerInfoAuthenticated(
         item = JSON.parse(localStorage.getItem(key)!)
 
         const timeObject = new Date(item.time)
-        if (Date.now() - timeObject.getTime() < oneDay) {
+        if (Date.now() - timeObject.getTime() > oneDay * 1000) {
             throw ''
         }
     } catch {
@@ -49,7 +51,7 @@ export async function fetchBorrowerInfoAuthenticated(
         poolAddress: string
     } = await response.json()
 
-    setBorrowerInfo(profileId, info)
+    setBorrowerInfo(applicationId, info)
 
     return info
 }

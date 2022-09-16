@@ -27,7 +27,7 @@ function Component() {
             <style jsx>{`
                 .container {
                     position: fixed;
-                    z-index: 10;
+                    z-index: 7;
                     bottom: 0;
                     left: 0;
                     width: 100%;

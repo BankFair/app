@@ -11,7 +11,7 @@ interface Info {
 
 interface Schema extends DBSchema {
     'borrower-info': {
-        key: string
+        key: number
         value: Info
     }
 }
@@ -20,19 +20,22 @@ const dbPromise =
     typeof window === 'undefined'
         ? undefined
         : import('idb').then((idb) =>
-              idb.openDB<Schema>(`store-${CHAIN_ID}`, 1, {
-                  upgrade(db) {
+              idb.openDB<Schema>(`store-${CHAIN_ID}`, 2, {
+                  upgrade(db, oldVersion) {
+                      if (oldVersion === 1) {
+                          db.deleteObjectStore('borrower-info')
+                      }
                       db.createObjectStore('borrower-info')
                   },
               }),
           )
 
-export async function getBorrowerInfo(id: string) {
+export async function getBorrowerInfo(id: number) {
     if (!dbPromise) return
     return (await dbPromise).get('borrower-info', id)
 }
 
-export async function setBorrowerInfo(id: string, info: Info) {
+export async function setBorrowerInfo(id: number, info: Info) {
     if (!dbPromise) return
     return (await dbPromise).put('borrower-info', info, id)
 }

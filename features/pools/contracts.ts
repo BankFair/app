@@ -10,6 +10,7 @@ import {
     TupleToObject,
     TupleToObjectWithPropNames,
     nullAddress,
+    Address,
 } from '../../app'
 import abi from './abi.json'
 import loanDeskAbi from './loanDeskAbi.json'
@@ -29,10 +30,10 @@ export interface CoreContract
     connect(...args: Parameters<CustomBaseContract['connect']>): this
     attach(...args: Parameters<CustomBaseContract['attach']>): this
 
-    manager: ContractFunction<string>
-    loanDesk: ContractFunction<string>
-    poolToken: ContractFunction<string>
-    liquidityToken: ContractFunction<string>
+    manager: ContractFunction<Address>
+    loanDesk: ContractFunction<Address>
+    poolToken: ContractFunction<Address>
+    liquidityToken: ContractFunction<Address>
     loansCount: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [account: string]>

@@ -11,6 +11,7 @@ import {
     useRef,
     useState,
 } from 'react'
+
 import {
     APP_NAME,
     useAccount,
@@ -36,6 +37,9 @@ import {
     checkAmountValidity,
     oneYear,
     amountWithInterest,
+    chains,
+    CHAIN_ID,
+    Address,
 } from '../../app'
 import {
     Alert,
@@ -115,10 +119,10 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
                         />
                         <LoansAwaitingApproval
                             pool={pool}
-                            poolAddress={address}
+                            poolAddress={address as Address}
                             account={account}
                         />
-                        <Loans pool={pool} poolAddress={address} />
+                        <Loans pool={pool} poolAddress={address as Address} />
                     </>
                 ) : (
                     <h3>Login with manager wallet</h3>
@@ -205,7 +209,7 @@ function StakeAndUnstake({
 }
 
 interface BaseLoanRequest {
-    id: string
+    id: number
     borrower: string
     amount: BigNumber // Will never change
     duration: BigNumber // Will never change
@@ -250,8 +254,8 @@ function LoansAwaitingApproval({
     account,
 }: {
     pool: Pool
-    poolAddress: string
-    account: string
+    poolAddress: Address
+    account: Address
 }) {
     const dispatch = useDispatch()
     const provider = useProvider()
@@ -259,11 +263,9 @@ function LoansAwaitingApproval({
     useEffect(() => {
         let canceled = false
 
-        const contract = loanDeskContract
-            .attach(loanDeskAddress)
-            .connect(provider!)
+        const contract = loanDeskContract.attach(loanDeskAddress)
 
-        const toLoad = 20
+        const toLoad = CHAIN_ID === chains.mumbai ? 40 : 20
         const { contract: attached } = getBatchProviderAndLoanDeskContract(
             toLoad,
             contract,
@@ -288,7 +290,7 @@ function LoansAwaitingApproval({
                         )
                         .map((request) =>
                             Promise.all([
-                                getBorrowerInfo(request.profileId).then(
+                                getBorrowerInfo(request.id.toNumber()).then(
                                     (info) =>
                                         info
                                             ? info
@@ -307,7 +309,7 @@ function LoansAwaitingApproval({
                                                   .then(
                                                       (info) => (
                                                           setBorrowerInfo(
-                                                              request.profileId,
+                                                              request.id.toNumber(),
                                                               info,
                                                           ),
                                                           info
@@ -343,7 +345,7 @@ function LoansAwaitingApproval({
                                         ...info,
                                         ...request,
                                         ...offer,
-                                        id: request.id.toHexString(),
+                                        id: request.id.toNumber(),
                                     } as LoanRequest),
                             ),
                         ),
@@ -573,10 +575,11 @@ function LoansAwaitingApproval({
                     }}
                     onFetchBorrowerInfo={async () => {
                         const info = await fetchBorrowerInfoAuthenticated(
+                            poolAddress,
+                            offerModalRequest.id,
+                            offerModalRequest.profileId,
                             account!,
                             provider!.getSigner(),
-                            offerModalRequest.profileId,
-                            poolAddress,
                         )
                         const newOffer = {
                             ...offerModalRequest,

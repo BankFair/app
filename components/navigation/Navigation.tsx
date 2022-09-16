@@ -37,7 +37,7 @@ export function Navigation() {
                     top: 0;
                     left: 0;
                     padding: ${NAV_PADDING}px;
-                    z-index: 2;
+                    z-index: 6;
                     width: 100vw;
                     display: flex;
                     align-items: center;

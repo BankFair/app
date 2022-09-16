@@ -76,12 +76,12 @@ type Loading = 'stats' | `accountInfo_${Address}`
 export interface Pool {
     name: string
     block: number
-    address: string
-    managerAddress: string
-    loanDeskAddress: string
-    poolTokenAddress: string
+    address: Address
+    managerAddress: Address
+    loanDeskAddress: Address
+    poolTokenAddress: Address
     poolTokenDecimals: number
-    liquidityTokenAddress: string
+    liquidityTokenAddress: Address
     liquidityTokenDecimals: number
     loans: Loan[]
     loansBlockNumber: number
@@ -363,12 +363,12 @@ export const poolsSlice = createSlice({
             }: Action<{
                 name: string
                 block: number
-                address: string
-                managerAddress: string
-                loanDeskAddress: string
-                poolTokenAddress: string
+                address: Address
+                managerAddress: Address
+                loanDeskAddress: Address
+                poolTokenAddress: Address
                 poolTokenDecimals: number
-                liquidityTokenAddress: string
+                liquidityTokenAddress: Address
                 liquidityTokenDecimals: number
             }>,
         ) {
