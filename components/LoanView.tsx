@@ -12,7 +12,11 @@ import { useEffect, useMemo, useState } from 'react'
 import TimeAgo from 'timeago-react'
 
 import {
+    Address,
+    BORROWER_SERVICE_URL,
+    fetchBorrowerInfoAuthenticated,
     formatToken,
+    getBorrowerInfo,
     noop,
     oneHundredMillion,
     rgbaLimeGreen21,
@@ -20,13 +24,16 @@ import {
     rgbRed,
     rgbRedLight,
     rgbYellow,
+    setBorrowerInfo,
     thirtyDays,
     TOKEN_SYMBOL,
+    useAccount,
     useAmountWithInterest,
+    useProvider,
     zero,
 } from '../app'
 
-import { LoanStatus, Loan, formatStatus } from '../features'
+import { LoanStatus, Loan, formatStatus, loanDeskContract } from '../features'
 
 import { EtherscanAddress } from './EtherscanLink'
 import { Button } from './Button'
@@ -38,20 +45,22 @@ export function LoanView({
         amount,
         duration,
         borrowedTime,
-        id,
         status,
         details,
         apr,
+        applicationId,
     },
     liquidityTokenDecimals,
-    showAll,
-    onRepay,
+    poolAddress,
+    loanDeskAddress,
 }: {
     loan: Loan
     liquidityTokenDecimals: number
-    showAll?: boolean
-    onRepay?(id: number, debt: BigNumber): void
+    poolAddress: Address
+    loanDeskAddress: Address
 }) {
+    const provider = useProvider()
+    const account = useAccount()
     const formattedAmount = useMemo(
         () => formatToken(amount, liquidityTokenDecimals),
         [amount, liquidityTokenDecimals],
@@ -78,6 +87,51 @@ export function LoanView({
                 : 0,
         }
     }, [details, amountWithInterest])
+
+    const [borrowerInfoState, setBorrowerInfoState] = useState<{
+        name: string
+        businessName: string
+        phone?: string | undefined
+        email?: string | undefined
+    } | null>(null)
+    const [profileId, setProfileId] = useState('')
+    useEffect(() => {
+        let canceled = false
+        getBorrowerInfo(applicationId)
+            .then(async (info) => {
+                if (canceled) return
+                if (info) {
+                    setBorrowerInfoState(info)
+                    return
+                }
+
+                const application = await loanDeskContract
+                    .attach(loanDeskAddress)
+                    .loanApplications(applicationId)
+
+                const response = await fetch(
+                    `${BORROWER_SERVICE_URL}/profile/${application.profileId}`,
+                )
+                const fetchedInfo = await (response.json() as Promise<{
+                    name: string
+                    businessName: string
+                    phone?: string
+                    email?: string
+                }>)
+
+                if (canceled) return
+                setProfileId(application.profileId)
+                setBorrowerInfo(applicationId, fetchedInfo)
+                setBorrowerInfoState(fetchedInfo)
+            })
+            .catch((error) => {
+                console.error(error)
+            })
+
+        return () => {
+            canceled = true
+        }
+    }, [applicationId, loanDeskAddress])
 
     const hasDebt = status === LoanStatus.OUTSTANDING
     const isRepaid = status === LoanStatus.REPAID
@@ -200,71 +254,108 @@ export function LoanView({
                     <div className="item">{formattedStatus}</div>
                 )}
             </div>
-            {showAll ? (
-                <div className="stats">
-                    <div className="item">
-                        <div className="label">Approved</div>
-                        <div className="value">
-                            <TimeAgo datetime={borrowedTime * 1000} />
-                        </div>
-                    </div>
-                    <div className="item">
-                        <div className="label">Duration</div>
-                        <div className="value">{formatDuration(duration)}</div>
-                    </div>
-                    <div className="item">
-                        <div className="label">Remaining</div>
-                        <div className="value">
-                            <Remaining timestamp={borrowedTime + duration} />
-                        </div>
-                    </div>
-                    <div className="item">
-                        <div className="label">Amount</div>
-                        <div className="value">
-                            {formatToken(amount, liquidityTokenDecimals)}{' '}
-                            {TOKEN_SYMBOL}
-                        </div>
-                    </div>
-                    <div className="item">
-                        <div className="label">Interest paid</div>
-                        <div className="value">
-                            {formatToken(
-                                details.interestPaid,
-                                liquidityTokenDecimals,
-                            )}{' '}
-                            {TOKEN_SYMBOL}
-                        </div>
-                    </div>
-                    <div className="item">
-                        <div className="label">Borrower</div>
-                        <div className="value">
-                            <EtherscanAddress address={borrower} />
-                        </div>
-                    </div>
-                    <div className="item">
-                        <div className="label">Status</div>
-                        <div className="value">{formatStatus(status)}</div>
+            <div className="stats">
+                <div className="item">
+                    <div className="label">Approved</div>
+                    <div className="value">
+                        <TimeAgo datetime={borrowedTime * 1000} />
                     </div>
                 </div>
-            ) : (
-                <div className="stats">
-                    <div className="item">
-                        <div className="label">Remaining</div>
-                        <div className="value">
-                            <Remaining timestamp={borrowedTime + duration} />
-                        </div>
-                    </div>
-                    <div className="item">
-                        <div className="label">Approved</div>
-                        <div className="value">
-                            <TimeAgo datetime={borrowedTime * 1000} />
-                        </div>
+                <div className="item">
+                    <div className="label">Duration</div>
+                    <div className="value">{formatDuration(duration)}</div>
+                </div>
+                <div className="item">
+                    <div className="label">Remaining</div>
+                    <div className="value">
+                        <Remaining timestamp={borrowedTime + duration} />
                     </div>
                 </div>
-            )}
-            {onRepay && hasDebt ? (
+                <div className="item">
+                    <div className="label">Amount</div>
+                    <div className="value">
+                        {formatToken(amount, liquidityTokenDecimals)}{' '}
+                        {TOKEN_SYMBOL}
+                    </div>
+                </div>
+                <div className="item">
+                    <div className="label">Interest paid</div>
+                    <div className="value">
+                        {formatToken(
+                            details.interestPaid,
+                            liquidityTokenDecimals,
+                        )}{' '}
+                        {TOKEN_SYMBOL}
+                    </div>
+                </div>
+                <div className="item">
+                    <div className="label">Status</div>
+                    <div className="value">{formatStatus(status)}</div>
+                </div>
+                {borrowerInfoState ? (
+                    <>
+                        <div className="item">
+                            <div className="label">Borrower name</div>
+                            <div className="value">
+                                {borrowerInfoState.name}
+                            </div>
+                        </div>
+                        <div className="item">
+                            <div className="label">Borrower business name</div>
+                            <div className="value">
+                                {borrowerInfoState.businessName}
+                            </div>
+                        </div>
+                        {borrowerInfoState.phone ? (
+                            <div className="item">
+                                <div className="label">Borrower phone</div>
+                                <div className="value">
+                                    <a href={`tel:${borrowerInfoState.phone}`}>
+                                        {borrowerInfoState.phone}
+                                    </a>
+                                </div>
+                            </div>
+                        ) : null}
+                        {borrowerInfoState.email ? (
+                            <div className="item">
+                                <div className="label">Borrower email</div>
+                                <div className="value">
+                                    <a
+                                        href={`mailto:${borrowerInfoState.email}`}
+                                    >
+                                        {borrowerInfoState.email}
+                                    </a>
+                                </div>
+                            </div>
+                        ) : null}
+                    </>
+                ) : null}
+                <div className="item">
+                    <div className="label">Borrower account</div>
+                    <div className="value">
+                        <EtherscanAddress address={borrower} />
+                    </div>
+                </div>
+            </div>
+            {borrowerInfoState &&
+            !borrowerInfoState.phone &&
+            !borrowerInfoState.email &&
+            profileId ? (
                 <div className="actions">
-                    <Button onClick={() => onRepay(id, debt)}>Repay</Button>
+                    <Button
+                        onClick={() =>
+                            fetchBorrowerInfoAuthenticated(
+                                poolAddress,
+                                applicationId,
+                                profileId,
+                                account!,
+                                provider!.getSigner(),
+                            ).then(setBorrowerInfoState)
+                        }
+                        stone
+                    >
+                        Get contact information
+                    </Button>
                 </div>
             ) : null}
         </div>

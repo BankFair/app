@@ -15,6 +15,7 @@ import {
     oneMillion,
     amountWithInterest,
     oneDay,
+    Address,
 } from '../../app'
 import {
     contract,
@@ -205,12 +206,12 @@ async function fetchAndSetPoolInfo([
     {
         name: string
         block: number
-        address: string
+        address: Address
     },
-    string,
-    string,
-    string,
-    string,
+    Address,
+    Address,
+    Address,
+    Address,
 ]) {
     const poolTokenContract = getERC20Contract(poolTokenAddress)
     const liquidityTokenContract = getERC20Contract(liquidityTokenAddress)

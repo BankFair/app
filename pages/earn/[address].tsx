@@ -209,7 +209,11 @@ function ApplyForLenderAccess({
                         Estimated APY {estimatedAPYTooltip}
                     </div>
                     <div className="value">
-                        {stats ? `${stats.apy}%` : <Skeleton width={50} />}
+                        {stats ? (
+                            formatPercent(stats.apy / 100)
+                        ) : (
+                            <Skeleton width={50} />
+                        )}
                     </div>
                 </div>
             </div>

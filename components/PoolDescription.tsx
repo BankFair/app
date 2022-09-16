@@ -51,12 +51,16 @@ const kitaleDescription = (
             to the running costs of the Kitale Community School.
         </p>
 
-        <a href="https://drive.google.com/drive/folders/1zhkaPuRKIkKMLA_LX9Kx5icQumnnNCH2"
-            rel="noopener noreferrer"
-            target="_blank"
+        <p>
+            See all the loan borrower data and security in the{' '}
+            <a
+                href="https://drive.google.com/drive/folders/1zhkaPuRKIkKMLA_LX9Kx5icQumnnNCH2"
+                rel="noopener noreferrer"
+                target="_blank"
             >
-            Dataroom link
-        </a>
+                Dataroom
+            </a>
+        </p>
     </>
 )
 

@@ -1,9 +1,8 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { parseUnits } from '@ethersproject/units'
 import { useMemo, useState } from 'react'
 
 import { useDispatch } from '../store'
-import { disabledBackground } from '../app'
+import { Address, disabledBackground } from '../app'
 import {
     CoreContract,
     fetchLoan,
@@ -36,7 +35,7 @@ const options = (
 )
 export function Loans(props: {
     pool: Pool
-    poolAddress: string
+    poolAddress: Address
     account?: string | undefined
 }) {
     const { pool, poolAddress, account } = props
@@ -67,14 +66,6 @@ export function Loans(props: {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         useLoadAccountLoans(poolAddress, account, dispatch, pool)
     }
-
-    const handleRepay = useMemo(
-        () =>
-            showAllLoans
-                ? undefined
-                : (id: number, max: BigNumber) => setRepay({ id, max }),
-        [showAllLoans],
-    )
 
     const header = (
         <div className="header">
@@ -179,8 +170,8 @@ export function Loans(props: {
                     key={loan.id}
                     loan={loan}
                     liquidityTokenDecimals={pool.liquidityTokenDecimals}
-                    showAll={showAllLoans}
-                    onRepay={handleRepay}
+                    poolAddress={poolAddress}
+                    loanDeskAddress={pool.loanDeskAddress}
                 />
             ))}
 

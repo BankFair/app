@@ -1,6 +1,5 @@
 import { parseUnits } from '@ethersproject/units'
 import { BigNumber } from '@ethersproject/bignumber'
-import { DateTime } from 'luxon'
 import { NextPage } from 'next'
 import Head from 'next/head'
 import {
@@ -14,8 +13,11 @@ import {
 } from 'react'
 
 import {
+    Address,
     APP_NAME,
     BORROWER_SERVICE_URL,
+    chains,
+    CHAIN_ID,
     checkAmountValidity,
     convertPercent,
     fetchBorrowerInfoAuthenticated,
@@ -112,7 +114,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
             <h1>{name}</h1>
             <RepayLoans
                 pool={pool}
-                poolAddress={address}
+                poolAddress={address as Address}
                 account={account}
                 loans={loans}
             />
@@ -162,11 +164,10 @@ function useOffer(
         if (account === offerRef.current) return
         offerRef.current = account
 
-        const contract = loanDeskContract
-            .attach(pool.loanDeskAddress)
-            .connect(provider)
+        const contract = loanDeskContract.attach(pool.loanDeskAddress)
 
-        for (let i = 1; i <= 20; i++) {
+        const max = CHAIN_ID === chains.mumbai ? 40 : 20
+        for (let i = 1; i <= max; i++) {
             contract
                 .loanApplications(i)
                 .then(async (request) => {
@@ -178,7 +179,7 @@ function useOffer(
 
                     const [offer, contactDetails] = await Promise.all([
                         contract.loanOffers(request.id),
-                        getBorrowerInfo(request.profileId).then((info) =>
+                        getBorrowerInfo(request.id.toNumber()).then((info) =>
                             info
                                 ? info
                                 : fetch(
@@ -196,7 +197,7 @@ function useOffer(
                                       .then(
                                           (info) => (
                                               setBorrowerInfo(
-                                                  request.profileId,
+                                                  request.id.toNumber(),
                                                   info,
                                               ),
                                               info
@@ -451,8 +452,8 @@ function RepayLoans({
     loans,
 }: {
     pool: Pool
-    poolAddress: string
-    account: string | undefined
+    poolAddress: Address
+    account: Address | undefined
     loans: Loan[]
 }) {
     const provider = useProvider()
@@ -482,11 +483,11 @@ function RepayLoan({
     account,
 }: {
     pool: Pool
-    poolAddress: string
+    poolAddress: Address
     loan: ReturnType<typeof useLoans>[number]
     provider: ReturnType<typeof useProvider>
     dispatch: AppDispatch
-    account: string | undefined
+    account: Address | undefined
 }) {
     const [amount, setAmount] = useState<InputAmount>('')
 
@@ -531,11 +532,10 @@ function RepayLoan({
             : null
     useEffect(() => {
         loanDeskContract
-            .connect(provider!)
             .attach(loanDeskAddress)
             .loanApplications(loan.applicationId)
             .then(({ profileId }) =>
-                getBorrowerInfo(profileId).then((info) =>
+                getBorrowerInfo(loan.applicationId).then((info) =>
                     info
                         ? { info, profileId }
                         : fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`)
@@ -550,7 +550,7 @@ function RepayLoan({
                               )
                               .then(
                                   (info) => (
-                                      setBorrowerInfo(profileId, info),
+                                      setBorrowerInfo(loan.applicationId, info),
                                       { info, profileId }
                                   ),
                               ),
@@ -752,10 +752,11 @@ function RepayLoan({
                             onClick={async () => {
                                 const info =
                                     await fetchBorrowerInfoAuthenticated(
+                                        poolAddress,
+                                        loan.applicationId,
+                                        contactDetails.profileId,
                                         account!,
                                         provider!.getSigner(),
-                                        contactDetails.profileId,
-                                        poolAddress,
                                     )
                                 setContactDetailsState({
                                     ...contactDetails,
@@ -917,7 +918,6 @@ function RequestLoan({
 
         loanDeskContract
             .attach(loanDeskAddress)
-            .connect(provider!)
             .borrowerStats(account)
             .then(({ hasOpenApplication }) => {
                 setLoanPendingApproval({
@@ -1027,6 +1027,11 @@ function RequestLoan({
         parsedDuration: BigNumber
         id: string
         digest: string
+
+        name: string
+        businessName: string
+        phone?: string
+        email?: string
     } | null>(null)
     const [stepTwoLoading, setStepTwoLoading] = useState(false)
 
@@ -1081,21 +1086,18 @@ function RequestLoan({
                             digest: string
                         }>,
                 )
-                .then(
-                    ({ id, digest }) => (
-                        setBorrowerInfo(id, {
-                            name,
-                            businessName,
-                            phone,
-                            email,
-                        }),
-                        setStepTwo({
-                            parsedAmount,
-                            parsedDuration,
-                            id,
-                            digest,
-                        })
-                    ),
+                .then(({ id, digest }) =>
+                    setStepTwo({
+                        parsedAmount,
+                        parsedDuration,
+                        id,
+                        digest,
+
+                        name,
+                        businessName,
+                        phone,
+                        email,
+                    }),
                 )
                 .catch((error) => {
                     console.error(error)
@@ -1144,7 +1146,7 @@ function RequestLoan({
             <style jsx>{`
                 form {
                     > h3 {
-                        z-index: 10;
+                        z-index: 5;
                         position: relative;
                         margin: 0;
                     }
@@ -1396,7 +1398,8 @@ function RequestLoan({
                     <Button
                         type="button"
                         loading={stepTwoLoading}
-                        style={{ display: 'block', margin: '0 auto 20px' }}
+                        disabled={stepTwoLoading}
+                        style={{ display: 'flex', margin: '0 auto 20px' }}
                         onClick={() => {
                             setStepTwoLoading(true)
                             loanDeskContract
@@ -1414,11 +1417,31 @@ function RequestLoan({
                                         tx,
                                     }),
                                 )
-                                .then(() => {
+                                .then((action) => {
                                     setIsSubmitted(true)
                                     setLoading(false)
                                     setStepTwo(null)
                                     setStepTwoLoading(false)
+
+                                    const event =
+                                        action.payload.receipt.events?.[0]
+                                    if (
+                                        event?.eventSignature ===
+                                        'LoanRequested(uint256,address)'
+                                    ) {
+                                        setBorrowerInfo(
+                                            BigNumber.from(
+                                                event!.args!.array[0],
+                                            ).toNumber(),
+                                            {
+                                                name: stepTwo!.name,
+                                                businessName:
+                                                    stepTwo!.businessName,
+                                                phone: stepTwo!.phone,
+                                                email: stepTwo!.email,
+                                            },
+                                        )
+                                    }
                                 })
                                 .catch((error) => {
                                     console.error(error)
