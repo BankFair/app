@@ -102,6 +102,16 @@ export function LoanView({
                 if (canceled) return
                 if (info) {
                     setBorrowerInfoState(info)
+
+                    if (!info.email && !info.phone) {
+                        const application = await loanDeskContract
+                            .attach(loanDeskAddress)
+                            .loanApplications(applicationId)
+
+                        if (canceled) return
+
+                        setProfileId(application.profileId)
+                    }
                     return
                 }
 
