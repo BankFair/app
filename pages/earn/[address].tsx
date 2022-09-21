@@ -47,6 +47,9 @@ import {
     useStatsState,
     trackTransaction,
 } from '../../features'
+import { 
+    LENDER_GATE_ON 
+} from '../../app/constants'
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
@@ -70,6 +73,11 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
         if (!account) {
             setHasAccess('no')
             return
+        }
+
+        if (!LENDER_GATE_ON) {
+            setHasAccess(account);
+            return;
         }
 
         setHasAccess('')
@@ -269,7 +277,7 @@ function AddFunds({
     const isManager = managerAddress === account
 
     const { form, allowance, balance } = useAmountForm({
-        type: 'Deposit',
+        type: 'Final Step ➜ Deposit',
         onSumbit: (contract, amount) => contract.deposit(amount),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,

@@ -127,6 +127,8 @@ export const LENDER_SERVICE_URL =
         ? 'https://test-lender-api.sapling.workers.dev'
         : 'https://lender-api.sapling.finance'
 
+export const LENDER_GATE_ON = false
+
 export const prefix = process.env.BUILDING_FOR_GITHUB_PAGES ? '/app' : ''
 
 export const zero = BigNumber.from(0)
