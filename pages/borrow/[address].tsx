@@ -583,7 +583,7 @@ function RepayLoan({
                     .approve(poolAddress, amountBigNumber)
                     .then((tx) =>
                         trackTransaction(dispatch, {
-                            name: `Approve ${TOKEN_SYMBOL}`,
+                            name: `Step 1 of 2 ➜ Approve ${TOKEN_SYMBOL}`,
                             tx,
                         }),
                     )
@@ -674,8 +674,11 @@ function RepayLoan({
                         disabled={!largerThanZero || isLoading}
                     >
                         {needsApproval && largerThanZero
-                            ? `Approve ${TOKEN_SYMBOL}`
-                            : 'Repay'}
+                            ? `Step 1 of 2 ➜ Approve ${TOKEN_SYMBOL}`
+                            : !(!largerThanZero || isLoading) 
+                                ? 'Final Step ➜ Repay'
+                                : 'Repay'
+                        }
                     </Button>
                     <Alert
                         style="warning"

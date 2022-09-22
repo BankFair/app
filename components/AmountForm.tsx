@@ -142,7 +142,7 @@ export function useAmountForm<T extends Types>({
                         .approve(poolAddress, valueBigNumber)
                         .then((tx) =>
                             trackTransaction(dispatch, {
-                                name: `Approve ${TOKEN_SYMBOL}`,
+                                name: `Step 1 of 2 ➜ Approve ${TOKEN_SYMBOL}`,
                                 tx,
                             }),
                         )
@@ -230,8 +230,10 @@ export function useAmountForm<T extends Types>({
             >
                 {account
                     ? needsApproval
-                        ? `Approve ${TOKEN_SYMBOL}`
-                        : type
+                        ? `Step 1 of 2 ➜ Approve ${TOKEN_SYMBOL}`
+                        : (type === 'Deposit' || type === 'Stake' || type === 'Repay') && !(account && (inputDisabled || !isValueBiggerThanZero)) 
+                            ? 'Final Step ➜ ' + type 
+                            : type
                     : 'Connect Wallet'}
             </Button>
 
