@@ -277,7 +277,7 @@ function AddFunds({
     const isManager = managerAddress === account
 
     const { form, allowance, balance } = useAmountForm({
-        type: 'Final Step ➜ Deposit',
+        type: 'Deposit',
         onSumbit: (contract, amount) => contract.deposit(amount),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,
