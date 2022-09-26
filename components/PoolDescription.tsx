@@ -68,6 +68,7 @@ const descriptions: Record<string, JSX.Element> = {
     '0xA3e07757131E5587ebB58ABB08de10783FC090Be': kitaleDescription,
     '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19': kitaleDescription,
     '0x063527eeB60ba6E6240b898315cee9E637CABe13': <>Training Pool</>,
+    '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850': <>Training Pool for user training under live network conditions</>
 }
 
 let nextMountShowMoreState = false
