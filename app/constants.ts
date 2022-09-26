@@ -93,6 +93,12 @@ export const poolsConfig =
                       '0xA3e07757131E5587ebB58ABB08de10783FC090Be' as Address,
                   block: 33073758,
               },
+              {
+                  name: 'Training Pool',
+                  address:
+                      '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850' as Address,
+                  block: 33598587,
+              },
           ]
         : [
               {
