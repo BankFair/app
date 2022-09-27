@@ -647,6 +647,8 @@ function RepayLoan({
                             {formatToken(
                                 outstandingNow,
                                 liquidityTokenDecimals,
+                                2,
+                                true,
                             )}{' '}
                             {TOKEN_SYMBOL}
                         </div>
@@ -690,12 +692,12 @@ function RepayLoan({
 
                     <div className="field">
                         <span className="label">Initial loan amount:</span>{' '}
-                        {formatToken(loan.amount, liquidityTokenDecimals)}{' '}
+                        {formatToken(loan.amount, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                     <div className="field">
                         <span className="label">Repaid:</span>{' '}
-                        {formatToken(repaid, liquidityTokenDecimals)}{' '}
+                        {formatToken(repaid, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                     <div className="field">
@@ -703,6 +705,8 @@ function RepayLoan({
                         {formatToken(
                             loan.details.interestPaid,
                             liquidityTokenDecimals,
+                            2,
+                            true
                         )}{' '}
                         {TOKEN_SYMBOL}
                     </div>
@@ -788,6 +792,8 @@ function RepayLoan({
                                         {formatToken(
                                             item.amount,
                                             liquidityTokenDecimals,
+                                            2,
+                                            true,
                                         )}{' '}
                                         {TOKEN_SYMBOL}
                                     </div>

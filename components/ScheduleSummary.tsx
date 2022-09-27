@@ -21,7 +21,7 @@ export function ScheduleSummary({
     schedule: ScheduleItem[]
     liquidityTokenDecimals: number
 }) {
-    const [showSchedule, setShowSchedule] = useState(false)
+    const [showSchedule, setShowSchedule] = useState(true)
     const { summary, total } = useMemo(() => {
         const summary: Summary[] = []
         let total = zero
@@ -66,14 +66,14 @@ export function ScheduleSummary({
                             : `${item.times}${
                                   monthly ? ' monthly' : ''
                               } payments`}{' '}
-                        of {formatToken(item.amount, liquidityTokenDecimals)}{' '}
+                        of {formatToken(item.amount, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                         {item.interestOnly ? ' (interest only)' : ''}
                     </div>
                 ))}
                 {summary.length > 1 ? (
                     <div className="line">
-                        Total: {formatToken(total, liquidityTokenDecimals)}{' '}
+                        Total: {formatToken(total, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                 ) : null}
@@ -97,6 +97,8 @@ export function ScheduleSummary({
                                     {formatToken(
                                         item.amount,
                                         liquidityTokenDecimals,
+                                        2,
+                                        true,
                                     )}{' '}
                                     {TOKEN_SYMBOL}
                                 </div>

@@ -26,17 +26,25 @@ export function formatToken(
     value: BigNumber | Hexadecimal,
     fractionDigits = USDT_DECIMALS,
     maximumFractionDigits = USDT_DECIMALS,
+    roundCeil = false,
 ) {
     return formatTokenNumber(
         Number(formatUnits(value, fractionDigits)),
         maximumFractionDigits,
+        roundCeil,
     )
 }
 
 export function formatTokenNumber(
     value: number,
     maximumFractionDigits = USDT_DECIMALS,
+    roundCeil = false,
 ) {
+    if (roundCeil) {
+        const scale = 10 ** maximumFractionDigits;
+        value = Math.ceil(value * scale) / scale;
+    }
+
     return value.toLocaleString(undefined, {
         style: 'decimal',
         maximumFractionDigits,
