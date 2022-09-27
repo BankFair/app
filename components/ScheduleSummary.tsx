@@ -66,14 +66,14 @@ export function ScheduleSummary({
                             : `${item.times}${
                                   monthly ? ' monthly' : ''
                               } payments`}{' '}
-                        of {formatToken(item.amount, liquidityTokenDecimals, 2)}{' '}
+                        of {formatToken(item.amount, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                         {item.interestOnly ? ' (interest only)' : ''}
                     </div>
                 ))}
                 {summary.length > 1 ? (
                     <div className="line">
-                        Total: {formatToken(total, liquidityTokenDecimals, 2)}{' '}
+                        Total: {formatToken(total, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                 ) : null}
@@ -97,7 +97,8 @@ export function ScheduleSummary({
                                     {formatToken(
                                         item.amount,
                                         liquidityTokenDecimals,
-                                        2
+                                        2,
+                                        true,
                                     )}{' '}
                                     {TOKEN_SYMBOL}
                                 </div>
