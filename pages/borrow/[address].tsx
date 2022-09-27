@@ -460,7 +460,7 @@ function RepayLoans({
     const dispatch = useDispatch()
 
     return loans
-        .sort((a, b) => a.id - b.id)
+        .sort((a, b) => b.id - a.id)
         .map((loan) => (
             <RepayLoan
                 key={loan.id}
