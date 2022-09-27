@@ -640,7 +640,7 @@ function mapLoanRequest(
             </div>
             <div className="description">
                 <span>
-                    {formatToken(loan.amount, liquidityTokenDecimals)}{' '}
+                    {formatToken(loan.amount, liquidityTokenDecimals, 2)}{' '}
                     {TOKEN_SYMBOL} for{' '}
                     {formatDurationInMonths(loan.duration.toNumber())} months
                 </span>
