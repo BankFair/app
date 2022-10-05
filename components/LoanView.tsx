@@ -77,7 +77,7 @@ export function LoanView({
         const repaid = BigNumber.from(details.totalAmountRepaid)
 
         return {
-            debt: amountWithInterest.sub(repaid),
+            debt: amountWithInterest,
             repaid,
             percent: !zero.eq(amountWithInterest)
                 ? Math.min(
