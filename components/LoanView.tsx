@@ -75,15 +75,16 @@ export function LoanView({
     )
     const { debt, repaid, percent } = useMemo(() => {
         const repaid = BigNumber.from(details.totalAmountRepaid)
+        const repaidPrincipal = BigNumber.from(details.baseAmountRepaid)
 
         return {
-            debt: amountWithInterest.sub(repaid),
+            debt: amountWithInterest,
             repaid,
             percent: !zero.eq(amountWithInterest)
                 ? Math.min(
-                    repaid
+                    repaidPrincipal
                       .mul(oneHundredMillion)
-                      .div(amountWithInterest)
+                      .div(amount)
                       .toNumber() / 1_000_000, 
                       100
                     )
