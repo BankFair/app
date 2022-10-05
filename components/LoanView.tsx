@@ -80,10 +80,13 @@ export function LoanView({
             debt: amountWithInterest.sub(repaid),
             repaid,
             percent: !zero.eq(amountWithInterest)
-                ? repaid
+                ? Math.min(
+                    repaid
                       .mul(oneHundredMillion)
                       .div(amountWithInterest)
-                      .toNumber() / 1_000_000
+                      .toNumber() / 1_000_000, 
+                      100
+                    )
                 : 0,
         }
     }, [details, amountWithInterest])
