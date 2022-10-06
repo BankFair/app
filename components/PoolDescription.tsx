@@ -50,17 +50,6 @@ const kitaleDescription = (
             A proportion of the Pool Manager profits will be used to contribute
             to the running costs of the Kitale Community School.
         </p>
-
-        <p>
-            See all the loan borrower data and security in the{' '}
-            <a
-                href="https://drive.google.com/drive/folders/1zhkaPuRKIkKMLA_LX9Kx5icQumnnNCH2"
-                rel="noopener noreferrer"
-                target="_blank"
-            >
-                Dataroom
-            </a>
-        </p>
     </>
 )
 
