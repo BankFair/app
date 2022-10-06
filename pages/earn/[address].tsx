@@ -53,8 +53,12 @@ import {
 
 const Earn: NextPage<{ address: string }> = ({ address }) => {
     const pool = useSelector((s) => s.pools[address])
-    const name =
-        poolsConfig.find((pool) => pool.address === address)?.name || ''
+
+    const poolConfig = poolsConfig.find((pool) => pool.address === address)
+    const name = poolConfig?.name || ''
+    const managerName = poolConfig?.managerName || ''
+    const tokenSymbol = poolConfig?.tokenSymbol || ''
+    const uniswapUrl = poolConfig?.uniswapUrl || ''
 
     const title = name ? `${name} - ${APP_NAME}` : APP_NAME
 
@@ -94,7 +98,7 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
             {head}
 
             <BackToPools href="/" />
-            <PoolInfo poolAddress={address} name={name} />
+            <PoolInfo poolAddress={address} name={name} managerName={managerName} tokenSymbol={tokenSymbol} uniswapUrl={uniswapUrl}/>
             <PoolStats pool={pool} poolAddress={address} />
             {!account || hasAccess === account ? (
                 <Main>

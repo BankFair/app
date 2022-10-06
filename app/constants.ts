@@ -89,6 +89,9 @@ export const poolsConfig =
         ? [
               {
                   name: 'Kitale Community Pool (Uganda)',
+                  managerName: 'Ausciery Emerson',
+                  tokenSymbol: 'KITCP',
+                  uniswapUrl: 'https://app.uniswap.org/#/swap?exactField=input&exactAmount=10&inputCurrency=0xc2132D05D31c914a87C6611C10748AEb04B58e8F&outputCurrency=0xcC9Fa0dBA57C1E22029aA81cB1144917DADe8BCc',
                   address:
                       '0xA3e07757131E5587ebB58ABB08de10783FC090Be' as Address,
                   block: 33073758,
