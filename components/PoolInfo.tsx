@@ -56,7 +56,7 @@ export function PoolInfo({
                 </span>
                 {managerName ? <span>Pool Manager: {managerName}</span>: <></>}
                 {tokenSymbol ? <span>Token: {tokenSymbol}</span>: <></>}
-                {uniswapUrl ? <span><a href={uniswapUrl} target={"_blank"} rel="noreferrer">Uniswap pool</a></span>: <></>}
+                {uniswapUrl ? <span><a href={uniswapUrl} target={"_blank"} rel="noreferrer">Uniswap pool ↗</a></span>: <></>}
             </div>
         </Box>
     )
