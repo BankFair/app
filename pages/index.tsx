@@ -45,14 +45,18 @@ const EarnPools: NextPage = () => {
                   display: block;
                 }
                 a {
-                    margin-top: 8px;
                     width: 50%;
                     color: var(--greenery);
                     font-weight: 600;
                     font-size: 16px;
-                    line-height: 19px;
+                    
                     display: inline-block;
                     cursor: pointer;
+                    line-height: 24px;
+                    
+                    > :global(svg) {
+                        margin-right: 8px;
+                    }
                 }
                 
                 @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
@@ -71,14 +75,14 @@ const EarnPools: NextPage = () => {
             <span className={'navlinks'}>
                 <Link href="/borrow">
                     <a>
-                        <RiHandCoinLine size={24} />
+                        <RiHandCoinLine size={18} />
                         Borrow
                     </a>
                 </Link>
                 {isManager && (
                     <Link href="/manage">
                         <a>
-                            <RiVipDiamondLine size={24} />
+                            <RiVipDiamondLine size={18} />
                             Manage
                         </a>
                     </Link>

@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Fragment, useMemo, useState } from 'react'
 
-import { formatToken, TOKEN_SYMBOL, zero } from '../app'
+import {formatToken, TOKEN_SYMBOL, USD_TO_UGX_FX, zero} from '../app'
 import { ScheduleItem } from '../features'
 
 interface Summary {
@@ -66,15 +66,39 @@ export function ScheduleSummary({
                             : `${item.times}${
                                   monthly ? ' monthly' : ''
                               } payments`}{' '}
-                        of {formatToken(item.amount, liquidityTokenDecimals, 2, true)}{' '}
-                        {TOKEN_SYMBOL}
+                        of
+                        {' '}
+                        {formatToken(
+                            item.amount.mul(USD_TO_UGX_FX),
+                            liquidityTokenDecimals,
+                            2,
+                            true,
+                        )}{' '}
+                        {'UGX'}
+                        {' '}
+                        (
+                            {formatToken(item.amount, liquidityTokenDecimals, 2, true)}{' '}
+                            {TOKEN_SYMBOL}
+                        )
                         {item.interestOnly ? ' (interest only)' : ''}
                     </div>
                 ))}
                 {summary.length > 1 ? (
                     <div className="line">
-                        Total: {formatToken(total, liquidityTokenDecimals, 2, true)}{' '}
-                        {TOKEN_SYMBOL}
+                        Total:
+                        {' '}
+                        {formatToken(
+                            total.mul(USD_TO_UGX_FX),
+                            liquidityTokenDecimals,
+                            2,
+                            true,
+                        )}{' '}
+                        {'UGX'}
+                        {' '}
+                        (
+                            {formatToken(total, liquidityTokenDecimals, 2, true)}{' '}
+                            {TOKEN_SYMBOL}
+                        )
                     </div>
                 ) : null}
                 {showSchedule ? null : (
@@ -93,7 +117,17 @@ export function ScheduleSummary({
                     {schedule.map((item, index) =>
                         item.skip ? null : (
                             <Fragment key={index}>
+                                <div>{item.date}</div>
                                 <div>
+                                    {formatToken(
+                                        item.amount.mul(USD_TO_UGX_FX),
+                                        liquidityTokenDecimals,
+                                        2,
+                                        true,
+                                    )}{' '}
+                                    {'UGX'}
+                                    {' '}
+                                    (
                                     {formatToken(
                                         item.amount,
                                         liquidityTokenDecimals,
@@ -101,8 +135,8 @@ export function ScheduleSummary({
                                         true,
                                     )}{' '}
                                     {TOKEN_SYMBOL}
+                                    )
                                 </div>
-                                <div>{item.date}</div>
                             </Fragment>
                         ),
                     )}

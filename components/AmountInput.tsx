@@ -13,6 +13,7 @@ export function AmountInput({
     onBlur,
     onKeyDown,
     label,
+    currency,
     paddingRight,
     invalid,
     ...classModifiers
@@ -23,6 +24,7 @@ export function AmountInput({
     onBlur?: FocusEventHandler<HTMLInputElement>
     onKeyDown?: KeyboardEventHandler<HTMLInputElement>
     label?: string
+    currency?: string
     paddingRight?: number
     disabled?: boolean
     invalid?: boolean
@@ -142,8 +144,14 @@ export function AmountInput({
             />
             {label ? <div className="label">{label}</div> : null}
             <div className="token">
-                <img src={`${prefix}/usdt.svg`} alt="USDT logo" />
-                USDT
+                {currency
+                    ? currency
+                    :
+                    <>
+                        <img src={`${prefix}/usdt.svg`} alt="USDT logo" />
+                        USDT
+                    </>
+                }
             </div>
         </div>
     )

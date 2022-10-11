@@ -40,6 +40,7 @@ import {
     chains,
     CHAIN_ID,
     Address,
+    USD_TO_UGX_FX,
 } from '../../app'
 import {
     Alert,
@@ -733,6 +734,24 @@ function OfferModal({
         }
     }, [isOfferActive, liquidityTokenDecimals, loan, borrowInfo])
     const [amount, setAmount] = useState<InputAmount>(initialAmount)
+
+    const [amountLocal, setAmountLocal] = useState<InputAmount>((Number(initialAmount) * USD_TO_UGX_FX).toFixed(2) as InputAmount)
+
+    const updateAmountLocal = (input:InputAmount) => {
+        setAmountLocal(input)
+
+        let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
+        let amountNum = inputNum / USD_TO_UGX_FX
+        setAmount(amountNum.toFixed(2) as InputAmount)
+    }
+
+    const updateAmount = (input:InputAmount) => {
+        setAmount(input)
+
+        let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
+        setAmountLocal((inputNum * USD_TO_UGX_FX).toFixed(2) as InputAmount)
+    }
+
     const [duration, setDuration] = useState<InputAmount>(initialMonths)
     const [installments, setInstallments] =
         useState<InputAmount>(initialInstallments)
@@ -780,6 +799,7 @@ function OfferModal({
 
         if (
             !amount ||
+            !amountLocal ||
             !duration ||
             !interest ||
             !installments ||
@@ -867,6 +887,17 @@ function OfferModal({
             ),
         [amount, borrowInfo.minLoanAmount, liquidityTokenDecimals],
     )
+
+    const isAmountLocalInvalid = useMemo(
+        () =>
+            !checkAmountValidity(
+                amountLocal,
+                liquidityTokenDecimals,
+                BigNumber.from(borrowInfo.minLoanAmount).mul(USD_TO_UGX_FX),
+            ),
+        [amountLocal, borrowInfo.minLoanAmount, liquidityTokenDecimals],
+    )
+
     const durationInvalidMessage = useMemo(() => {
         const inSeconds = Number(duration) * thirtyDays
 
@@ -953,11 +984,31 @@ function OfferModal({
                     </Button> // TODO: If auth is valid fetch automatically
                 ) : null}
                 <label>
+                    <div className="label">Amount in Local Currency</div>
+                    <AmountInput
+                        invalid
+                        decimals={2}
+                        value={amountLocal}
+                        onChange={updateAmountLocal}
+                        disabled={isOfferLoading}
+                        currency={'UGX'}
+                    />
+                    {isAmountLocalInvalid ? (
+                        <Alert
+                            style="error"
+                            title={`Minimum amount is ${formatToken(
+                                BigNumber.from(borrowInfo.minLoanAmount).mul(USD_TO_UGX_FX),
+                                liquidityTokenDecimals,
+                            )}`}
+                        />
+                    ) : null}
+                </label>
+                <label>
                     <div className="label">Amount</div>
                     <AmountInput
                         decimals={liquidityTokenDecimals}
                         value={amount}
-                        onChange={setAmount}
+                        onChange={updateAmount}
                         disabled={isOfferLoading}
                         invalid={isAmountInvalid}
                     />
@@ -970,6 +1021,14 @@ function OfferModal({
                             )}`}
                         />
                     ) : null}
+                </label>
+                <label>
+                    <div className="label">FX Rate</div>
+                    <input
+                        type="text"
+                        disabled
+                        value={'1 USDT = ' + USD_TO_UGX_FX + ' UGX'}
+                    />
                 </label>
                 <label>
                     <div className="label">Duration</div>

@@ -26,7 +26,7 @@ import {
     rgbYellow,
     setBorrowerInfo,
     thirtyDays,
-    TOKEN_SYMBOL,
+    TOKEN_SYMBOL, USD_TO_UGX_FX,
     useAccount,
     useAmountWithInterest,
     useProvider,
@@ -223,11 +223,12 @@ export function LoanView({
             `}</style>
 
             <h4 className="amount">
+                {borrowerInfoState ? borrowerInfoState.name : <></>}
                 {hasDebt
-                    ? `Debt: ${formatToken(debt, liquidityTokenDecimals)}`
-                    : `Amount: ${
+                    ? ` ${formatToken(debt, liquidityTokenDecimals, 2, true)}`
+                    : ` ${
                           isRepaid
-                              ? formatToken(repaid, liquidityTokenDecimals)
+                              ? formatToken(repaid, liquidityTokenDecimals, 2)
                               : formattedAmount
                       }`}{' '}
                 {TOKEN_SYMBOL}
@@ -282,13 +283,17 @@ export function LoanView({
                 <div className="item">
                     <div className="label">Remaining</div>
                     <div className="value">
-                        <Remaining timestamp={borrowedTime + duration} />
+                        <Remaining timestamp={borrowedTime + duration} noHoursAndLess={true} />
                     </div>
                 </div>
                 <div className="item">
-                    <div className="label">Amount</div>
+                    <div className="label">Status</div>
+                    <div className="value">{formatStatus(status)}</div>
+                </div>
+                <div className="item">
+                    <div className="label">Principal</div>
                     <div className="value">
-                        {formatToken(amount, liquidityTokenDecimals)}{' '}
+                        {formatToken(amount, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                 </div>
@@ -298,31 +303,42 @@ export function LoanView({
                         {formatToken(
                             details.interestPaid,
                             liquidityTokenDecimals,
+                            2,
+                            false
                         )}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                 </div>
                 <div className="item">
-                    <div className="label">Status</div>
-                    <div className="value">{formatStatus(status)}</div>
+                    <div className="label">UGX Due</div>
+                    <div className="value">
+                        {hasDebt
+                            ? ` ${formatToken(debt.mul(USD_TO_UGX_FX), liquidityTokenDecimals, 2, true)}`
+                            : ` ${
+                                isRepaid
+                                    ? formatToken(BigNumber.from(0), liquidityTokenDecimals, 2)
+                                    : formattedAmount
+                            }`}{' '}
+                        {'UGX'}
+                    </div>
+                </div>
+                <div className="item">
+                    <div className="label">Account</div>
+                    <div className="value">
+                        <EtherscanAddress address={borrower} />
+                    </div>
                 </div>
                 {borrowerInfoState ? (
                     <>
                         <div className="item">
-                            <div className="label">Borrower name</div>
-                            <div className="value">
-                                {borrowerInfoState.name}
-                            </div>
-                        </div>
-                        <div className="item">
-                            <div className="label">Borrower business name</div>
+                            <div className="label">Business name</div>
                             <div className="value">
                                 {borrowerInfoState.businessName}
                             </div>
                         </div>
                         {borrowerInfoState.phone ? (
                             <div className="item">
-                                <div className="label">Borrower phone</div>
+                                <div className="label">Phone</div>
                                 <div className="value">
                                     <a href={`tel:${borrowerInfoState.phone}`}>
                                         {borrowerInfoState.phone}
@@ -332,7 +348,7 @@ export function LoanView({
                         ) : null}
                         {borrowerInfoState.email ? (
                             <div className="item">
-                                <div className="label">Borrower email</div>
+                                <div className="label">Email</div>
                                 <div className="value">
                                     <a
                                         href={`mailto:${borrowerInfoState.email}`}
@@ -344,12 +360,7 @@ export function LoanView({
                         ) : null}
                     </>
                 ) : null}
-                <div className="item">
-                    <div className="label">Borrower account</div>
-                    <div className="value">
-                        <EtherscanAddress address={borrower} />
-                    </div>
-                </div>
+
             </div>
             {borrowerInfoState &&
             !borrowerInfoState.phone &&
@@ -377,11 +388,11 @@ export function LoanView({
 }
 
 const zeroMinutes = Duration.fromObject({ minutes: 0 }).toHuman()
-function Remaining({ timestamp }: { timestamp: number }) {
+function Remaining({ timestamp, noHoursAndLess }: { timestamp: number, noHoursAndLess?: boolean }) {
     const [integer, setInteger] = useState(0) // Force update
     const value = useMemo(
-        () => (noop(integer), formatRemaining(timestamp)),
-        [timestamp, integer],
+        () => (noop(integer), formatRemaining(timestamp, noHoursAndLess)),
+        [timestamp, integer, noHoursAndLess],
     )
 
     useEffect(() => {
@@ -400,11 +411,11 @@ function Remaining({ timestamp }: { timestamp: number }) {
     return (value === zeroMinutes ? '-' : value) as unknown as JSX.Element
 }
 
-function formatRemaining(timestamp: number) {
+function formatRemaining(timestamp: number, noHoursAndLess?: boolean) {
     const now = Date.now() / 1000
     if (now > timestamp) return zeroMinutes
 
-    return formatDuration(timestamp - now, true)
+    return formatDuration(timestamp - now, true, noHoursAndLess, noHoursAndLess)
 }
 
 function onlyPositive<T, R extends { [key in keyof T]?: number }>(
@@ -421,7 +432,7 @@ function onlyPositive<T, R extends { [key in keyof T]?: number }>(
     return newObject
 }
 
-function formatDuration(duration: number, noSeconds?: boolean): string {
+function formatDuration(duration: number, noSeconds?: boolean, noMinutes?: boolean, noHours?: boolean): string {
     const result = onlyPositive(
         Duration.fromObject({
             years: 0,
@@ -436,10 +447,10 @@ function formatDuration(duration: number, noSeconds?: boolean): string {
     )
 
     if (noSeconds) delete result.seconds
+    if (noMinutes) delete result.minutes
+    if (noHours) delete result.hours
 
-    return Duration.fromObject(result).toHuman({
-        listStyle: 'long',
-    })
+    return Duration.fromObject(result).toHuman()
 }
 
 export function formatDurationInMonths(duration: number): number {
