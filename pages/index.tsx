@@ -1,15 +1,19 @@
 import { NextPage } from 'next'
 import Head from 'next/head'
-import { useDispatch } from 'react-redux'
+import {useDispatch, useSelector} from 'react-redux'
 import {
     APP_NAME,
     formatCurrency,
     formatPercent,
     poolsConfig,
-    prefix,
+    prefix, SIDEBAR_ALWAYS_VISIBLE_WIDTH, useAccount,
 } from '../app'
 import { Page, Skeleton, PoolsListNew } from '../components'
-import { useFetchIntervalAllStats, usePools } from '../features'
+import {selectPools, useFetchIntervalAllStats, usePools} from '../features'
+import Link from "next/link";
+import {RiHandCoinLine, RiVipDiamondLine} from "react-icons/ri";
+import {useMemo} from "react";
+import {SIDEBAR_MAX_WIDTH} from "../components/navigation/constants";
 
 const title = `Earn - ${APP_NAME}`
 const labels = [
@@ -25,14 +29,62 @@ const EarnPools: NextPage = () => {
     const poolsLoaded = Object.keys(pools).length === poolsConfig.length
     useFetchIntervalAllStats(poolsLoaded ? { dispatch } : null)
 
+    const account = useAccount()
+    const isManager = useMemo(
+        () =>
+            Object.values(pools).filter(
+                (pool) => pool.managerAddress === account,
+            ).length > 0,
+        [pools, account],
+    )
+
     return (
         <Page>
+            <style jsx>{`
+                .navlinks {
+                  display: block;
+                }
+                a {
+                    margin-top: 8px;
+                    width: 50%;
+                    color: var(--greenery);
+                    font-weight: 600;
+                    font-size: 16px;
+                    line-height: 19px;
+                    display: inline-block;
+                    cursor: pointer;
+                }
+                
+                @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
+                    .navlinks {
+                      display: none;
+                    }
+                }
+            `}</style>
+
             <Head>
                 <title>{title}</title>
                 <link rel="icon" href={`${prefix}/favicon.svg`} />
             </Head>
 
-            <h1>Pools</h1>
+            <h1>Earn: Pools Open to Lenders</h1>
+            <span className={'navlinks'}>
+                <Link href="/borrow">
+                    <a>
+                        <RiHandCoinLine size={24} />
+                        Borrow
+                    </a>
+                </Link>
+                {isManager && (
+                    <Link href="/manage">
+                        <a>
+                            <RiVipDiamondLine size={24} />
+                            Manage
+                        </a>
+                    </Link>
+                )}
+            </span>
+
             <PoolsListNew
                 showMoreAndOpenPage
                 items={poolsConfig.map(({ address, name }) => {

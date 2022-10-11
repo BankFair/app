@@ -33,7 +33,7 @@ const BorrowPools: NextPage = () => {
                 <link rel="icon" href={`${prefix}/favicon.svg`} />
             </Head>
 
-            <h1>Pools</h1>
+            <h1>Borrowers: Choose Pool</h1>
             <PoolsListNew
                 items={poolsConfig.map(({ address, name }) => {
                     const pool = pools[address]
