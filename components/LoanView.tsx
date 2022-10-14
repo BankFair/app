@@ -8,7 +8,7 @@ import '@formatjs/intl-listformat/locale-data/en'
 
 import { BigNumber } from 'ethers'
 import { Duration } from 'luxon'
-import { useEffect, useMemo, useState } from 'react'
+import {Fragment, useEffect, useMemo, useState} from 'react'
 import TimeAgo from 'timeago-react'
 
 import {
@@ -33,23 +33,14 @@ import {
     zero,
 } from '../app'
 
-import { LoanStatus, Loan, formatStatus, loanDeskContract } from '../features'
+import {LoanStatus, Loan, formatStatus, loanDeskContract, useSchedule} from '../features'
 
 import { EtherscanAddress } from './EtherscanLink'
 import { Button } from './Button'
 import { Progress } from './Progress'
 
 export function LoanView({
-    loan: {
-        borrower,
-        amount,
-        duration,
-        borrowedTime,
-        status,
-        details,
-        apr,
-        applicationId,
-    },
+    loan,
     liquidityTokenDecimals,
     poolAddress,
     loanDeskAddress,
@@ -61,6 +52,16 @@ export function LoanView({
 }) {
     const provider = useProvider()
     const account = useAccount()
+    
+    const applicationId = loan.applicationId;
+    const borrower = loan.borrower;
+    const amount = loan.amount;
+    const apr = loan.apr;
+    const borrowedTime = loan.borrowedTime;
+    const duration = loan.duration;
+    const status = loan.status;
+    const details = loan.details;
+
     const formattedAmount = useMemo(
         () => formatToken(amount, liquidityTokenDecimals),
         [amount, liquidityTokenDecimals],
@@ -150,6 +151,8 @@ export function LoanView({
     const hasDebt = status === LoanStatus.OUTSTANDING
     const isRepaid = status === LoanStatus.REPAID
 
+    const schedule = useSchedule(isRepaid ? null : loan)
+
     return (
         <div className="loan">
             <style jsx>{`
@@ -218,6 +221,21 @@ export function LoanView({
 
                     > :global(button) {
                         margin: 0 4px;
+                    }
+                }
+                
+                .schedule {
+                    display: grid;
+                    grid-template-columns: minmax(auto, max-content) auto;
+                    row-gap: 8px;
+                    column-gap: 16px;
+
+                    > .label {
+                        color: var(--color-secondary);
+                    }
+
+                    > .red {
+                        color: ${rgbRed};
                     }
                 }
             `}</style>
@@ -372,6 +390,37 @@ export function LoanView({
                     </Button>
                 </div>
             ) : null}
+
+            {isRepaid ? null : (
+                <>
+                    <h3>Future Re-Payments Due</h3>
+
+                    <div className="schedule">
+                        <div className="label">Amount</div>
+                        <div className="label">Due</div>
+
+                        {schedule.map((item, index) =>
+                            item.skip ? null : (
+                                <Fragment key={index}>
+                                    <div className={item.overdue ? 'red' : ''}>
+                                        {formatToken(
+                                            item.amount,
+                                            liquidityTokenDecimals,
+                                            2,
+                                            true,
+                                        )}{' '}
+                                        {TOKEN_SYMBOL}
+                                    </div>
+                                    <div className={item.overdue ? 'red' : ''}>
+                                        {item.date}
+                                        {item.overdue ? ' (overdue)' : ''}
+                                    </div>
+                                </Fragment>
+                            ),
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     )
 }
