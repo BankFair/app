@@ -563,7 +563,7 @@ export function useSchedule(
                 if (nextDate) {
                     if (nextDate > now) {
                         if (
-                            principalOutstanding.lte(
+                            principalOutstanding.lt(
                                 expectedPrincipalOutstanding,
                             )
                         ) {
