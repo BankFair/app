@@ -52,7 +52,7 @@ export function LoanView({
 }) {
     const provider = useProvider()
     const account = useAccount()
-    
+
     const applicationId = loan.applicationId;
     const borrower = loan.borrower;
     const amount = loan.amount;
@@ -86,7 +86,7 @@ export function LoanView({
                     repaidPrincipal
                       .mul(oneHundredMillion)
                       .div(amount)
-                      .toNumber() / 1_000_000, 
+                      .toNumber() / 1_000_000,
                       100
                     )
                 : 0,
@@ -223,7 +223,7 @@ export function LoanView({
                         margin: 0 4px;
                     }
                 }
-                
+
                 .schedule {
                     display: grid;
                     grid-template-columns: minmax(auto, max-content) auto;
@@ -413,7 +413,7 @@ export function LoanView({
                                     </div>
                                     <div className={item.overdue ? 'red' : ''}>
                                         {item.date}
-                                        {item.overdue ? ' (overdue)' : ''}
+                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
                                     </div>
                                 </Fragment>
                             ),
