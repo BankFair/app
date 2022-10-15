@@ -677,7 +677,7 @@ function RepayLoan({
                     >
                         {needsApproval && largerThanZero
                             ? `Step 1 of 2 ➜ Approve ${TOKEN_SYMBOL}`
-                            : !(!largerThanZero || isLoading) 
+                            : !(!largerThanZero || isLoading)
                                 ? 'Final Step ➜ Repay'
                                 : 'Repay'
                         }
@@ -799,7 +799,7 @@ function RepayLoan({
                                     </div>
                                     <div className={item.overdue ? 'red' : ''}>
                                         {item.date}
-                                        {item.overdue ? ' (overdue)' : ''}
+                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
                                     </div>
                                 </Fragment>
                             ),
