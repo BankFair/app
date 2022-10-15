@@ -465,6 +465,7 @@ export function useCanDefaultLoan(
 
 export interface ScheduleItem {
     date: string
+    scheduledDate: string
     dateTime: DateTime
     overdue: boolean
     amount: BigNumber
@@ -504,6 +505,7 @@ export function useSchedule(
             if (paid) {
                 array[index] = {
                     date: date.toLocaleString(),
+                    scheduledDate: date.toLocaleString(),
                     dateTime: date,
                     overdue: false,
                     amount: zero,
@@ -520,6 +522,7 @@ export function useSchedule(
             )
             const previous = array[index - 1] as ScheduleItem | undefined
             let actualDate = date
+            let scheduledDate = date
             let skip = false
             let amount = installmentAmount
 
@@ -563,7 +566,7 @@ export function useSchedule(
                 if (nextDate) {
                     if (nextDate > now) {
                         if (
-                            principalOutstanding.lte(
+                            principalOutstanding.lt(
                                 expectedPrincipalOutstanding,
                             )
                         ) {
@@ -697,6 +700,7 @@ export function useSchedule(
             const isAmountZero = amount.eq(zero)
             array[index] = {
                 date: actualDate.toLocaleString(),
+                scheduledDate: scheduledDate.toLocaleString(),
                 dateTime: actualDate,
                 overdue:
                     overdue && !isAmountZero
