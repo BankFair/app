@@ -150,6 +150,8 @@ interface Offer {
         businessName: string
         phone?: string
         email?: string
+        isLocalCurrencyLoan?: boolean
+        localLoanAmount?: string
     }
     loanDeskAddress: string
 }
@@ -240,6 +242,9 @@ function Offer({
     const [isLoading, setIsLoading] = useState(false)
     const [isAccepted, setIsAccepted] = useState(false)
 
+    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
+    const [fxRate, setFxRate] = useState(1);
+
     const [monthly, scheduleArg] = useMemo<
         [boolean, Parameters<typeof useSchedule>[0]]
     >(() => {
@@ -277,6 +282,9 @@ function Offer({
         return null
     }
 
+    setLocalCurrencyLoan(offer.contactDetails?.isLocalCurrencyLoan ?? false);
+    setFxRate(offer.contactDetails?.isLocalCurrencyLoan ? 3800 : 1);
+
     return (
         <Box
             className="loan-offer"
@@ -286,32 +294,44 @@ function Offer({
             <div className="field">
                 <div className="label">Amount</div>
                 <div>
-                    {formatToken(
-                        offer.details.amount.mul(USD_TO_UGX_FX),
-                        liquidityTokenDecimals,
-                        2,
-                        true,
-                    )}{' '}
-                    {'UGX'}
-                    {' '}
-                    (
-                        {formatToken(offer.details.amount, liquidityTokenDecimals)}{' '}
-                        {TOKEN_SYMBOL}
-                    )
+                    {!isLocalCurrencyLoan ? null :
+                        <>
+                            {formatToken(
+                                offer.details.amount.mul(fxRate),
+                                liquidityTokenDecimals,
+                                2,
+                                true,
+                            )}{' '}
+                            {'UGX'}
+                            {' '}
+                            (
+                        </>
+                    }
+                    {formatToken(offer.details.amount, liquidityTokenDecimals)}{' '}
+                    {TOKEN_SYMBOL}
+                    {!isLocalCurrencyLoan ? null :
+                        <>
+                            )
+                        </>
+                    }
                 </div>
             </div>
             <div className="field">
                 <div className="label">Installment amount</div>
                 <div>
-                    {formatToken(
-                        offer.details.amount.mul(USD_TO_UGX_FX),
-                        liquidityTokenDecimals,
-                        2,
-                        true,
-                    )}{' '}
-                    {'UGX'}
-                    {' '}
-                    (
+                    {!isLocalCurrencyLoan ? null :
+                        <>
+                            {formatToken(
+                                offer.details.amount.mul(fxRate),
+                                liquidityTokenDecimals,
+                                2,
+                                true,
+                            )}{' '}
+                            {'UGX'}
+                            {' '}
+                            (
+                        </>
+                    }
                         {formatToken(
                             offer.details.installmentAmount,
                             liquidityTokenDecimals,
@@ -319,7 +339,11 @@ function Offer({
                             true
                         )}{' '}
                         {TOKEN_SYMBOL}
-                    )
+                    {!isLocalCurrencyLoan ? null :
+                        <>
+                            )
+                        </>
+                    }
                 </div>
             </div>
             <div className="field">
@@ -376,6 +400,8 @@ function Offer({
                     monthly={monthly}
                     schedule={schedule}
                     liquidityTokenDecimals={liquidityTokenDecimals}
+                    isLocalCurrencyLoan={offer.contactDetails.isLocalCurrencyLoan ?? false}
+                    fxRate={offer.contactDetails.isLocalCurrencyLoan ? 3800 : 1}
                 />
 
                 <div className="schedule-notice">
@@ -513,6 +539,8 @@ function RepayLoan({
     account: Address | undefined
 }) {
     const [amount, setAmount] = useState<InputAmount>('')
+    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
+    const [fxRate, setFxRate] = useState(1);
 
     const outstandingNow = useAmountWithInterest(
         loan.amount,
@@ -547,6 +575,8 @@ function RepayLoan({
         businessName: string
         phone?: string
         email?: string
+        isLocalCurrencyLoan?: boolean
+        localLoanAmount?: string
     } | null>(null)
     const contactDetails =
         contactDetailsState &&
@@ -569,11 +599,15 @@ function RepayLoan({
                                           businessName: string
                                           phone?: string
                                           email?: string
+                                          isLocalCurrencyLoan?: boolean
+                                          localLoanAmount?: string
                                       }>,
                               )
                               .then(
                                   (info) => (
                                       setBorrowerInfo(loan.applicationId, info),
+                                      setLocalCurrencyLoan(info?.isLocalCurrencyLoan ?? false),
+                                      setFxRate(isLocalCurrencyLoan ? 3800 : 1),
                                       { info, profileId }
                                   ),
                               ),
@@ -667,15 +701,19 @@ function RepayLoan({
                     <div className="stat">
                         <div className="label">Outstanding</div>
                         <div className="value">
-                            {formatToken(
-                                outstandingNow.mul(USD_TO_UGX_FX),
-                                liquidityTokenDecimals,
-                                2,
-                                true,
-                            )}{' '}
-                            {'UGX'}
-                            {' '}
-                            (
+                            {!isLocalCurrencyLoan ? null :
+                                <>
+                                    {formatToken(
+                                        outstandingNow.mul(fxRate),
+                                        liquidityTokenDecimals,
+                                        2,
+                                        true,
+                                    )}{' '}
+                                    {'UGX'}
+                                    {' '}
+                                    (
+                                </>
+                            }
                             {formatToken(
                                 outstandingNow,
                                 liquidityTokenDecimals,
@@ -683,7 +721,11 @@ function RepayLoan({
                                 true,
                             )}{' '}
                             {TOKEN_SYMBOL}
-                            )
+                            {!isLocalCurrencyLoan ? null :
+                                <>
+                                    )
+                                </>
+                            }
                         </div>
                     </div>
                 </div>
@@ -725,53 +767,77 @@ function RepayLoan({
 
                     <div className="field">
                         <span className="label">Initial loan amount:</span>{' '}
-                        {formatToken(
-                            BigNumber.from(loan.amount).mul(USD_TO_UGX_FX),
-                            liquidityTokenDecimals,
-                            2,
-                            true,
-                        )}{' '}
-                        {'UGX'}
-                        {' '}
-                        (
-                            {formatToken(loan.amount, liquidityTokenDecimals, 2, true)}{' '}
-                            {TOKEN_SYMBOL}
-                        )
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    BigNumber.from(loan.amount).mul(fxRate),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {'UGX'}
+                                {' '}
+                                (
+                            </>
+                        }
+                        {formatToken(loan.amount, liquidityTokenDecimals, 2, true)}{' '}
+                        {TOKEN_SYMBOL}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
                     </div>
                     <div className="field">
                         <span className="label">Repaid:</span>{' '}
-                        {formatToken(
-                            repaid.mul(USD_TO_UGX_FX),
-                            liquidityTokenDecimals,
-                            2,
-                            false,
-                        )}{' '}
-                        {'UGX'}
-                        {' '}
-                        (
-                            {formatToken(repaid, liquidityTokenDecimals, 2, true)}{' '}
-                            {TOKEN_SYMBOL}
-                        )
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    repaid.mul(fxRate),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {'UGX'}
+                                {' '}
+                                (
+                            </>
+                        }
+                        {formatToken(repaid, liquidityTokenDecimals, 2, true)}{' '}
+                        {TOKEN_SYMBOL}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
                     </div>
                     <div className="field">
                         <span className="label">Total interest paid:</span>{' '}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    BigNumber.from(loan.details.interestPaid).mul(fxRate),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {'UGX'}
+                                {' '}
+                                (
+                            </>
+                        }
                         {formatToken(
-                            repaid.mul(USD_TO_UGX_FX),
+                            loan.details.interestPaid,
                             liquidityTokenDecimals,
                             2,
-                            false,
+                            true
                         )}{' '}
-                        {'UGX'}
-                        {' '}
-                        (
-                            {formatToken(
-                                loan.details.interestPaid,
-                                liquidityTokenDecimals,
-                                2,
-                                true
-                            )}{' '}
-                            {TOKEN_SYMBOL}
-                        )
+                        {TOKEN_SYMBOL}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
                     </div>
                     {
                         // TODO: Display time remaining and start date instead of duration
@@ -853,28 +919,34 @@ function RepayLoan({
                                 <Fragment key={index}>
                                     <div className={item.overdue ? 'red' : ''}>
                                         {item.date}
-                                        {item.overdue ? ' (overdue)' : ''}
+                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
                                     </div>
                                     <div className={item.overdue ? 'red' : ''}>
+                                        {!isLocalCurrencyLoan ? null :
+                                            <>
+                                                {formatToken(
+                                                    item.amount.mul(fxRate),
+                                                    liquidityTokenDecimals,
+                                                    2,
+                                                    true,
+                                                )}{' '}
+                                                {'UGX'}
+                                                {' '}
+                                                (
+                                            </>
+                                        }
                                         {formatToken(
-                                            item.amount.mul(USD_TO_UGX_FX),
-                                            liquidityTokenDecimals,
-                                            2,
-                                            true,
-                                        )}{' '}
-                                        {'UGX'}
-                                        {' '}
-                                        ({formatToken(
                                             item.amount,
                                             liquidityTokenDecimals,
                                             2,
                                             true,
                                         )}{' '}
-                                        {TOKEN_SYMBOL})
-                                    </div>
-                                    <div className={item.overdue ? 'red' : ''}>
-                                        {item.date}
-                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
+                                        {TOKEN_SYMBOL}
+                                        {!isLocalCurrencyLoan ? null :
+                                            <>
+                                                )
+                                            </>
+                                        }
                                     </div>
                                 </Fragment>
                             ),
@@ -1425,6 +1497,7 @@ function RequestLoan({
                         ) : null
                     ) : null}
                 </label>
+                {/*
                 <label>
                     <div className="label">Amount in Local Currency</div>
                     <AmountInput
@@ -1445,6 +1518,7 @@ function RequestLoan({
                         <Alert style="error" title={invalidAmountLocalMessage} />
                     ) : null}
                 </label>
+                */}
                 <label>
                     <div className="label">Amount</div>
                     <AmountInput
@@ -1464,6 +1538,7 @@ function RequestLoan({
                         <Alert style="error" title={invalidAmountMessage} />
                     ) : null}
                 </label>
+                {/*
                 <label>
                     <div className="label">FX Rate</div>
                     <input
@@ -1472,6 +1547,7 @@ function RequestLoan({
                         value={'1 USDT = ' + USD_TO_UGX_FX + ' UGX'}
                     />
                 </label>
+                */}
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
