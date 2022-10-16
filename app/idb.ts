@@ -7,6 +7,8 @@ interface Info {
     businessName: string
     email?: string
     phone?: string
+    isLocalCurrencyLoan?: boolean
+    localLoanAmount?: string
 }
 
 interface Schema extends DBSchema {

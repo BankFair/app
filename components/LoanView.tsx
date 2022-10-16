@@ -62,6 +62,9 @@ export function LoanView({
     const status = loan.status;
     const details = loan.details;
 
+    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
+    const [fxRate, setFxRate] = useState(1);
+
     const formattedAmount = useMemo(
         () => formatToken(amount, liquidityTokenDecimals),
         [amount, liquidityTokenDecimals],
@@ -98,6 +101,8 @@ export function LoanView({
         businessName: string
         phone?: string | undefined
         email?: string | undefined
+        isLocalCurrencyLoan?: boolean
+        localLoanAmount?: string
     } | null>(null)
     const [profileId, setProfileId] = useState('')
     useEffect(() => {
@@ -117,6 +122,10 @@ export function LoanView({
 
                         setProfileId(application.profileId)
                     }
+
+                    setLocalCurrencyLoan(borrowerInfoState?.isLocalCurrencyLoan ?? false);
+                    setFxRate(isLocalCurrencyLoan ? 3800 : 1);
+
                     return
                 }
 
@@ -132,6 +141,8 @@ export function LoanView({
                     businessName: string
                     phone?: string
                     email?: string
+                    isLocalCurrencyLoan?: boolean
+                    localLoanAmount?: string
                 }>)
 
                 if (canceled) return
@@ -327,19 +338,21 @@ export function LoanView({
                         {TOKEN_SYMBOL}
                     </div>
                 </div>
-                <div className="item">
-                    <div className="label">UGX Due</div>
-                    <div className="value">
-                        {hasDebt
-                            ? ` ${formatToken(debt.mul(USD_TO_UGX_FX), liquidityTokenDecimals, 2, true)}`
-                            : ` ${
-                                isRepaid
-                                    ? formatToken(BigNumber.from(0), liquidityTokenDecimals, 2)
-                                    : formattedAmount
-                            }`}{' '}
-                        {'UGX'}
+                {!isLocalCurrencyLoan ? null :
+                    <div className="item">
+                        <div className="label">UGX Due</div>
+                        <div className="value">
+                            {hasDebt
+                                ? ` ${formatToken(debt.mul(USD_TO_UGX_FX), liquidityTokenDecimals, 2, true)}`
+                                : ` ${
+                                    isRepaid
+                                        ? formatToken(BigNumber.from(0), liquidityTokenDecimals, 2)
+                                        : formattedAmount
+                                }`}{' '}
+                            {'UGX'}
+                        </div>
                     </div>
-                </div>
+                }
                 <div className="item">
                     <div className="label">Account</div>
                     <div className="value">
@@ -407,13 +420,30 @@ export function LoanView({
                     <h3>Future Re-Payments Due</h3>
 
                     <div className="schedule">
-                        <div className="label">Amount</div>
                         <div className="label">Due</div>
+                        <div className="label">Amount</div>
 
                         {schedule.map((item, index) =>
                             item.skip ? null : (
                                 <Fragment key={index}>
                                     <div className={item.overdue ? 'red' : ''}>
+                                        {item.date}
+                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
+                                    </div>
+                                    <div className={item.overdue ? 'red' : ''}>
+                                        {!isLocalCurrencyLoan ? null :
+                                            <>
+                                                {formatToken(
+                                                    item.amount.mul(fxRate),
+                                                    liquidityTokenDecimals,
+                                                    2,
+                                                    true,
+                                                )}{' '}
+                                                {'UGX'}
+                                                {' '}
+                                                (
+                                            </>
+                                        }
                                         {formatToken(
                                             item.amount,
                                             liquidityTokenDecimals,
@@ -421,11 +451,13 @@ export function LoanView({
                                             true,
                                         )}{' '}
                                         {TOKEN_SYMBOL}
+                                        {!isLocalCurrencyLoan ? null :
+                                            <>
+                                                )
+                                            </>
+                                        }
                                     </div>
-                                    <div className={item.overdue ? 'red' : ''}>
-                                        {item.date}
-                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
-                                    </div>
+
                                 </Fragment>
                             ),
                         )}

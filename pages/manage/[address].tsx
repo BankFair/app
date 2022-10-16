@@ -220,6 +220,8 @@ interface BaseLoanRequest {
     profileId: string
     phone?: string
     email?: string
+    isLocalCurrencyLoan?: boolean
+    localLoanAmount?: string
 }
 interface OfferValues {
     amount: BigNumber
@@ -983,6 +985,7 @@ function OfferModal({
                         Get contact information
                     </Button> // TODO: If auth is valid fetch automatically
                 ) : null}
+                {/*
                 <label>
                     <div className="label">Amount in Local Currency</div>
                     <AmountInput
@@ -1003,6 +1006,7 @@ function OfferModal({
                         />
                     ) : null}
                 </label>
+                */}
                 <label>
                     <div className="label">Amount</div>
                     <AmountInput
@@ -1022,6 +1026,7 @@ function OfferModal({
                         />
                     ) : null}
                 </label>
+                {/*
                 <label>
                     <div className="label">FX Rate</div>
                     <input
@@ -1030,6 +1035,7 @@ function OfferModal({
                         value={'1 USDT = ' + USD_TO_UGX_FX + ' UGX'}
                     />
                 </label>
+                */}
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
@@ -1141,6 +1147,8 @@ function OfferModal({
                         monthly={monthly}
                         schedule={schedule}
                         liquidityTokenDecimals={liquidityTokenDecimals}
+                        isLocalCurrencyLoan={loan.isLocalCurrencyLoan ?? false}
+                        fxRate={loan.isLocalCurrencyLoan ? 3800 : 1}
                     />
                 </div>
 
