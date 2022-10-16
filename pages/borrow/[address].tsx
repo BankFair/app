@@ -879,7 +879,9 @@ function RepayLoan({
                             </a>
                         </div>
                     ) : null}
-                    {contactDetails &&
+                    {
+                    /*
+                    contactDetails &&
                     !contactDetails.phone &&
                     !contactDetails.email ? (
                         <Button
@@ -902,7 +904,9 @@ function RepayLoan({
                         >
                             Get contact information
                         </Button>
-                    ) : null}
+                    ) : null
+                    */
+                    }
                 </Box>
             </form>
 
