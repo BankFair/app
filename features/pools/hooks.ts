@@ -583,8 +583,6 @@ export function useSchedule(
                                 timestamp + installmentDuration,
                             )
 
-                            actualDate = now
-
                             const {
                                 interestOutstanding: currentInterestOutstanding,
                                 daysPassed: currentDaysPassed,
@@ -593,7 +591,7 @@ export function useSchedule(
                                 loan.details.baseAmountRepaid,
                                 loan.details.interestPaidUntil,
                                 loan.apr,
-                                Math.trunc(now.toSeconds()),
+                                date.toSeconds()
                             )
                             amount = principalOutstanding
                                 .sub(nextExpectedPrincipalOutstanding)

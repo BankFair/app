@@ -919,7 +919,7 @@ function RepayLoan({
                                 <Fragment key={index}>
                                     <div className={item.overdue ? 'red' : ''}>
                                         {item.date}
-                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
+                                        {item.overdue ? <strong> OVERDUE</strong> : null}
                                     </div>
                                     <div className={item.overdue ? 'red' : ''}>
                                         {!isLocalCurrencyLoan ? null :
