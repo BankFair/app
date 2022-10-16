@@ -233,6 +233,28 @@ export function LoanView({
                     > :global(button) {
                         margin: 0 4px;
                     }
+                    
+                    > a {
+                        width: 33%;
+                        color: var(--greenery);
+                        font-weight: 600;
+                        font-size: 16px;
+                        
+                        display: inline-block;
+                        cursor: pointer;
+                        line-height: 24px;
+                    }
+                    
+                    > :global(svg) {
+                        margin-right: 8px;
+                    }
+                    
+                    .disabled {
+                      color: var(--color-secondary);
+                      cursor: default;
+                      opacity: 0.5;
+                      text-decoration: none;
+                    }
                 }
 
                 .schedule {
@@ -393,27 +415,31 @@ export function LoanView({
                 ) : null}
 
             </div>
-            {borrowerInfoState &&
-            !borrowerInfoState.phone &&
-            !borrowerInfoState.email &&
-            profileId ? (
+
+
                 <div className="actions">
-                    <Button
-                        onClick={() =>
-                            fetchBorrowerInfoAuthenticated(
-                                poolAddress,
-                                applicationId,
-                                profileId,
-                                account!,
-                                provider!.getSigner(),
-                            ).then(setBorrowerInfoState)
-                        }
-                        stone
-                    >
-                        Get contact information
-                    </Button>
+                    {borrowerInfoState &&
+                    !borrowerInfoState.phone &&
+                    !borrowerInfoState.email &&
+                    profileId ? (
+                        <a
+                            onClick={() =>
+                                fetchBorrowerInfoAuthenticated(
+                                    poolAddress,
+                                    applicationId,
+                                    profileId,
+                                    account!,
+                                    provider!.getSigner(),
+                                ).then(setBorrowerInfoState)
+                            }
+                              >
+                            Contacts
+                        </a>
+                    ) : null}
+                    <a className="disabled">Repay</a>
+                    <a className="disabled">Close</a>
+                    <a className="disabled">Default</a>
                 </div>
-            ) : null}
 
             {isRepaid ? null : (
                 <>
