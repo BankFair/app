@@ -12,7 +12,7 @@ import {
 import { PoolsList, Page, PageLoading, Skeleton } from '../../components'
 import { useFetchIntervalAllStats, usePools } from '../../features'
 
-const title = `Earn - ${APP_NAME}`
+const title = `Stake - ${APP_NAME}`
 const labels = ['Pool size', 'Manager funds', 'Avialable liquidity', 'Loans']
 const ManagePools: NextPage = () => {
     const account = useAccount()
@@ -57,11 +57,11 @@ const ManagePools: NextPage = () => {
         <Page>
             {head}
 
-            <h1>Manage Loans</h1>
+            <h1>Manage First Loss Capital </h1>
             <PoolsList
                 items={pools.map((pool) => {
                     return {
-                        link: `/manage/${pool.address}`,
+                        link: `/stake/${pool.address}`,
                         name: pool.name,
                         stats: pool.stats
                             ? [

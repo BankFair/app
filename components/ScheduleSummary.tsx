@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Fragment, useMemo, useState } from 'react'
 
-import { formatToken, TOKEN_SYMBOL, zero } from '../app'
+import {formatToken, TOKEN_SYMBOL, USD_TO_UGX_FX, zero} from '../app'
 import { ScheduleItem } from '../features'
 
 interface Summary {
@@ -15,11 +15,15 @@ export function ScheduleSummary({
     monthly,
     schedule,
     liquidityTokenDecimals,
+    isLocalCurrencyLoan,
+    fxRate,
 }: {
     amount: BigNumber
     monthly: boolean
     schedule: ScheduleItem[]
     liquidityTokenDecimals: number
+    isLocalCurrencyLoan: boolean
+    fxRate: number
 }) {
     const [showSchedule, setShowSchedule] = useState(true)
     const { summary, total } = useMemo(() => {
@@ -66,15 +70,55 @@ export function ScheduleSummary({
                             : `${item.times}${
                                   monthly ? ' monthly' : ''
                               } payments`}{' '}
-                        of {formatToken(item.amount, liquidityTokenDecimals, 2, true)}{' '}
-                        {TOKEN_SYMBOL}
+                        of
+                        {' '}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    item.amount.mul(fxRate),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {'UGX'}
+                                {' '}
+                                (
+                            </>
+                        }
+                            {formatToken(item.amount, liquidityTokenDecimals, 2, true)}{' '}
+                            {TOKEN_SYMBOL}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
                         {item.interestOnly ? ' (interest only)' : ''}
                     </div>
                 ))}
                 {summary.length > 1 ? (
                     <div className="line">
-                        Total: {formatToken(total, liquidityTokenDecimals, 2, true)}{' '}
+                        Total:
+                        {' '}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    total.mul(fxRate),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {'UGX'}
+                                {' '}
+                                (
+                            </>
+                        }
+                        {formatToken(total, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
+                        {!isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
                     </div>
                 ) : null}
                 {showSchedule ? null : (
@@ -93,7 +137,21 @@ export function ScheduleSummary({
                     {schedule.map((item, index) =>
                         item.skip ? null : (
                             <Fragment key={index}>
+                                <div>{item.date}</div>
                                 <div>
+                                    {!isLocalCurrencyLoan ? null :
+                                        <>
+                                            {formatToken(
+                                                item.amount.mul(fxRate),
+                                                liquidityTokenDecimals,
+                                                2,
+                                                true,
+                                            )}{' '}
+                                            {'UGX'}
+                                            {' '}
+                                            (
+                                        </>
+                                    }
                                     {formatToken(
                                         item.amount,
                                         liquidityTokenDecimals,
@@ -101,8 +159,12 @@ export function ScheduleSummary({
                                         true,
                                     )}{' '}
                                     {TOKEN_SYMBOL}
+                                    {!isLocalCurrencyLoan ? null :
+                                        <>
+                                            )
+                                        </>
+                                    }
                                 </div>
-                                <div>{item.date}</div>
                             </Fragment>
                         ),
                     )}

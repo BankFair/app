@@ -26,7 +26,7 @@ import {
     rgbYellow,
     setBorrowerInfo,
     thirtyDays,
-    TOKEN_SYMBOL,
+    TOKEN_SYMBOL, USD_TO_UGX_FX,
     useAccount,
     useAmountWithInterest,
     useProvider,
@@ -61,6 +61,9 @@ export function LoanView({
     const duration = loan.duration;
     const status = loan.status;
     const details = loan.details;
+
+    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
+    const [fxRate, setFxRate] = useState(1);
 
     const formattedAmount = useMemo(
         () => formatToken(amount, liquidityTokenDecimals),
@@ -98,6 +101,8 @@ export function LoanView({
         businessName: string
         phone?: string | undefined
         email?: string | undefined
+        isLocalCurrencyLoan?: boolean
+        localLoanAmount?: string
     } | null>(null)
     const [profileId, setProfileId] = useState('')
     useEffect(() => {
@@ -117,6 +122,10 @@ export function LoanView({
 
                         setProfileId(application.profileId)
                     }
+
+                    setLocalCurrencyLoan(borrowerInfoState?.isLocalCurrencyLoan ?? false);
+                    setFxRate(isLocalCurrencyLoan ? 3800 : 1);
+
                     return
                 }
 
@@ -132,6 +141,8 @@ export function LoanView({
                     businessName: string
                     phone?: string
                     email?: string
+                    isLocalCurrencyLoan?: boolean
+                    localLoanAmount?: string
                 }>)
 
                 if (canceled) return
@@ -222,6 +233,28 @@ export function LoanView({
                     > :global(button) {
                         margin: 0 4px;
                     }
+                    
+                    > a {
+                        width: 33%;
+                        color: var(--greenery);
+                        font-weight: 600;
+                        font-size: 16px;
+                        
+                        display: inline-block;
+                        cursor: pointer;
+                        line-height: 24px;
+                    }
+                    
+                    > :global(svg) {
+                        margin-right: 8px;
+                    }
+                    
+                    .disabled {
+                      color: var(--color-secondary);
+                      cursor: default;
+                      opacity: 0.5;
+                      text-decoration: none;
+                    }
                 }
 
                 .schedule {
@@ -241,11 +274,12 @@ export function LoanView({
             `}</style>
 
             <h4 className="amount">
+                {borrowerInfoState ? borrowerInfoState.name : <></>}
                 {hasDebt
-                    ? `Debt: ${formatToken(debt, liquidityTokenDecimals)}`
-                    : `Amount: ${
+                    ? ` ${formatToken(debt, liquidityTokenDecimals, 2, true)}`
+                    : ` ${
                           isRepaid
-                              ? formatToken(repaid, liquidityTokenDecimals)
+                              ? formatToken(repaid, liquidityTokenDecimals, 2)
                               : formattedAmount
                       }`}{' '}
                 {TOKEN_SYMBOL}
@@ -300,13 +334,17 @@ export function LoanView({
                 <div className="item">
                     <div className="label">Remaining</div>
                     <div className="value">
-                        <Remaining timestamp={borrowedTime + duration} />
+                        <Remaining timestamp={borrowedTime + duration} noHoursAndLess={true} />
                     </div>
                 </div>
                 <div className="item">
-                    <div className="label">Amount</div>
+                    <div className="label">Status</div>
+                    <div className="value">{formatStatus(status)}</div>
+                </div>
+                <div className="item">
+                    <div className="label">Principal</div>
                     <div className="value">
-                        {formatToken(amount, liquidityTokenDecimals)}{' '}
+                        {formatToken(amount, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                 </div>
@@ -316,31 +354,44 @@ export function LoanView({
                         {formatToken(
                             details.interestPaid,
                             liquidityTokenDecimals,
+                            2,
+                            false
                         )}{' '}
                         {TOKEN_SYMBOL}
                     </div>
                 </div>
+                {!isLocalCurrencyLoan ? null :
+                    <div className="item">
+                        <div className="label">UGX Due</div>
+                        <div className="value">
+                            {hasDebt
+                                ? ` ${formatToken(debt.mul(USD_TO_UGX_FX), liquidityTokenDecimals, 2, true)}`
+                                : ` ${
+                                    isRepaid
+                                        ? formatToken(BigNumber.from(0), liquidityTokenDecimals, 2)
+                                        : formattedAmount
+                                }`}{' '}
+                            {'UGX'}
+                        </div>
+                    </div>
+                }
                 <div className="item">
-                    <div className="label">Status</div>
-                    <div className="value">{formatStatus(status)}</div>
+                    <div className="label">Account</div>
+                    <div className="value">
+                        <EtherscanAddress address={borrower} />
+                    </div>
                 </div>
                 {borrowerInfoState ? (
                     <>
                         <div className="item">
-                            <div className="label">Borrower name</div>
-                            <div className="value">
-                                {borrowerInfoState.name}
-                            </div>
-                        </div>
-                        <div className="item">
-                            <div className="label">Borrower business name</div>
+                            <div className="label">Business name</div>
                             <div className="value">
                                 {borrowerInfoState.businessName}
                             </div>
                         </div>
                         {borrowerInfoState.phone ? (
                             <div className="item">
-                                <div className="label">Borrower phone</div>
+                                <div className="label">Phone</div>
                                 <div className="value">
                                     <a href={`tel:${borrowerInfoState.phone}`}>
                                         {borrowerInfoState.phone}
@@ -350,7 +401,7 @@ export function LoanView({
                         ) : null}
                         {borrowerInfoState.email ? (
                             <div className="item">
-                                <div className="label">Borrower email</div>
+                                <div className="label">Email</div>
                                 <div className="value">
                                     <a
                                         href={`mailto:${borrowerInfoState.email}`}
@@ -362,47 +413,63 @@ export function LoanView({
                         ) : null}
                     </>
                 ) : null}
-                <div className="item">
-                    <div className="label">Borrower account</div>
-                    <div className="value">
-                        <EtherscanAddress address={borrower} />
-                    </div>
-                </div>
+
             </div>
-            {borrowerInfoState &&
-            !borrowerInfoState.phone &&
-            !borrowerInfoState.email &&
-            profileId ? (
+
+
                 <div className="actions">
-                    <Button
-                        onClick={() =>
-                            fetchBorrowerInfoAuthenticated(
-                                poolAddress,
-                                applicationId,
-                                profileId,
-                                account!,
-                                provider!.getSigner(),
-                            ).then(setBorrowerInfoState)
-                        }
-                        stone
-                    >
-                        Get contact information
-                    </Button>
+                    {borrowerInfoState &&
+                    !borrowerInfoState.phone &&
+                    !borrowerInfoState.email &&
+                    profileId ? (
+                        <a
+                            onClick={() =>
+                                fetchBorrowerInfoAuthenticated(
+                                    poolAddress,
+                                    applicationId,
+                                    profileId,
+                                    account!,
+                                    provider!.getSigner(),
+                                ).then(setBorrowerInfoState)
+                            }
+                              >
+                            Contacts
+                        </a>
+                    ) : null}
+                    <a className="disabled">Repay</a>
+                    <a className="disabled">Close</a>
+                    <a className="disabled">Default</a>
                 </div>
-            ) : null}
 
             {isRepaid ? null : (
                 <>
                     <h3>Future Re-Payments Due</h3>
 
                     <div className="schedule">
-                        <div className="label">Amount</div>
                         <div className="label">Due</div>
+                        <div className="label">Amount</div>
 
                         {schedule.map((item, index) =>
                             item.skip ? null : (
                                 <Fragment key={index}>
                                     <div className={item.overdue ? 'red' : ''}>
+                                        {item.date}
+                                        {item.overdue ? <strong> OVERDUE</strong> : null}
+                                    </div>
+                                    <div className={item.overdue ? 'red' : ''}>
+                                        {!isLocalCurrencyLoan ? null :
+                                            <>
+                                                {formatToken(
+                                                    item.amount.mul(fxRate),
+                                                    liquidityTokenDecimals,
+                                                    2,
+                                                    true,
+                                                )}{' '}
+                                                {'UGX'}
+                                                {' '}
+                                                (
+                                            </>
+                                        }
                                         {formatToken(
                                             item.amount,
                                             liquidityTokenDecimals,
@@ -410,11 +477,13 @@ export function LoanView({
                                             true,
                                         )}{' '}
                                         {TOKEN_SYMBOL}
+                                        {!isLocalCurrencyLoan ? null :
+                                            <>
+                                                )
+                                            </>
+                                        }
                                     </div>
-                                    <div className={item.overdue ? 'red' : ''}>
-                                        {item.date}
-                                        {item.overdue ? ' (overdue since ' + item.scheduledDate + ')' : ''}
-                                    </div>
+
                                 </Fragment>
                             ),
                         )}
@@ -426,11 +495,11 @@ export function LoanView({
 }
 
 const zeroMinutes = Duration.fromObject({ minutes: 0 }).toHuman()
-function Remaining({ timestamp }: { timestamp: number }) {
+function Remaining({ timestamp, noHoursAndLess }: { timestamp: number, noHoursAndLess?: boolean }) {
     const [integer, setInteger] = useState(0) // Force update
     const value = useMemo(
-        () => (noop(integer), formatRemaining(timestamp)),
-        [timestamp, integer],
+        () => (noop(integer), formatRemaining(timestamp, noHoursAndLess)),
+        [timestamp, integer, noHoursAndLess],
     )
 
     useEffect(() => {
@@ -449,11 +518,11 @@ function Remaining({ timestamp }: { timestamp: number }) {
     return (value === zeroMinutes ? '-' : value) as unknown as JSX.Element
 }
 
-function formatRemaining(timestamp: number) {
+function formatRemaining(timestamp: number, noHoursAndLess?: boolean) {
     const now = Date.now() / 1000
     if (now > timestamp) return zeroMinutes
 
-    return formatDuration(timestamp - now, true)
+    return formatDuration(timestamp - now, true, noHoursAndLess, noHoursAndLess)
 }
 
 function onlyPositive<T, R extends { [key in keyof T]?: number }>(
@@ -470,7 +539,7 @@ function onlyPositive<T, R extends { [key in keyof T]?: number }>(
     return newObject
 }
 
-function formatDuration(duration: number, noSeconds?: boolean): string {
+function formatDuration(duration: number, noSeconds?: boolean, noMinutes?: boolean, noHours?: boolean): string {
     const result = onlyPositive(
         Duration.fromObject({
             years: 0,
@@ -485,10 +554,10 @@ function formatDuration(duration: number, noSeconds?: boolean): string {
     )
 
     if (noSeconds) delete result.seconds
+    if (noMinutes) delete result.minutes
+    if (noHours) delete result.hours
 
-    return Duration.fromObject(result).toHuman({
-        listStyle: 'long',
-    })
+    return Duration.fromObject(result).toHuman()
 }
 
 export function formatDurationInMonths(duration: number): number {

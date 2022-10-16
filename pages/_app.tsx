@@ -52,7 +52,8 @@ export default function App({ Component, pageProps }: AppProps) {
                         --shadow: ${rgba(COLOR_GREY_500, 0.16)};
                         --greenery: ${rgbGreeneryLight};
                         --old-gradient: #47cc4c;
-                        --old-gradient-hover: #d1ffda;
+                        --old-gradient-hover: #91e094;
+                        --old-menu-hover: #d1ffda;
                     }
 
                     html,

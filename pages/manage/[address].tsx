@@ -40,6 +40,7 @@ import {
     chains,
     CHAIN_ID,
     Address,
+    USD_TO_UGX_FX,
 } from '../../app'
 import {
     Alert,
@@ -112,11 +113,6 @@ const Manage: NextPage<{ address: string }> = ({ address }) => {
             {pool ? (
                 pool.managerAddress === account ? (
                     <>
-                        <StakeAndUnstake
-                            pool={pool}
-                            poolAddress={address}
-                            account={account}
-                        />
                         <LoansAwaitingApproval
                             pool={pool}
                             poolAddress={address as Address}
@@ -140,74 +136,6 @@ Manage.getInitialProps = (context) => {
 
 export default Manage
 
-const types = ['Stake', 'Unstake'] as const
-function StakeAndUnstake({
-    pool: { managerAddress, liquidityTokenAddress, liquidityTokenDecimals },
-    poolAddress,
-    account,
-}: {
-    pool: Pool
-    poolAddress: string
-    account: string
-}) {
-    const [type, setType] = useState<typeof types[number]>('Stake')
-
-    const [stats] = useStatsState(poolAddress)
-    const [info, refetchManagerInfo] = useManagerInfo(poolAddress)
-
-    const max = useMemo(() => {
-        if (type === 'Stake') return undefined
-
-        if (info) return BigNumber.from(info.unstakable)
-
-        return undefined
-    }, [type, info])
-
-    const isNotManager = managerAddress !== account
-
-    const { form, value } = useAmountForm({
-        type,
-        onSumbit:
-            type === 'Stake'
-                ? (contract, amount) => contract.stake(amount)
-                : (contract, amount) => contract.unstake(amount),
-        refetch: () =>
-            Promise.all([
-                refetchManagerInfo(),
-                refetchStatsIfUsed(poolAddress),
-            ]),
-        poolAddress,
-        liquidityTokenAddress,
-        liquidityTokenDecimals,
-        disabled: Boolean(isNotManager),
-        max,
-    })
-
-    return (
-        <Box
-            loading={Boolean(type === 'Unstake' && account ? !info : false)}
-            overlay={isNotManager ? 'Only manager can stake' : undefined}
-        >
-            <Tabs tabs={types} currentTab={type} setCurrentTab={setType}></Tabs>
-
-            {form}
-
-            {type === 'Stake' ? (
-                <Alert
-                    style="warning"
-                    title="You should not stake unless you are prepared to sustain a total loss of the money you have invested plus any commission or other transaction charges"
-                />
-            ) : (
-                <ExitAlert
-                    value={value}
-                    verb="unstaking"
-                    feePercent={stats ? stats.exitFeePercent : 0}
-                />
-            )}
-        </Box>
-    )
-}
-
 interface BaseLoanRequest {
     id: number
     borrower: string
@@ -219,6 +147,8 @@ interface BaseLoanRequest {
     profileId: string
     phone?: string
     email?: string
+    isLocalCurrencyLoan?: boolean
+    localLoanAmount?: string
 }
 interface OfferValues {
     amount: BigNumber
@@ -733,6 +663,24 @@ function OfferModal({
         }
     }, [isOfferActive, liquidityTokenDecimals, loan, borrowInfo])
     const [amount, setAmount] = useState<InputAmount>(initialAmount)
+
+    const [amountLocal, setAmountLocal] = useState<InputAmount>((Number(initialAmount) * USD_TO_UGX_FX).toFixed(2) as InputAmount)
+
+    const updateAmountLocal = (input:InputAmount) => {
+        setAmountLocal(input)
+
+        let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
+        let amountNum = inputNum / USD_TO_UGX_FX
+        setAmount(amountNum.toFixed(2) as InputAmount)
+    }
+
+    const updateAmount = (input:InputAmount) => {
+        setAmount(input)
+
+        let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
+        setAmountLocal((inputNum * USD_TO_UGX_FX).toFixed(2) as InputAmount)
+    }
+
     const [duration, setDuration] = useState<InputAmount>(initialMonths)
     const [installments, setInstallments] =
         useState<InputAmount>(initialInstallments)
@@ -780,6 +728,7 @@ function OfferModal({
 
         if (
             !amount ||
+            !amountLocal ||
             !duration ||
             !interest ||
             !installments ||
@@ -867,6 +816,17 @@ function OfferModal({
             ),
         [amount, borrowInfo.minLoanAmount, liquidityTokenDecimals],
     )
+
+    const isAmountLocalInvalid = useMemo(
+        () =>
+            !checkAmountValidity(
+                amountLocal,
+                liquidityTokenDecimals,
+                BigNumber.from(borrowInfo.minLoanAmount).mul(USD_TO_UGX_FX),
+            ),
+        [amountLocal, borrowInfo.minLoanAmount, liquidityTokenDecimals],
+    )
+
     const durationInvalidMessage = useMemo(() => {
         const inSeconds = Number(duration) * thirtyDays
 
@@ -952,12 +912,34 @@ function OfferModal({
                         Get contact information
                     </Button> // TODO: If auth is valid fetch automatically
                 ) : null}
+                {/*
+                <label>
+                    <div className="label">Amount in Local Currency</div>
+                    <AmountInput
+                        invalid
+                        decimals={2}
+                        value={amountLocal}
+                        onChange={updateAmountLocal}
+                        disabled={isOfferLoading}
+                        currency={'UGX'}
+                    />
+                    {isAmountLocalInvalid ? (
+                        <Alert
+                            style="error"
+                            title={`Minimum amount is ${formatToken(
+                                BigNumber.from(borrowInfo.minLoanAmount).mul(USD_TO_UGX_FX),
+                                liquidityTokenDecimals,
+                            )}`}
+                        />
+                    ) : null}
+                </label>
+                */}
                 <label>
                     <div className="label">Amount</div>
                     <AmountInput
                         decimals={liquidityTokenDecimals}
                         value={amount}
-                        onChange={setAmount}
+                        onChange={updateAmount}
                         disabled={isOfferLoading}
                         invalid={isAmountInvalid}
                     />
@@ -971,6 +953,16 @@ function OfferModal({
                         />
                     ) : null}
                 </label>
+                {/*
+                <label>
+                    <div className="label">FX Rate</div>
+                    <input
+                        type="text"
+                        disabled
+                        value={'1 USDT = ' + USD_TO_UGX_FX + ' UGX'}
+                    />
+                </label>
+                */}
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
@@ -1082,6 +1074,8 @@ function OfferModal({
                         monthly={monthly}
                         schedule={schedule}
                         liquidityTokenDecimals={liquidityTokenDecimals}
+                        isLocalCurrencyLoan={loan.isLocalCurrencyLoan ?? false}
+                        fxRate={loan.isLocalCurrencyLoan ? 3800 : 1}
                     />
                 </div>
 

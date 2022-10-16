@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { RiArrowLeftLine } from 'react-icons/ri'
 import { rgbStone } from '../app'
 
-export function BackToPools({ href }: { href: '/' | '/borrow' | '/manage' }) {
+export function BackToPools({ href }: { href: '/' | '/borrow' | '/manage' | '/stake' }) {
     return (
         <Link href={href}>
             <a>

@@ -14,7 +14,7 @@ export default class NotFound extends Component {
 
         const { asPath } = router
 
-        const paths = ['/borrow/', '/earn/', '/manage/']
+        const paths = ['/borrow/', '/earn/', '/manage/', '/stake/']
         for (const path of paths) {
             if (asPath.startsWith(path)) {
                 router.replace(asPath)

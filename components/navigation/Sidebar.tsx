@@ -12,6 +12,7 @@ import {
     RiUserLine,
     RiCoinLine,
     RiVipDiamondLine,
+    RiShieldCheckLine,
 } from 'react-icons/ri'
 import { useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
@@ -92,7 +93,7 @@ export function Sidebar({
                     &.current,
                     &:hover {
                         color: var(--greenery);
-                        background-color: var(--old-gradient-hover);
+                        background-color: var(--old-menu-hover);
                     }
                 }
 
@@ -148,6 +149,16 @@ export function Sidebar({
                     </a>
                 </Link>
                 {isManager && (
+                    <>
+                    <Link href="/stake">
+                        <a
+                            className={getSidebarItemClass('/stake', pathname)}
+                            onClick={hideSidebar}
+                        >
+                            <RiShieldCheckLine size={24} />
+                            Stake
+                        </a>
+                    </Link>
                     <Link href="/manage">
                         <a
                             className={getSidebarItemClass('/manage', pathname)}
@@ -157,6 +168,7 @@ export function Sidebar({
                             Manage
                         </a>
                     </Link>
+                    </>
                 )}
                 <Link href="/account">
                     <a
