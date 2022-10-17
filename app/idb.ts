@@ -2,13 +2,21 @@ import type { DBSchema } from 'idb'
 
 import { CHAIN_ID } from './constants'
 
+export interface LocalDetail {
+    localLoanAmount: string
+    localCurrencyCode: string
+    fxRate: number
+    localInstallmentAmount?: string
+    lastLocalInstallmentAmount?: string
+}
+
 interface Info {
     name: string
     businessName: string
     email?: string
     phone?: string
     isLocalCurrencyLoan?: boolean
-    localLoanAmount?: string
+    localDetail: LocalDetail
 }
 
 interface Schema extends DBSchema {

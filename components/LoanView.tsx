@@ -17,6 +17,7 @@ import {
     fetchBorrowerInfoAuthenticated,
     formatToken,
     getBorrowerInfo,
+    LocalDetail,
     noop,
     oneHundredMillion,
     rgbaLimeGreen21,
@@ -26,7 +27,7 @@ import {
     rgbYellow,
     setBorrowerInfo,
     thirtyDays,
-    TOKEN_SYMBOL, USD_TO_UGX_FX,
+    TOKEN_SYMBOL,
     useAccount,
     useAmountWithInterest,
     useProvider,
@@ -61,9 +62,6 @@ export function LoanView({
     const duration = loan.duration;
     const status = loan.status;
     const details = loan.details;
-
-    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
-    const [fxRate, setFxRate] = useState(1);
 
     const formattedAmount = useMemo(
         () => formatToken(amount, liquidityTokenDecimals),
@@ -102,7 +100,7 @@ export function LoanView({
         phone?: string | undefined
         email?: string | undefined
         isLocalCurrencyLoan?: boolean
-        localLoanAmount?: string
+        localDetail: LocalDetail
     } | null>(null)
     const [profileId, setProfileId] = useState('')
     useEffect(() => {
@@ -123,9 +121,6 @@ export function LoanView({
                         setProfileId(application.profileId)
                     }
 
-                    setLocalCurrencyLoan(borrowerInfoState?.isLocalCurrencyLoan ?? false);
-                    setFxRate(isLocalCurrencyLoan ? 3800 : 1);
-
                     return
                 }
 
@@ -142,7 +137,7 @@ export function LoanView({
                     phone?: string
                     email?: string
                     isLocalCurrencyLoan?: boolean
-                    localLoanAmount?: string
+                    localDetail: LocalDetail
                 }>)
 
                 if (canceled) return
@@ -360,18 +355,22 @@ export function LoanView({
                         {TOKEN_SYMBOL}
                     </div>
                 </div>
-                {!isLocalCurrencyLoan ? null :
+                {!borrowerInfoState?.isLocalCurrencyLoan ? null :
                     <div className="item">
                         <div className="label">UGX Due</div>
                         <div className="value">
                             {hasDebt
-                                ? ` ${formatToken(debt.mul(USD_TO_UGX_FX), liquidityTokenDecimals, 2, true)}`
+                                ? ` ${formatToken(
+                                        debt.mul((Number(borrowerInfoState.localDetail.fxRate) * 100).toFixed(0)).div(100),
+                                        liquidityTokenDecimals, 
+                                        2, 
+                                        true)}`
                                 : ` ${
                                     isRepaid
                                         ? formatToken(BigNumber.from(0), liquidityTokenDecimals, 2)
                                         : formattedAmount
                                 }`}{' '}
-                            {'UGX'}
+                            {borrowerInfoState.localDetail.localCurrencyCode}
                         </div>
                     </div>
                 }
@@ -457,15 +456,15 @@ export function LoanView({
                                         {item.overdue ? <strong> OVERDUE</strong> : null}
                                     </div>
                                     <div className={item.overdue ? 'red' : ''}>
-                                        {!isLocalCurrencyLoan ? null :
+                                        {!borrowerInfoState?.isLocalCurrencyLoan ? null :
                                             <>
                                                 {formatToken(
-                                                    item.amount.mul(fxRate),
+                                                    item.amount.mul((Number(borrowerInfoState.localDetail.fxRate) * 100).toFixed(0)).div(100),
                                                     liquidityTokenDecimals,
                                                     2,
                                                     true,
                                                 )}{' '}
-                                                {'UGX'}
+                                                {borrowerInfoState.localDetail.localCurrencyCode}
                                                 {' '}
                                                 (
                                             </>
@@ -477,7 +476,7 @@ export function LoanView({
                                             true,
                                         )}{' '}
                                         {TOKEN_SYMBOL}
-                                        {!isLocalCurrencyLoan ? null :
+                                        {!borrowerInfoState?.isLocalCurrencyLoan ? null :
                                             <>
                                                 )
                                             </>
