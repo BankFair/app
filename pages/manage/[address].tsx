@@ -42,7 +42,7 @@ import {
     Address,
     LocalDetail,
     authenticateUser,
-    SIDEBAR_ALWAYS_VISIBLE_WIDTH,
+    SIDEBAR_ALWAYS_VISIBLE_WIDTH, formatNumberInputAmount,
 } from '../../app'
 import {
     Alert,
@@ -741,14 +741,14 @@ function OfferModal({
 
         let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
         let amountNum = inputNum / Number(fxRate)
-        setAmount(amountNum.toFixed(2) as InputAmount)
+        setAmount(formatNumberInputAmount(Number.parseFloat(amountNum.toFixed(2))) as InputAmount)
     }
 
     const updateAmount = (input:InputAmount) => {
         setAmount(input)
 
         let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
-        let newFxRate = inputNum > 0 ? (Number(amountLocal) / inputNum).toFixed(2) : 0
+        let newFxRate = inputNum > 0 ? formatNumberInputAmount(Number.parseFloat((Number(amountLocal) / inputNum).toFixed(2))) : 0
         setFxRate(newFxRate as InputAmount)
     }
 
@@ -756,10 +756,10 @@ function OfferModal({
         setFxRate(input)
 
         let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
-        let newAmount = inputNum > 0 ? (Number(amountLocal) / inputNum).toFixed(2) : 0
+        let newAmount = inputNum > 0 ? formatNumberInputAmount(Number.parseFloat((Number(amountLocal) / inputNum).toFixed(2))) : 0
         setAmount(newAmount as InputAmount)
 
-        let newInstallmentAmount = inputNum > 0 ? (Number(localInstallmentAmount) / inputNum).toFixed(2) : 0
+        let newInstallmentAmount = inputNum > 0 ? formatNumberInputAmount(Number.parseFloat((Number(localInstallmentAmount) / inputNum).toFixed(2))) : 0
         setInstallmentAmount(newInstallmentAmount as InputAmount)
     }
 
@@ -768,7 +768,7 @@ function OfferModal({
 
         let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
         let installmentAmountNum = inputNum / Number(fxRate)
-        setInstallmentAmount(installmentAmountNum.toFixed(6) as InputAmount)
+        setInstallmentAmount(formatNumberInputAmount(Number.parseFloat(installmentAmountNum.toFixed(6))) as InputAmount)
     }
 
     const updateInstallmentAmount = (input:InputAmount) => {
@@ -776,7 +776,7 @@ function OfferModal({
 
         let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
         let localInstallmentAmountNum = inputNum * Number(fxRate)
-        setLocalInstallmentAmount(localInstallmentAmountNum.toFixed(2) as InputAmount)
+        setLocalInstallmentAmount(formatNumberInputAmount(Number.parseFloat(localInstallmentAmountNum.toFixed(2))) as InputAmount)
     }
 
     const [duration, setDuration] = useState<InputAmount>(initialMonths)
@@ -787,7 +787,7 @@ function OfferModal({
     )
     const [localInstallmentAmount, setLocalInstallmentAmount] = useState<InputAmount>(
         !loan.isLocalCurrencyLoan ? initialInstallmentAmount :
-            (Number(initialInstallmentAmount) * Number(loan.localDetail.fxRate)).toFixed(2) as InputAmount,
+            formatNumberInputAmount(Number.parseFloat((Number(initialInstallmentAmount) * Number(loan.localDetail.fxRate)).toFixed(2))) as InputAmount,
     )
     const [interest, setInterest] = useState<InputAmount>(initialInterestValue)
     const [graceDefaultPeriod, setGraceDefaultPeriod] = useState<InputAmount>(
@@ -826,11 +826,12 @@ function OfferModal({
     const localInstallmentAmountValue = useMemo(
         () =>
             interestOnly
-                ? (Number(installmentAmountValue) * Number(fxRate)).toFixed(2) as InputAmount
+                ? formatNumberInputAmount(Number.parseFloat((Number(installmentAmountValue) * Number(fxRate)).toFixed(2))) as InputAmount
                 : localInstallmentAmount,
         [
             interestOnly,
             installmentAmountValue,
+            localInstallmentAmount
         ],
     )
 
@@ -978,11 +979,11 @@ function OfferModal({
     const isLocalInstallmentAmountInvalid = useMemo(
         () =>
             !checkAmountValidity(
-                localInstallmentAmount,
+                localInstallmentAmountValue,
                 2,
                 zero,
             ),
-        [localInstallmentAmount],
+        [localInstallmentAmountValue],
     )
     const isInterestInvalid = useMemo(() => {
         return Number(interest) <= 0
