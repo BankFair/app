@@ -489,6 +489,39 @@ export function LoanView({
                     </div>
                 </>
             )}
+
+            <div>
+                <h4>Total Repaid:</h4>
+                <div>
+                    {!borrowerInfoState?.isLocalCurrencyLoan ? null :
+                        <>
+                            {formatToken(
+                                BigNumber.from(details.totalAmountRepaid)
+                                    .mul((Number(borrowerInfoState.localDetail.fxRate) * 100).toFixed(0))
+                                    .div(100),
+                                liquidityTokenDecimals,
+                                2,
+                                true,
+                            )}{' '}
+                            {borrowerInfoState.localDetail.localCurrencyCode}
+                            {' '}
+                            (
+                        </>
+                    }
+                    {formatToken(
+                        details.totalAmountRepaid,
+                        liquidityTokenDecimals,
+                        2,
+                        false
+                    )}{' '}
+                    {TOKEN_SYMBOL}
+                    {!borrowerInfoState?.isLocalCurrencyLoan ? null :
+                        <>
+                            )
+                        </>
+                    }
+                </div>
+            </div>
         </div>
     )
 }
