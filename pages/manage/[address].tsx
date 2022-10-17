@@ -588,13 +588,18 @@ function LoansAwaitingApproval({
                 }
 
                 .grid {
-                    display: grid;
-                    grid-template-columns: 30% 50% 20%;
+                    display: flex;
+                    flex-direction: column;
                     > :global(.name) {
+                        margin-right:24px;
                         > :global(span) {
                             color: ${rgbGreen};
                             cursor: pointer;
                         }
+                    }
+                    
+                    @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
+                        flex-direction: row;
                     }
                 }
             `}</style>
@@ -616,8 +621,19 @@ function mapLoanRequest(
             </div>
             <div className="description">
                 <span>
+                    {!loan.isLocalCurrencyLoan ? null :
+                        <>
+                            {Number(loan.localDetail.localLoanAmount).toFixed(2)}{' '}
+                            {loan.localDetail.localCurrencyCode}{' '}
+                            (
+                        </>
+                    }
                     {formatToken(loan.amount, liquidityTokenDecimals, 2)}{' '}
-                    {TOKEN_SYMBOL} for{' '}
+                    {TOKEN_SYMBOL}
+                    {!loan.isLocalCurrencyLoan ? null :
+                        <>)</>
+                    }
+                    {' '}for{' '}
                     {formatDurationInMonths(loan.duration.toNumber())} months
                 </span>
             </div>
