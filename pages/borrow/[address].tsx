@@ -1672,6 +1672,7 @@ function RequestLoan({
                                                     stepTwo!.businessName,
                                                 phone: stepTwo!.phone,
                                                 email: stepTwo!.email,
+                                                isLocalCurrencyLoan: true,
                                                 localDetail :{
                                                     localLoanAmount: amountLocal,
                                                     localCurrencyCode: UGX_CODE,

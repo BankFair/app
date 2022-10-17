@@ -42,6 +42,7 @@ import {
     Address,
     LocalDetail,
     authenticateUser,
+    SIDEBAR_ALWAYS_VISIBLE_WIDTH,
 } from '../../app'
 import {
     Alert,
@@ -423,6 +424,17 @@ function LoansAwaitingApproval({
                                     (response) => {
                                         if (!response.ok) {
                                             throw new Error("Error when updating loan application!")
+                                            return
+                                        }
+
+                                        if (offerModalRequest) {
+                                            getBorrowerInfo(offerModalRequest?.id).then(
+                                                (info) => {
+                                                    if (info) {
+                                                        setBorrowerInfo(offerModalRequest?.id, {...info, localDetail})
+                                                    }
+                                                }
+                                            )
                                         }
                                     }
                                 ).then(() => (
@@ -608,9 +620,6 @@ function mapLoanRequest(
                     {TOKEN_SYMBOL} for{' '}
                     {formatDurationInMonths(loan.duration.toNumber())} months
                 </span>
-            </div>
-            <div className="address">
-                <EtherscanAddress address={loan.borrower} />
             </div>
         </Fragment>
     ))
