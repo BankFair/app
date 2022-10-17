@@ -34,7 +34,7 @@ import {
     zero,
 } from '../app'
 
-import {LoanStatus, Loan, formatStatus, loanDeskContract, useSchedule} from '../features'
+import {LoanStatus, Loan, formatStatus, loanDeskContract, useSimpleSchedule} from '../features'
 
 import { EtherscanAddress } from './EtherscanLink'
 import { Button } from './Button'
@@ -157,7 +157,10 @@ export function LoanView({
     const hasDebt = status === LoanStatus.OUTSTANDING
     const isRepaid = status === LoanStatus.REPAID
 
-    const schedule = useSchedule(isRepaid ? null : loan)
+    const schedule = useSimpleSchedule(
+        isRepaid ? null : loan,
+        BigNumber.from((Number(borrowerInfoState?.localDetail?.localInstallmentAmount ?? 0) * 100).toFixed(0)),
+        borrowerInfoState?.localDetail?.fxRate ?? 1)
 
     return (
         <div className="loan">
@@ -431,7 +434,8 @@ export function LoanView({
                                     provider!.getSigner(),
                                 ).then(setBorrowerInfoState)
                             }
-                              >
+                            style={{width: '100%', marginBottom: '12px'}}
+                            >
                             Contacts
                         </a>
                     ) : null}
@@ -442,7 +446,7 @@ export function LoanView({
 
             {isRepaid ? null : (
                 <>
-                    <h3>Future Re-Payments Due</h3>
+                    <h3>Re-Payment Schedule</h3>
 
                     <div className="schedule">
                         <div className="label">Due</div>
@@ -451,16 +455,15 @@ export function LoanView({
                         {schedule.map((item, index) =>
                             item.skip ? null : (
                                 <Fragment key={index}>
-                                    <div className={item.overdue ? 'red' : ''}>
+                                    <div>
                                         {item.date}
-                                        {item.overdue ? <strong> OVERDUE</strong> : null}
                                     </div>
-                                    <div className={item.overdue ? 'red' : ''}>
+                                    <div>
                                         {!borrowerInfoState?.isLocalCurrencyLoan ? null :
                                             <>
                                                 {formatToken(
-                                                    item.amount.mul((Number(borrowerInfoState.localDetail.fxRate) * 100).toFixed(0)).div(100),
-                                                    liquidityTokenDecimals,
+                                                    item.localAmount,
+                                                    2,
                                                     2,
                                                     true,
                                                 )}{' '}
@@ -489,6 +492,39 @@ export function LoanView({
                     </div>
                 </>
             )}
+
+            <div>
+                <h4>Total Repaid:</h4>
+                <div>
+                    {!borrowerInfoState?.isLocalCurrencyLoan ? null :
+                        <>
+                            {formatToken(
+                                BigNumber.from(details.totalAmountRepaid)
+                                    .mul((Number(borrowerInfoState.localDetail.fxRate) * 100).toFixed(0))
+                                    .div(100),
+                                liquidityTokenDecimals,
+                                2,
+                                true,
+                            )}{' '}
+                            {borrowerInfoState.localDetail.localCurrencyCode}
+                            {' '}
+                            (
+                        </>
+                    }
+                    {formatToken(
+                        details.totalAmountRepaid,
+                        liquidityTokenDecimals,
+                        2,
+                        false
+                    )}{' '}
+                    {TOKEN_SYMBOL}
+                    {!borrowerInfoState?.isLocalCurrencyLoan ? null :
+                        <>
+                            )
+                        </>
+                    }
+                </div>
+            </div>
         </div>
     )
 }

@@ -74,7 +74,7 @@ import {
     useLoadAccountLoans,
     useAllowanceAndBalance,
     Loan,
-    useSchedule,
+    useSimpleSchedule,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
 
@@ -250,7 +250,7 @@ function Offer({
     const [fxRate, setFxRate] = useState(offer?.contactDetails?.isLocalCurrencyLoan ? offer.contactDetails?.localDetail.fxRate : 1);
 
     const [monthly, scheduleArg] = useMemo<
-        [boolean, Parameters<typeof useSchedule>[0]]
+        [boolean, Parameters<typeof useSimpleSchedule>[0]]
     >(() => {
         if (!offer) return [false, null]
         const { amount, apr, duration, installments, installmentAmount } =
@@ -276,7 +276,11 @@ function Offer({
             },
         ]
     }, [offer])
-    const schedule = useSchedule(scheduleArg)
+    const schedule = useSimpleSchedule(
+        scheduleArg,
+        BigNumber.from((Number(offer?.contactDetails?.localDetail.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
+        Number(fxRate)
+    )
 
     if (
         !offer ||
@@ -540,14 +544,6 @@ function RepayLoan({
     account: Address | undefined
 }) {
     const [amount, setAmount] = useState<InputAmount>('')
-    // const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
-    // const [localDetail, setLocalDetail] = useState<LocalDetail>({
-    //     fxRate: 1,
-    //     lastLocalInstallmentAmount: "",
-    //     localCurrencyCode: "",
-    //     localInstallmentAmount: "",
-    //     localLoanAmount: ""
-    // });
 
     const outstandingNow = useAmountWithInterest(
         loan.amount,
@@ -694,7 +690,10 @@ function RepayLoan({
 
     const wasRepaid = loan.status === LoanStatus.REPAID
 
-    const schedule = useSchedule(wasRepaid ? null : loan)
+    const schedule = useSimpleSchedule(
+        wasRepaid ? null : loan,
+        BigNumber.from((Number(contactDetailsState?.localDetail?.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
+        contactDetailsState?.localDetail?.fxRate ?? 1)
 
     const largerThanZero = Number(amount) > 0
 
@@ -917,7 +916,7 @@ function RepayLoan({
 
             {wasRepaid ? null : (
                 <Box>
-                    <h3>Future Re-Payments Due</h3>
+                    <h3>Re-Payment Schedule</h3>
 
                     <div className="schedule">
                         <div className="label">Due</div>
@@ -926,15 +925,14 @@ function RepayLoan({
                         {schedule.map((item, index) =>
                             item.skip ? null : (
                                 <Fragment key={index}>
-                                    <div className={item.overdue ? 'red' : ''}>
+                                    <div>
                                         {item.date}
-                                        {item.overdue ? <strong> OVERDUE</strong> : null}
                                     </div>
-                                    <div className={item.overdue ? 'red' : ''}>
+                                    <div>
                                         {!contactDetailsState?.isLocalCurrencyLoan ? null :
                                             <>
                                                 {formatToken(
-                                                    item.amount.mul((Number(contactDetailsState.localDetail?.fxRate) * 100).toFixed(0)).div(100),
+                                                    item.localAmount,
                                                     liquidityTokenDecimals,
                                                     2,
                                                     true,
@@ -1677,8 +1675,7 @@ function RequestLoan({
                                                     localLoanAmount: amountLocal,
                                                     localCurrencyCode: UGX_CODE,
                                                     fxRate: USD_TO_UGX_FX,
-                                                    localInstallmentAmount: "0",
-                                                    lastLocalInstallmentAmount: "0",
+                                                    localInstallmentAmount: "0"
                                                 },
                                             },
                                         )

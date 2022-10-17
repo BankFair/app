@@ -713,3 +713,207 @@ export function useSchedule(
         }, [])
     }, [loan])
 }
+
+export interface SimpleScheduleItem {
+    date: string
+    dateTime: DateTime
+    amount: BigNumber
+    localAmount: BigNumber
+    expectedBaseAmountRepaid: BigNumber
+    expectedTimestamp: number
+    skip: boolean
+}
+
+export function useSimpleSchedule(
+    loan: Omit<
+        | Loan
+        | (Omit<Loan, 'amount' | 'installmentAmount'> & {
+        amount: BigNumber
+        installmentAmount: BigNumber
+    }),
+        'id' | 'applicationId' | 'gracePeriod' | 'borrower' | 'status'
+        > | null,
+    localInstallmentAmount: BigNumber,
+    fxRate: number
+): SimpleScheduleItem[] {
+    return useMemo(() => {
+        if (!loan) return []
+        const installmentAmount = BigNumber.from(loan.installmentAmount)
+        const now = DateTime.now()
+        const installmentDuration = loan.duration / loan.installments
+        const amountBigNumber = BigNumber.from(loan.amount)
+
+        let baseAmountRepaid = BigNumber.from(0)
+        let interestPaidUntil = loan.borrowedTime
+        let paid = false
+
+        return Array.from({
+            length: loan.installments,
+        }).reduce<SimpleScheduleItem[]>((array, _, index) => {
+            const installmentNumber = index + 1
+            const timestamp = loan.borrowedTime + installmentDuration * installmentNumber
+            const date = DateTime.fromSeconds(timestamp)
+
+            if (paid) {
+                array[index] = {
+                    date: date.toLocaleString(),
+                    dateTime: date,
+                    amount: zero,
+                    localAmount: zero,
+                    expectedBaseAmountRepaid: zero,
+                    expectedTimestamp: timestamp,
+                    skip: true,
+                }
+                return array
+            }
+
+            const nextDate = DateTime.fromSeconds(
+                timestamp + installmentDuration,
+            )
+            const previous = array[index - 1] as SimpleScheduleItem | undefined
+            let actualDate = date
+            let scheduledDate = date
+            let skip = false
+            let amount = installmentAmount
+
+            // base currency
+            const {
+                principalOutstanding: expectedPrincipalOutstanding,
+                interestOutstanding: expectedInterestOutstanding,
+            } = amountWithInterest(
+                amountBigNumber,
+                previous ? previous.expectedBaseAmountRepaid : zero,
+                previous ? previous.expectedTimestamp : loan.borrowedTime,
+                loan.apr,
+                timestamp,
+            )
+
+            let { principalOutstanding, interestOutstanding, daysPassed } =
+                baseAmountRepaid.gte(amountBigNumber)
+                    ? {
+                        principalOutstanding: zero,
+                        interestOutstanding: zero,
+                        daysPassed: 0,
+                    }
+                    : amountWithInterest(
+                        amountBigNumber,
+                        baseAmountRepaid,
+                        interestPaidUntil,
+                        loan.apr,
+                        timestamp,
+                    )
+
+            const outstanding = principalOutstanding.add(interestOutstanding)
+
+            if (installmentAmount.gt(outstanding)) {
+                amount = outstanding
+            }
+
+            const expectedBaseAmountRepaid = installmentAmount
+                .sub(expectedInterestOutstanding)
+                .add(previous ? previous.expectedBaseAmountRepaid : zero)
+
+            if (
+                ((previous && previous.amount.eq(zero)) ||
+                    installmentNumber === 1) &&
+                principalOutstanding.lt(expectedPrincipalOutstanding) &&
+                interestOutstanding.lt(expectedInterestOutstanding)
+            ) {
+                const {
+                    principalOutstanding: nextExpectedPrincipalOutstanding,
+                } = amountWithInterest(
+                    amountBigNumber,
+                    expectedBaseAmountRepaid,
+                    timestamp,
+                    loan.apr,
+                    timestamp + installmentDuration,
+                )
+
+                const {
+                    interestOutstanding: currentInterestOutstanding,
+                    daysPassed: currentDaysPassed,
+                } = amountWithInterest(
+                    amountBigNumber,
+                    loan.details.baseAmountRepaid,
+                    loan.details.interestPaidUntil,
+                    loan.apr,
+                    timestamp,
+                )
+
+                amount = principalOutstanding
+                    .sub(nextExpectedPrincipalOutstanding)
+                    .add(currentInterestOutstanding)
+
+                if (amount.lt(zero)) {
+                    skip = true
+                } else {
+                    daysPassed = currentDaysPassed
+                    interestOutstanding = currentInterestOutstanding
+                }
+            } else if (
+                previous &&
+                previous.amount.gt(installmentAmount) &&
+                now.equals(previous.dateTime)
+            ) {
+                const {
+                    interestOutstanding: currentInterestOutstanding,
+                    daysPassed: currentDaysPassed,
+                } = amountWithInterest(
+                    amountBigNumber,
+                    baseAmountRepaid,
+                    interestPaidUntil,
+                    loan.apr,
+                    timestamp,
+                )
+                interestOutstanding = currentInterestOutstanding
+                daysPassed = currentDaysPassed
+                amount = expectedBaseAmountRepaid
+                    .sub(baseAmountRepaid)
+                    .add(currentInterestOutstanding)
+            }
+
+            if (skip) {
+                amount = zero
+            } else if (amount.lt(interestOutstanding)) {
+                const payableInterestDays = amount
+                    .mul(daysPassed)
+                    .div(interestOutstanding)
+
+                amount = interestOutstanding
+                    .mul(payableInterestDays)
+                    .div(daysPassed)
+                interestPaidUntil += payableInterestDays.toNumber() * oneDay
+            } else {
+                baseAmountRepaid = baseAmountRepaid.add(
+                    amount.sub(interestOutstanding),
+                )
+                interestPaidUntil += daysPassed * oneDay
+            }
+
+            if (
+                installmentNumber === loan.installments &&
+                outstanding.gt(amount)
+            ) {
+                amount = outstanding
+            }
+
+            if (baseAmountRepaid.gte(amountBigNumber)) {
+                paid = true
+            }
+
+            const isAmountZero = amount.eq(zero)
+            array[index] = {
+                date: actualDate.toLocaleString(),
+                dateTime: actualDate,
+                amount,
+                localAmount: amount.eq(installmentAmount)
+                    ? localInstallmentAmount
+                    : amount.mul(BigNumber.from((fxRate * 100).toFixed(0))).div(100),
+                skip: isAmountZero && paid,
+                expectedBaseAmountRepaid,
+                expectedTimestamp: timestamp,
+            }
+            return array
+        }, [])
+    }, [loan])
+}

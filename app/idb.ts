@@ -7,7 +7,6 @@ export interface LocalDetail {
     localCurrencyCode: string
     fxRate: number
     localInstallmentAmount?: string
-    lastLocalInstallmentAmount?: string
 }
 
 interface Info {
