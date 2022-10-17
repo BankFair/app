@@ -434,7 +434,8 @@ export function LoanView({
                                     provider!.getSigner(),
                                 ).then(setBorrowerInfoState)
                             }
-                              >
+                            style={{width: '100%', marginBottom: '12px'}}
+                            >
                             Contacts
                         </a>
                     ) : null}
