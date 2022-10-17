@@ -71,7 +71,7 @@ import {
     refetchStatsIfUsed,
     trackTransaction,
     useManagerInfo,
-    useSchedule,
+    useSimpleSchedule,
     useStatsState,
 } from '../../features'
 import { useDispatch, useSelector } from '../../store'
@@ -836,7 +836,7 @@ function OfferModal({
     )
 
     const [amountBigNumber, monthly, scheduleArg] = useMemo<
-        [BigNumber, boolean, Parameters<typeof useSchedule>[0]]
+        [BigNumber, boolean, Parameters<typeof useSimpleSchedule>[0]]
     >(() => {
         const now = Math.trunc(Date.now() / 1000)
 
@@ -888,7 +888,11 @@ function OfferModal({
         installments,
         installmentAmountValue,
     ])
-    const schedule = useSchedule(scheduleArg)
+    const schedule = useSimpleSchedule(
+        scheduleArg,
+        BigNumber.from((Number(localInstallmentAmountValue) * 1000000).toFixed(0)),
+        Number(fxRate)
+    )
 
     const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (event) => {
@@ -905,8 +909,7 @@ function OfferModal({
                     localLoanAmount: amountLocal.toString(),
                     localCurrencyCode: loan.localDetail.localCurrencyCode,
                     fxRate: Number(fxRate),
-                    localInstallmentAmount: localInstallmentAmount,
-                    lastLocalInstallmentAmount: localInstallmentAmount, //FIXME calculate
+                    localInstallmentAmount: localInstallmentAmountValue,
                 },
             ).catch(() => {
                 setIsOfferLoading(false)

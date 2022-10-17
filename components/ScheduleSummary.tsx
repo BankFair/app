@@ -2,10 +2,11 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Fragment, useMemo, useState } from 'react'
 
 import {formatToken, LocalDetail, TOKEN_SYMBOL, zero} from '../app'
-import { ScheduleItem } from '../features'
+import {SimpleScheduleItem} from '../features'
 
 interface Summary {
     amount: BigNumber
+    localAmount: BigNumber
     interestOnly: boolean
     times: number
 }
@@ -20,15 +21,16 @@ export function ScheduleSummary({
 }: {
     amount: BigNumber
     monthly: boolean
-    schedule: ScheduleItem[]
+    schedule: SimpleScheduleItem[]
     liquidityTokenDecimals: number
     isLocalCurrencyLoan: boolean
     localDetail: LocalDetail
 }) {
     const [showSchedule, setShowSchedule] = useState(true)
-    const { summary, total } = useMemo(() => {
+    const { summary, total, localTotal } = useMemo(() => {
         const summary: Summary[] = []
         let total = zero
+        let localTotal = zero;
 
         for (const item of schedule) {
             if (item.skip) continue
@@ -39,12 +41,14 @@ export function ScheduleSummary({
             } else {
                 summary.push({
                     amount: item.amount,
+                    localAmount: item.localAmount,
                     times: 1,
                     interestOnly: false,
                 })
             }
 
             total = total.add(item.amount)
+            localTotal = localTotal.add(item.localAmount)
         }
 
         if (summary.length === 2) {
@@ -53,7 +57,7 @@ export function ScheduleSummary({
             }
         }
 
-        return { summary, total }
+        return { summary, total, localTotal}
     }, [schedule, amount])
 
     if (!summary.length) return null
@@ -75,7 +79,7 @@ export function ScheduleSummary({
                         {!(isLocalCurrencyLoan && localDetail) ? null :
                             <>
                                 {formatToken(
-                                    item.amount.mul(localDetail ? (Number(localDetail.fxRate) * 100).toFixed(0) : 100).div(100),
+                                    item.localAmount,
                                     liquidityTokenDecimals,
                                     2,
                                     true,
@@ -102,7 +106,7 @@ export function ScheduleSummary({
                         {!isLocalCurrencyLoan ? null :
                             <>
                                 {formatToken(
-                                    total.mul(localDetail ? (Number(localDetail.fxRate) * 100).toFixed(0) : 100).div(100),
+                                    localTotal,
                                     liquidityTokenDecimals,
                                     2,
                                     true,
@@ -142,7 +146,7 @@ export function ScheduleSummary({
                                     {!isLocalCurrencyLoan ? null :
                                         <>
                                             {formatToken(
-                                                item.amount.mul(localDetail ? (Number(localDetail.fxRate) * 100).toFixed(0) : 100).div(100),
+                                                item.localAmount,
                                                 liquidityTokenDecimals,
                                                 2,
                                                 true,
