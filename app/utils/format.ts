@@ -68,3 +68,12 @@ export function formatInputAmount(
     if (decimal === '0') return integer as InputAmount
     return string as InputAmount
 }
+
+export function formatNumberInputAmount(
+    value: Number,
+): InputAmount {
+    const string = value.toString()
+    const [integer, decimal] = string.split('.')
+    if (decimal === '0') return integer as InputAmount
+    return string as InputAmount
+}
