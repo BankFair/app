@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Fragment, useMemo, useState } from 'react'
 
-import {formatToken, TOKEN_SYMBOL, USD_TO_UGX_FX, zero} from '../app'
+import {formatToken, LocalDetail, TOKEN_SYMBOL, zero} from '../app'
 import { ScheduleItem } from '../features'
 
 interface Summary {
@@ -16,14 +16,14 @@ export function ScheduleSummary({
     schedule,
     liquidityTokenDecimals,
     isLocalCurrencyLoan,
-    fxRate,
+    localDetail,
 }: {
     amount: BigNumber
     monthly: boolean
     schedule: ScheduleItem[]
     liquidityTokenDecimals: number
     isLocalCurrencyLoan: boolean
-    fxRate: number
+    localDetail: LocalDetail
 }) {
     const [showSchedule, setShowSchedule] = useState(true)
     const { summary, total } = useMemo(() => {
@@ -72,15 +72,15 @@ export function ScheduleSummary({
                               } payments`}{' '}
                         of
                         {' '}
-                        {!isLocalCurrencyLoan ? null :
+                        {!(isLocalCurrencyLoan && localDetail) ? null :
                             <>
                                 {formatToken(
-                                    item.amount.mul(fxRate),
+                                    item.amount.mul(localDetail ? (Number(localDetail.fxRate) * 100).toFixed(0) : 100).div(100),
                                     liquidityTokenDecimals,
                                     2,
                                     true,
                                 )}{' '}
-                                {'UGX'}
+                                {localDetail.localCurrencyCode}
                                 {' '}
                                 (
                             </>
@@ -102,12 +102,12 @@ export function ScheduleSummary({
                         {!isLocalCurrencyLoan ? null :
                             <>
                                 {formatToken(
-                                    total.mul(fxRate),
+                                    total.mul(localDetail ? (Number(localDetail.fxRate) * 100).toFixed(0) : 100).div(100),
                                     liquidityTokenDecimals,
                                     2,
                                     true,
                                 )}{' '}
-                                {'UGX'}
+                                {localDetail.localCurrencyCode}
                                 {' '}
                                 (
                             </>
@@ -142,12 +142,12 @@ export function ScheduleSummary({
                                     {!isLocalCurrencyLoan ? null :
                                         <>
                                             {formatToken(
-                                                item.amount.mul(fxRate),
+                                                item.amount.mul(localDetail ? (Number(localDetail.fxRate) * 100).toFixed(0) : 100).div(100),
                                                 liquidityTokenDecimals,
                                                 2,
                                                 true,
                                             )}{' '}
-                                            {'UGX'}
+                                            {localDetail.localCurrencyCode}
                                             {' '}
                                             (
                                         </>

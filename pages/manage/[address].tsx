@@ -40,7 +40,9 @@ import {
     chains,
     CHAIN_ID,
     Address,
-    USD_TO_UGX_FX,
+    LocalDetail,
+    authenticateUser,
+    SIDEBAR_ALWAYS_VISIBLE_WIDTH,
 } from '../../app'
 import {
     Alert,
@@ -74,6 +76,7 @@ import {
 } from '../../features'
 import { useDispatch, useSelector } from '../../store'
 import { Oval } from 'react-loading-icons'
+import {types} from "sass";
 
 const title = `Earn - ${APP_NAME}`
 
@@ -148,7 +151,7 @@ interface BaseLoanRequest {
     phone?: string
     email?: string
     isLocalCurrencyLoan?: boolean
-    localLoanAmount?: string
+    localDetail: LocalDetail
 }
 interface OfferValues {
     amount: BigNumber
@@ -234,6 +237,8 @@ function LoansAwaitingApproval({
                                                               businessName: string
                                                               phone?: string
                                                               email?: string
+                                                              isLocalCurrencyLoan?: boolean
+                                                              localDetail: LocalDetail
                                                           }>,
                                                   )
                                                   .then(
@@ -268,6 +273,8 @@ function LoansAwaitingApproval({
                                         businessName: string
                                         phone?: string
                                         email?: string
+                                        isLocalCurrencyLoan?: boolean
+                                        localDetail?: LocalDetail
                                     },
                                     OfferValues | undefined,
                                 ]) =>
@@ -382,6 +389,7 @@ function LoansAwaitingApproval({
                         installments,
                         interest,
                         graceDefaultPeriod,
+                        localDetail: LocalDetail,
                     ) => {
                         const contract = loanDeskContract
                             .attach(loanDeskAddress)
@@ -391,40 +399,78 @@ function LoansAwaitingApproval({
                             offerModalRequest.status ===
                             LoanApplicationStatus.OFFER_MADE
 
+                        const signer = provider!.getSigner()
+
                         return (
-                            isOfferActive
-                                ? contract
-                                      .updateOffer(
-                                          offerModalRequest.id,
-                                          amount,
-                                          duration,
-                                          graceDefaultPeriod,
-                                          installmentAmount,
-                                          installments,
-                                          interest,
-                                      )
-                                      .then((tx) => ({
-                                          tx,
-                                          name: 'Update offer',
-                                      }))
-                                : contract
-                                      .offerLoan(
-                                          offerModalRequest.id,
-                                          amount,
-                                          duration,
-                                          graceDefaultPeriod,
-                                          installmentAmount,
-                                          installments,
-                                          interest,
-                                      )
-                                      .then((tx) => ({
-                                          tx,
-                                          name: `Offer a loan for ${formatToken(
-                                              amount,
-                                              liquidityTokenDecimals,
-                                          )} ${TOKEN_SYMBOL}`,
-                                      }))
-                        )
+                            authenticateUser(account, signer)
+                                .then((auth) =>
+                                    fetch(
+                                        `${BORROWER_SERVICE_URL}/profile/${offerModalRequest.profileId}?${new URLSearchParams({
+                                            ...auth,
+                                            poolAddress,
+                                        })}`,
+                                        {
+                                            method: 'PATCH',
+                                            headers: {
+                                                'Content-Type' : 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                localDetail: localDetail,
+                                            })
+                                        }
+                                    )
+                                )
+                                .then(
+                                    (response) => {
+                                        if (!response.ok) {
+                                            throw new Error("Error when updating loan application!")
+                                            return
+                                        }
+
+                                        if (offerModalRequest) {
+                                            getBorrowerInfo(offerModalRequest?.id).then(
+                                                (info) => {
+                                                    if (info) {
+                                                        setBorrowerInfo(offerModalRequest?.id, {...info, localDetail})
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                ).then(() => (
+                                    isOfferActive
+                                        ? contract
+                                            .updateOffer(
+                                                offerModalRequest.id,
+                                                amount,
+                                                duration,
+                                                graceDefaultPeriod,
+                                                installmentAmount,
+                                                installments,
+                                                interest,
+                                            )
+                                            .then((tx) => ({
+                                                tx,
+                                                name: 'Update offer',
+                                            }))
+                                        : contract
+                                            .offerLoan(
+                                                offerModalRequest.id,
+                                                amount,
+                                                duration,
+                                                graceDefaultPeriod,
+                                                installmentAmount,
+                                                installments,
+                                                interest,
+                                            )
+                                            .then((tx) => ({
+                                                tx,
+                                                name: `Offer a loan for ${formatToken(
+                                                    amount,
+                                                    liquidityTokenDecimals,
+                                                )} ${TOKEN_SYMBOL}`,
+                                            }))
+                            )))
                             .then(({ tx, name }) =>
                                 trackTransaction(dispatch, { name, tx }),
                             )
@@ -542,13 +588,18 @@ function LoansAwaitingApproval({
                 }
 
                 .grid {
-                    display: grid;
-                    grid-template-columns: 30% 50% 20%;
+                    display: flex;
+                    flex-direction: column;
                     > :global(.name) {
+                        margin-right:24px;
                         > :global(span) {
                             color: ${rgbGreen};
                             cursor: pointer;
                         }
+                    }
+                    
+                    @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
+                        flex-direction: row;
                     }
                 }
             `}</style>
@@ -570,13 +621,21 @@ function mapLoanRequest(
             </div>
             <div className="description">
                 <span>
+                    {!loan.isLocalCurrencyLoan ? null :
+                        <>
+                            {Number(loan.localDetail.localLoanAmount).toFixed(2)}{' '}
+                            {loan.localDetail.localCurrencyCode}{' '}
+                            (
+                        </>
+                    }
                     {formatToken(loan.amount, liquidityTokenDecimals, 2)}{' '}
-                    {TOKEN_SYMBOL} for{' '}
+                    {TOKEN_SYMBOL}
+                    {!loan.isLocalCurrencyLoan ? null :
+                        <>)</>
+                    }
+                    {' '}for{' '}
                     {formatDurationInMonths(loan.duration.toNumber())} months
                 </span>
-            </div>
-            <div className="address">
-                <EtherscanAddress address={loan.borrower} />
             </div>
         </Fragment>
     ))
@@ -602,6 +661,7 @@ function OfferModal({
         installments: number,
         interest: number,
         graceDefaultPeriod: number,
+        localDetail: LocalDetail,
     ): Promise<void | object>
     onReject(): Promise<void>
     onFetchBorrowerInfo(): void
@@ -664,13 +724,23 @@ function OfferModal({
     }, [isOfferActive, liquidityTokenDecimals, loan, borrowInfo])
     const [amount, setAmount] = useState<InputAmount>(initialAmount)
 
-    const [amountLocal, setAmountLocal] = useState<InputAmount>((Number(initialAmount) * USD_TO_UGX_FX).toFixed(2) as InputAmount)
+    const [amountLocal, setAmountLocal] = useState<InputAmount>(
+        loan.isLocalCurrencyLoan
+            ? Number(loan.localDetail.localLoanAmount).toFixed(2) as InputAmount
+            : "0" as InputAmount
+    )
+
+    const [fxRate, setFxRate] = useState<InputAmount>(
+        loan.isLocalCurrencyLoan
+            ? loan.localDetail.fxRate?.toFixed(2) as InputAmount
+            : "0" as InputAmount
+    )
 
     const updateAmountLocal = (input:InputAmount) => {
         setAmountLocal(input)
 
         let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
-        let amountNum = inputNum / USD_TO_UGX_FX
+        let amountNum = inputNum / Number(fxRate)
         setAmount(amountNum.toFixed(2) as InputAmount)
     }
 
@@ -678,7 +748,35 @@ function OfferModal({
         setAmount(input)
 
         let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
-        setAmountLocal((inputNum * USD_TO_UGX_FX).toFixed(2) as InputAmount)
+        let newFxRate = inputNum > 0 ? (Number(amountLocal) / inputNum).toFixed(2) : 0
+        setFxRate(newFxRate as InputAmount)
+    }
+
+    const updateFxRate = (input:InputAmount) => {
+        setFxRate(input)
+
+        let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
+        let newAmount = inputNum > 0 ? (Number(amountLocal) / inputNum).toFixed(2) : 0
+        setAmount(newAmount as InputAmount)
+
+        let newInstallmentAmount = inputNum > 0 ? (Number(localInstallmentAmount) / inputNum).toFixed(2) : 0
+        setInstallmentAmount(newInstallmentAmount as InputAmount)
+    }
+
+    const updateLocalInstallmentAmount = (input:InputAmount) => {
+        setLocalInstallmentAmount(input)
+
+        let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
+        let installmentAmountNum = inputNum / Number(fxRate)
+        setInstallmentAmount(installmentAmountNum.toFixed(6) as InputAmount)
+    }
+
+    const updateInstallmentAmount = (input:InputAmount) => {
+        setInstallmentAmount(input)
+
+        let inputNum = input && input.trim().length >= 1 ? Number(input) : 0
+        let localInstallmentAmountNum = inputNum * Number(fxRate)
+        setLocalInstallmentAmount(localInstallmentAmountNum.toFixed(2) as InputAmount)
     }
 
     const [duration, setDuration] = useState<InputAmount>(initialMonths)
@@ -686,6 +784,10 @@ function OfferModal({
         useState<InputAmount>(initialInstallments)
     const [installmentAmount, setInstallmentAmount] = useState<InputAmount>(
         initialInstallmentAmount,
+    )
+    const [localInstallmentAmount, setLocalInstallmentAmount] = useState<InputAmount>(
+        !loan.isLocalCurrencyLoan ? initialInstallmentAmount :
+            (Number(initialInstallmentAmount) * Number(loan.localDetail.fxRate)).toFixed(2) as InputAmount,
     )
     const [interest, setInterest] = useState<InputAmount>(initialInterestValue)
     const [graceDefaultPeriod, setGraceDefaultPeriod] = useState<InputAmount>(
@@ -721,6 +823,17 @@ function OfferModal({
         ],
     )
 
+    const localInstallmentAmountValue = useMemo(
+        () =>
+            interestOnly
+                ? (Number(installmentAmountValue) * Number(fxRate)).toFixed(2) as InputAmount
+                : localInstallmentAmount,
+        [
+            interestOnly,
+            installmentAmountValue,
+        ],
+    )
+
     const [amountBigNumber, monthly, scheduleArg] = useMemo<
         [BigNumber, boolean, Parameters<typeof useSchedule>[0]]
     >(() => {
@@ -729,6 +842,7 @@ function OfferModal({
         if (
             !amount ||
             !amountLocal ||
+            !fxRate ||
             !duration ||
             !interest ||
             !installments ||
@@ -765,6 +879,8 @@ function OfferModal({
         ]
     }, [
         amount,
+        amountLocal,
+        fxRate,
         liquidityTokenDecimals,
         duration,
         interest,
@@ -784,12 +900,21 @@ function OfferModal({
                 parseInt(installments, 10),
                 Number(interest) * 10,
                 Number(graceDefaultPeriod) * oneDay,
+                {
+                    localLoanAmount: amountLocal.toString(),
+                    localCurrencyCode: loan.localDetail.localCurrencyCode,
+                    fxRate: Number(fxRate),
+                    localInstallmentAmount: localInstallmentAmount,
+                    lastLocalInstallmentAmount: localInstallmentAmount, //FIXME calculate
+                },
             ).catch(() => {
                 setIsOfferLoading(false)
             })
         },
         [
             amount,
+            amountLocal,
+            fxRate,
             duration,
             graceDefaultPeriod,
             installmentAmountValue,
@@ -822,7 +947,9 @@ function OfferModal({
             !checkAmountValidity(
                 amountLocal,
                 liquidityTokenDecimals,
-                BigNumber.from(borrowInfo.minLoanAmount).mul(USD_TO_UGX_FX),
+                BigNumber.from(borrowInfo.minLoanAmount)
+                    .mul((Number(fxRate) * 100).toFixed(0))
+                    .div(100),
             ),
         [amountLocal, borrowInfo.minLoanAmount, liquidityTokenDecimals],
     )
@@ -847,6 +974,16 @@ function OfferModal({
             ),
         [installmentAmountValue, liquidityTokenDecimals],
     )
+
+    const isLocalInstallmentAmountInvalid = useMemo(
+        () =>
+            !checkAmountValidity(
+                localInstallmentAmount,
+                2,
+                zero,
+            ),
+        [localInstallmentAmount],
+    )
     const isInterestInvalid = useMemo(() => {
         return Number(interest) <= 0
     }, [interest])
@@ -866,6 +1003,17 @@ function OfferModal({
             ? 'Grace default period must be less than 365'
             : ''
     }, [graceDefaultPeriod])
+
+    const localDetail = useMemo(
+        () => {
+            return {
+                localLoanAmount: amountLocal,
+                localCurrencyCode: loan.localDetail.localCurrencyCode,
+                fxRate: Number(fxRate),
+            }
+        },
+        [amountLocal, fxRate, localInstallmentAmount],
+    )
 
     return (
         <Modal onClose={onClose}>
@@ -912,28 +1060,28 @@ function OfferModal({
                         Get contact information
                     </Button> // TODO: If auth is valid fetch automatically
                 ) : null}
-                {/*
-                <label>
-                    <div className="label">Amount in Local Currency</div>
-                    <AmountInput
-                        invalid
-                        decimals={2}
-                        value={amountLocal}
-                        onChange={updateAmountLocal}
-                        disabled={isOfferLoading}
-                        currency={'UGX'}
-                    />
-                    {isAmountLocalInvalid ? (
-                        <Alert
-                            style="error"
-                            title={`Minimum amount is ${formatToken(
-                                BigNumber.from(borrowInfo.minLoanAmount).mul(USD_TO_UGX_FX),
-                                liquidityTokenDecimals,
-                            )}`}
+                {!loan.isLocalCurrencyLoan ? null :
+                    <label>
+                        <div className="label">Amount in Local Currency</div>
+                        <AmountInput
+                            invalid
+                            decimals={2}
+                            value={amountLocal}
+                            onChange={updateAmountLocal}
+                            disabled={isOfferLoading}
+                            currency={loan.localDetail.localCurrencyCode}
                         />
-                    ) : null}
-                </label>
-                */}
+                        {isAmountLocalInvalid ? (
+                            <Alert
+                                style="error"
+                                title={`Minimum amount is ${formatToken(
+                                    BigNumber.from(borrowInfo.minLoanAmount).mul((Number(fxRate) * 100).toFixed(0)).div(100),
+                                    liquidityTokenDecimals,
+                                )}`}
+                            />
+                        ) : null}
+                    </label>
+                }
                 <label>
                     <div className="label">Amount</div>
                     <AmountInput
@@ -953,16 +1101,19 @@ function OfferModal({
                         />
                     ) : null}
                 </label>
-                {/*
-                <label>
-                    <div className="label">FX Rate</div>
-                    <input
-                        type="text"
-                        disabled
-                        value={'1 USDT = ' + USD_TO_UGX_FX + ' UGX'}
-                    />
-                </label>
-                */}
+                {!loan.isLocalCurrencyLoan ? null :
+                    <label>
+                        <div className="label">FX Rate, 1 USDT =</div>
+                        <AmountInput
+                            invalid
+                            decimals={2}
+                            value={fxRate}
+                            onChange={updateFxRate}
+                            disabled={isOfferLoading}
+                            currency={loan.localDetail.localCurrencyCode}
+                        />
+                    </label>
+                }
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
@@ -1013,11 +1164,28 @@ function OfferModal({
                     ) : null}
                 </label>
                 <label>
-                    <div className="label">Installment amount</div>
+                    <div className="label">Local Installment Amount</div>
+                    <AmountInput
+                        decimals={2}
+                        value={localInstallmentAmountValue}
+                        onChange={updateLocalInstallmentAmount}
+                        disabled={isOfferLoading || interestOnly}
+                        invalid={isLocalInstallmentAmountInvalid}
+                        currency={loan.localDetail.localCurrencyCode}
+                    />
+                    {isLocalInstallmentAmountInvalid ? (
+                        <Alert
+                            style="error"
+                            title="Invalid installment amount"
+                        />
+                    ) : null}
+                </label>
+                <label>
+                    <div className="label">Installment Amount</div>
                     <AmountInput
                         decimals={liquidityTokenDecimals}
                         value={installmentAmountValue}
-                        onChange={setInstallmentAmount}
+                        onChange={updateInstallmentAmount}
                         disabled={isOfferLoading || interestOnly}
                         invalid={isInstallmentAmountInvalid}
                     />
@@ -1075,7 +1243,7 @@ function OfferModal({
                         schedule={schedule}
                         liquidityTokenDecimals={liquidityTokenDecimals}
                         isLocalCurrencyLoan={loan.isLocalCurrencyLoan ?? false}
-                        fxRate={loan.isLocalCurrencyLoan ? 3800 : 1}
+                        localDetail={localDetail}
                     />
                 </div>
 

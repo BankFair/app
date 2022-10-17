@@ -122,7 +122,8 @@ export const TOKEN_SYMBOL = 'USDT'
 export const USDT_DECIMALS = 6
 export const oneHundredPercent = 1000
 export const ONE_HUNDRED_PERCENT = BigNumber.from(oneHundredPercent)
-export const USD_TO_UGX_FX = 3800;
+export const USD_TO_UGX_FX = 3850.0;
+export const UGX_CODE = 'UGX';
 
 export const BORROWER_SERVICE_URL =
     process.env.NODE_ENV === 'development'

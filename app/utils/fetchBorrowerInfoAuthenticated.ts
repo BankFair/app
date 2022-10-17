@@ -5,13 +5,43 @@ import {
     LOCAL_STORAGE_BORROWER_INFO_AUTH_KEY_PREFIX,
     oneDay,
 } from '../constants'
-import { setBorrowerInfo } from '../idb'
+import {LocalDetail, setBorrowerInfo} from '../idb'
 import { Address } from '../types'
 
 export async function fetchBorrowerInfoAuthenticated(
     poolAddress: Address,
     applicationId: number,
     profileId: string,
+    account: Address,
+    signer: JsonRpcSigner,
+) {
+    let item = await authenticateUser(account, signer);
+
+    const response = await fetch(
+        `${BORROWER_SERVICE_URL}/profile/${profileId}?${new URLSearchParams({
+            ...item,
+            poolAddress,
+        })}`,
+    )
+
+    const info: {
+        id: string
+        name: string
+        email?: string
+        phone?: string
+        businessName: string
+        digest: string
+        poolAddress: string
+        isLocalCurrencyLoan?: boolean
+        localDetail: LocalDetail
+    } = await response.json()
+
+    setBorrowerInfo(applicationId, info)
+
+    return info
+}
+
+export async function authenticateUser(
     account: Address,
     signer: JsonRpcSigner,
 ) {
@@ -34,24 +64,5 @@ export async function fetchBorrowerInfoAuthenticated(
         localStorage.setItem(key, JSON.stringify(item))
     }
 
-    const response = await fetch(
-        `${BORROWER_SERVICE_URL}/profile/${profileId}?${new URLSearchParams({
-            ...item,
-            poolAddress,
-        })}`,
-    )
-
-    const info: {
-        id: string
-        name: string
-        email?: string
-        phone?: string
-        businessName: string
-        digest: string
-        poolAddress: string
-    } = await response.json()
-
-    setBorrowerInfo(applicationId, info)
-
-    return info
+    return item;
 }

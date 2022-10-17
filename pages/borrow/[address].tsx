@@ -44,6 +44,8 @@ import {
     zero,
     zeroHex,
     USD_TO_UGX_FX,
+    UGX_CODE,
+    LocalDetail,
 } from '../../app'
 import {
     Alert,
@@ -151,7 +153,7 @@ interface Offer {
         phone?: string
         email?: string
         isLocalCurrencyLoan?: boolean
-        localLoanAmount?: string
+        localDetail: LocalDetail
     }
     loanDeskAddress: string
 }
@@ -195,6 +197,8 @@ function useOffer(
                                                   businessName: string
                                                   phone?: string
                                                   email?: string
+                                                  isLocalCurrencyLoan?: boolean
+                                                  localDetail: LocalDetail
                                               }>,
                                       )
                                       .then(
@@ -242,8 +246,8 @@ function Offer({
     const [isLoading, setIsLoading] = useState(false)
     const [isAccepted, setIsAccepted] = useState(false)
 
-    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
-    const [fxRate, setFxRate] = useState(1);
+    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(offer?.contactDetails?.isLocalCurrencyLoan ?? false);
+    const [fxRate, setFxRate] = useState(offer?.contactDetails?.isLocalCurrencyLoan ? offer.contactDetails?.localDetail.fxRate : 1);
 
     const [monthly, scheduleArg] = useMemo<
         [boolean, Parameters<typeof useSchedule>[0]]
@@ -282,9 +286,6 @@ function Offer({
         return null
     }
 
-    setLocalCurrencyLoan(offer.contactDetails?.isLocalCurrencyLoan ?? false);
-    setFxRate(offer.contactDetails?.isLocalCurrencyLoan ? 3800 : 1);
-
     return (
         <Box
             className="loan-offer"
@@ -297,12 +298,12 @@ function Offer({
                     {!isLocalCurrencyLoan ? null :
                         <>
                             {formatToken(
-                                offer.details.amount.mul(fxRate),
+                                offer.details.amount.mul((Number(fxRate) * 100).toFixed(0)).div(100),
                                 liquidityTokenDecimals,
                                 2,
                                 true,
                             )}{' '}
-                            {'UGX'}
+                            {}
                             {' '}
                             (
                         </>
@@ -322,12 +323,12 @@ function Offer({
                     {!isLocalCurrencyLoan ? null :
                         <>
                             {formatToken(
-                                offer.details.amount.mul(fxRate),
+                                offer.details.amount.mul((Number(fxRate) * 100).toFixed(0)).div(100),
                                 liquidityTokenDecimals,
                                 2,
                                 true,
                             )}{' '}
-                            {'UGX'}
+                            {offer.contactDetails?.localDetail.localCurrencyCode}
                             {' '}
                             (
                         </>
@@ -401,7 +402,7 @@ function Offer({
                     schedule={schedule}
                     liquidityTokenDecimals={liquidityTokenDecimals}
                     isLocalCurrencyLoan={offer.contactDetails.isLocalCurrencyLoan ?? false}
-                    fxRate={offer.contactDetails.isLocalCurrencyLoan ? 3800 : 1}
+                    localDetail={offer.contactDetails.localDetail}
                 />
 
                 <div className="schedule-notice">
@@ -539,8 +540,14 @@ function RepayLoan({
     account: Address | undefined
 }) {
     const [amount, setAmount] = useState<InputAmount>('')
-    const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
-    const [fxRate, setFxRate] = useState(1);
+    // const [isLocalCurrencyLoan, setLocalCurrencyLoan] = useState(false);
+    // const [localDetail, setLocalDetail] = useState<LocalDetail>({
+    //     fxRate: 1,
+    //     lastLocalInstallmentAmount: "",
+    //     localCurrencyCode: "",
+    //     localInstallmentAmount: "",
+    //     localLoanAmount: ""
+    // });
 
     const outstandingNow = useAmountWithInterest(
         loan.amount,
@@ -576,7 +583,7 @@ function RepayLoan({
         phone?: string
         email?: string
         isLocalCurrencyLoan?: boolean
-        localLoanAmount?: string
+        localDetail?: LocalDetail
     } | null>(null)
     const contactDetails =
         contactDetailsState &&
@@ -600,14 +607,12 @@ function RepayLoan({
                                           phone?: string
                                           email?: string
                                           isLocalCurrencyLoan?: boolean
-                                          localLoanAmount?: string
+                                          localDetail: LocalDetail
                                       }>,
                               )
                               .then(
                                   (info) => (
                                       setBorrowerInfo(loan.applicationId, info),
-                                      setLocalCurrencyLoan(info?.isLocalCurrencyLoan ?? false),
-                                      setFxRate(isLocalCurrencyLoan ? 3800 : 1),
                                       { info, profileId }
                                   ),
                               ),
@@ -701,15 +706,15 @@ function RepayLoan({
                     <div className="stat">
                         <div className="label">Outstanding</div>
                         <div className="value">
-                            {!isLocalCurrencyLoan ? null :
+                            {!contactDetailsState?.isLocalCurrencyLoan ? null :
                                 <>
                                     {formatToken(
-                                        outstandingNow.mul(fxRate),
+                                        outstandingNow.mul((Number(contactDetailsState.localDetail?.fxRate) * 100).toFixed(0)).div(100),
                                         liquidityTokenDecimals,
                                         2,
                                         true,
                                     )}{' '}
-                                    {'UGX'}
+                                    {contactDetailsState.localDetail?.localCurrencyCode}
                                     {' '}
                                     (
                                 </>
@@ -721,7 +726,7 @@ function RepayLoan({
                                 true,
                             )}{' '}
                             {TOKEN_SYMBOL}
-                            {!isLocalCurrencyLoan ? null :
+                            {!contactDetailsState?.isLocalCurrencyLoan ? null :
                                 <>
                                     )
                                 </>
@@ -767,22 +772,22 @@ function RepayLoan({
 
                     <div className="field">
                         <span className="label">Initial loan amount:</span>{' '}
-                        {!isLocalCurrencyLoan ? null :
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                             <>
                                 {formatToken(
-                                    BigNumber.from(loan.amount).mul(fxRate),
-                                    liquidityTokenDecimals,
+                                    BigNumber.from((Number(contactDetailsState.localDetail?.localLoanAmount) * 100).toFixed(0)),
+                                    2,
                                     2,
                                     true,
                                 )}{' '}
-                                {'UGX'}
+                                {contactDetailsState.localDetail?.localCurrencyCode}
                                 {' '}
                                 (
                             </>
                         }
                         {formatToken(loan.amount, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
-                        {!isLocalCurrencyLoan ? null :
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                             <>
                                 )
                             </>
@@ -790,22 +795,22 @@ function RepayLoan({
                     </div>
                     <div className="field">
                         <span className="label">Repaid:</span>{' '}
-                        {!isLocalCurrencyLoan ? null :
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                             <>
                                 {formatToken(
-                                    repaid.mul(fxRate),
+                                    repaid.mul((Number(contactDetailsState.localDetail?.fxRate) * 100).toFixed(0)).div(100),
                                     liquidityTokenDecimals,
                                     2,
                                     true,
                                 )}{' '}
-                                {'UGX'}
+                                {contactDetailsState.localDetail?.localCurrencyCode}
                                 {' '}
                                 (
                             </>
                         }
                         {formatToken(repaid, liquidityTokenDecimals, 2, true)}{' '}
                         {TOKEN_SYMBOL}
-                        {!isLocalCurrencyLoan ? null :
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                             <>
                                 )
                             </>
@@ -813,15 +818,15 @@ function RepayLoan({
                     </div>
                     <div className="field">
                         <span className="label">Total interest paid:</span>{' '}
-                        {!isLocalCurrencyLoan ? null :
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                             <>
                                 {formatToken(
-                                    BigNumber.from(loan.details.interestPaid).mul(fxRate),
+                                    BigNumber.from(loan.details.interestPaid).mul((Number(contactDetailsState.localDetail?.fxRate) * 100).toFixed(0)).div(100),
                                     liquidityTokenDecimals,
                                     2,
                                     true,
                                 )}{' '}
-                                {'UGX'}
+                                {contactDetailsState.localDetail?.localCurrencyCode}
                                 {' '}
                                 (
                             </>
@@ -833,7 +838,7 @@ function RepayLoan({
                             true
                         )}{' '}
                         {TOKEN_SYMBOL}
-                        {!isLocalCurrencyLoan ? null :
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                             <>
                                 )
                             </>
@@ -926,15 +931,15 @@ function RepayLoan({
                                         {item.overdue ? <strong> OVERDUE</strong> : null}
                                     </div>
                                     <div className={item.overdue ? 'red' : ''}>
-                                        {!isLocalCurrencyLoan ? null :
+                                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                                             <>
                                                 {formatToken(
-                                                    item.amount.mul(fxRate),
+                                                    item.amount.mul((Number(contactDetailsState.localDetail?.fxRate) * 100).toFixed(0)).div(100),
                                                     liquidityTokenDecimals,
                                                     2,
                                                     true,
                                                 )}{' '}
-                                                {'UGX'}
+                                                {contactDetailsState.localDetail?.localCurrencyCode}
                                                 {' '}
                                                 (
                                             </>
@@ -946,7 +951,7 @@ function RepayLoan({
                                             true,
                                         )}{' '}
                                         {TOKEN_SYMBOL}
-                                        {!isLocalCurrencyLoan ? null :
+                                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
                                             <>
                                                 )
                                             </>
@@ -1156,7 +1161,7 @@ function RequestLoan({
                       BigNumber.from(borrowInfo.minLoanAmount),
                       liquidityTokenDecimals,
                   )}`,
-            invalidAmountLocalMessage: isAmountValid
+            invalidAmountLocalMessage: isAmountLocalValid
                 ? ''
                 : `Minimum amount is ${formatToken(
                     BigNumber.from(borrowInfo.minLoanAmount).mul(USD_TO_UGX_FX),
@@ -1267,6 +1272,12 @@ function RequestLoan({
                             walletSignature,
                             walletAddress: account.toLowerCase(),
                             poolAddress,
+                            isLocalCurrencyLoan: true,
+                            localDetail :{
+                                localLoanAmount: amountLocal,
+                                localCurrencyCode: UGX_CODE,
+                                fxRate: USD_TO_UGX_FX,
+                            },
                         }),
                     }),
                 )
@@ -1299,6 +1310,7 @@ function RequestLoan({
             account,
             disabledSubmit,
             amount,
+            amountLocal,
             liquidityTokenDecimals,
             duration,
             durationMultiplier,
@@ -1501,7 +1513,7 @@ function RequestLoan({
                         ) : null
                     ) : null}
                 </label>
-                {/*
+
                 <label>
                     <div className="label">Amount in Local Currency</div>
                     <AmountInput
@@ -1516,13 +1528,12 @@ function RequestLoan({
                                 ? setAmountLocalBlurred(true)
                                 : undefined
                         }
-                        currency={'UGX'}
+                        currency={UGX_CODE}
                     />
                     {amountLocalBlurred && invalidAmountLocalMessage ? (
                         <Alert style="error" title={invalidAmountLocalMessage} />
                     ) : null}
                 </label>
-                */}
                 <label>
                     <div className="label">Amount</div>
                     <AmountInput
@@ -1542,16 +1553,14 @@ function RequestLoan({
                         <Alert style="error" title={invalidAmountMessage} />
                     ) : null}
                 </label>
-                {/*
                 <label>
-                    <div className="label">FX Rate</div>
+                    <div className="label">FX Rate, 1 USDT = </div>
                     <input
                         type="text"
                         disabled
-                        value={'1 USDT = ' + USD_TO_UGX_FX + ' UGX'}
+                        value={USD_TO_UGX_FX + ' UGX'}
                     />
                 </label>
-                */}
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
@@ -1595,6 +1604,7 @@ function RequestLoan({
                                 setBusinessNameBlurred(true)
                                 setPhoneBlurred(true)
                                 setEmailBlurred(true)
+                                setAmountLocalBlurred(true)
                                 setAmountBlurred(true)
                                 setDurationBlurred(true)
                             }}
@@ -1662,6 +1672,14 @@ function RequestLoan({
                                                     stepTwo!.businessName,
                                                 phone: stepTwo!.phone,
                                                 email: stepTwo!.email,
+                                                isLocalCurrencyLoan: true,
+                                                localDetail :{
+                                                    localLoanAmount: amountLocal,
+                                                    localCurrencyCode: UGX_CODE,
+                                                    fxRate: USD_TO_UGX_FX,
+                                                    localInstallmentAmount: "0",
+                                                    lastLocalInstallmentAmount: "0",
+                                                },
                                             },
                                         )
                                     }
