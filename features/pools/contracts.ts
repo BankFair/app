@@ -54,6 +54,10 @@ export interface CoreContract
         boolean,
         [loanId: BigNumberish, account: string]
     >
+    closeLoan: ContractFunction<
+        ContractTransaction,
+        [loanId: BigNumberish]
+        >
 
     loans: ContractFunction<EVMLoan, [loanId: BigNumberish]>
     loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumberish]>

@@ -6,8 +6,8 @@ import '@formatjs/intl-pluralrules/locale-data/en'
 import '@formatjs/intl-listformat/polyfill'
 import '@formatjs/intl-listformat/locale-data/en'
 
-import { BigNumber } from 'ethers'
-import { Duration } from 'luxon'
+import {BigNumber} from 'ethers'
+import {Duration} from 'luxon'
 import {Fragment, useEffect, useMemo, useState} from 'react'
 import TimeAgo from 'timeago-react'
 
@@ -34,11 +34,22 @@ import {
     zero,
 } from '../app'
 
-import {LoanStatus, Loan, formatStatus, loanDeskContract, useSimpleSchedule} from '../features'
+import {
+    contract,
+    formatStatus,
+    Loan,
+    loanDeskContract,
+    LoanStatus,
+    trackTransaction,
+    useSimpleSchedule
+} from '../features'
 
-import { EtherscanAddress } from './EtherscanLink'
-import { Button } from './Button'
-import { Progress } from './Progress'
+import {EtherscanAddress} from './EtherscanLink'
+import {Button} from './Button'
+import {Progress} from './Progress'
+import {Modal} from "./Modal";
+import {useDispatch} from "../store";
+import {Alert} from "./Alert";
 
 export function LoanView({
     loan,
@@ -52,6 +63,7 @@ export function LoanView({
     loanDeskAddress: Address
 }) {
     const provider = useProvider()
+    const dispatch = useDispatch()
     const account = useAccount()
 
     const applicationId = loan.applicationId;
@@ -156,6 +168,35 @@ export function LoanView({
         }
     }, [applicationId, loanDeskAddress])
 
+    const [managerEarnings, setEarnings] = useState<BigNumber | null>(null)
+
+    const [managerStake, setManagerStake] = useState<BigNumber | null>(null)
+
+    useEffect(() => {
+        if (!account) return
+        contract
+            .attach(poolAddress)
+            .revenueBalanceOf(account)
+            .then((earnings) => {
+                if (!earnings.gt(BigNumber.from(0))) return
+                setEarnings(earnings)
+            })
+            .catch((error) => {
+                console.error(error)
+            })
+
+        contract
+            .attach(poolAddress)
+            .balanceStaked()
+            .then((stake) => {
+                if (!stake.gt(BigNumber.from(0))) return
+                setManagerStake(stake)
+            })
+            .catch((error) => {
+                console.error(error)
+            })
+    }, [account, poolAddress])
+
     const hasDebt = status === LoanStatus.OUTSTANDING
     const isRepaid = status === LoanStatus.REPAID
 
@@ -163,6 +204,9 @@ export function LoanView({
         isRepaid ? null : loan,
         BigNumber.from((Number(borrowerInfoState?.localDetail?.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
         borrowerInfoState?.localDetail?.fxRate ?? 1)
+
+    const [closeLoading, setCloseLoading] = useState(false)
+    const [showCloseModal, setShowCloseModal] = useState(false)
 
     return (
         <div className="loan">
@@ -442,7 +486,16 @@ export function LoanView({
                         </a>
                     ) : null}
                     <a className="disabled">Repay</a>
-                    <a className="disabled">Close</a>
+                    <a className={loan.status == LoanStatus.OUTSTANDING ? "" : "disabled"}
+
+                       onClick={(event) => {
+                           loan.status == LoanStatus.OUTSTANDING
+                               ? setShowCloseModal(true)
+                               : event.preventDefault()
+                       }}
+                        >
+                        Close
+                    </a>
                     <a className="disabled">Default</a>
                 </div>
 
@@ -527,6 +580,130 @@ export function LoanView({
                     }
                 </div>
             </div>
+
+            {showCloseModal ? (
+                <Modal onClose={() => {setShowCloseModal(false)}}>
+                    <h3 style={{ textAlign: 'center' }}>
+                        Close loan
+                    </h3>
+
+                    <div className="stats">
+                        <div className="item">
+                            <div className="label">Borrower</div>
+                            <div className="value">
+                                {borrowerInfoState?.name ?? "..."}
+                            </div>
+                        </div>
+                        <div className="item">
+                            <div className="label">Account</div>
+                            <div className="value">
+                                <EtherscanAddress address={borrower} />
+                            </div>
+                        </div>
+                        <div className="item">
+                            <div className="label">Approved</div>
+                            <div className="value">
+                                <TimeAgo datetime={borrowedTime * 1000} />
+                            </div>
+                        </div>
+                        <div className="item">
+                            <div className="label">Remaining</div>
+                            <div className="value">
+                                <Remaining timestamp={borrowedTime + duration} noHoursAndLess={true} />
+                            </div>
+                        </div>
+                        <div className="item">
+                            <div className="label">Principal</div>
+                            <div className="value">
+                                {formatToken(amount, liquidityTokenDecimals, 2, true)}{' '}
+                                {TOKEN_SYMBOL}
+                            </div>
+                        </div>
+
+                        <div className="item">
+                            <div className="label">Principal Outstanding</div>
+                            <div className="value">
+                                {formatToken(
+                                    BigNumber.from(loan.amount).sub(details.baseAmountRepaid),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    false
+                                )}{' '}
+                                {TOKEN_SYMBOL}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="stats">
+                        <div className="item">
+                            <div className="label">Manager&apos;s Revenue</div>
+                            <div className="value">
+                                {formatToken(
+                                    managerEarnings ?? zero,
+                                    liquidityTokenDecimals,
+                                    2,
+                                    false
+                                )}{' '}
+                                {TOKEN_SYMBOL}
+                            </div>
+                        </div>
+
+                        <div className="item">
+                            <div className="label">Manager&apos;s Stake</div>
+                            <div className="value">
+                                {formatToken(
+                                    managerStake ?? zero,
+                                    liquidityTokenDecimals,
+                                    2,
+                                    false
+                                )}{' '}
+                                {TOKEN_SYMBOL}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{margin:'24px'}}>
+                        <Alert
+                            style="warning"
+                            title="Closing this loan will repay the outstanding principal using the pool manager's revenue
+                            and/or staked funds. If these funds are not sufficient, the lenders will take the loss."
+                        />
+                    </div>
+                    <Button
+                        type="button"
+                        loading={closeLoading}
+                        disabled={closeLoading}
+                        style={{ display: 'flex', margin: '24px auto 20px' }}
+                        onClick={() => {
+                            setCloseLoading(true)
+                            contract
+                                .attach(poolAddress)
+                                .connect(provider!.getSigner())
+                                .closeLoan(
+                                    loan.id
+                                )
+                                .then((tx) =>
+                                    trackTransaction(dispatch, {
+                                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
+                                        tx,
+                                    }),
+                                )
+                                .then((action) => {
+                                    setShowCloseModal(false)
+                                    setCloseLoading(false)
+                                })
+                                .catch((error) => {
+                                    console.error(error)
+                                    setShowCloseModal(false)
+                                    setCloseLoading(false)
+                                })
+                        }}
+                    >
+                        Confirm Close Loan
+                    </Button>
+                </Modal>
+            ) : (
+                false
+            )}
         </div>
     )
 }
