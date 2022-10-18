@@ -172,6 +172,41 @@ export function LoanView({
 
     const [managerStake, setManagerStake] = useState<BigNumber | null>(null)
 
+    const closeInfo = useMemo<{
+        principalOutstanding: BigNumber,
+        revenueLoss: BigNumber,
+        stakeLoss: BigNumber,
+        poolLoss: BigNumber,
+    }>(() => {
+        let principalOutstanding = loan ? BigNumber.from(loan.amount).sub(details.baseAmountRepaid) : zero
+        let unpaid = principalOutstanding
+        let revenueLoss = zero;
+        let stakeLoss = zero;
+        let poolLoss = zero;
+
+        if (unpaid.gt(zero) && managerEarnings) {
+            revenueLoss = BigNumber.from(managerEarnings).gte(unpaid) ? unpaid : BigNumber.from(managerEarnings)
+            unpaid = unpaid.sub(revenueLoss)
+        }
+
+        if (unpaid.gt(zero) && managerStake) {
+            stakeLoss = BigNumber.from(managerStake).gte(unpaid) ? unpaid : BigNumber.from(managerStake)
+            unpaid = unpaid.sub(stakeLoss)
+        }
+
+        if (unpaid.gt(zero)) {
+            poolLoss = unpaid
+            unpaid = zero
+        }
+
+        return {
+            principalOutstanding,
+            revenueLoss,
+            stakeLoss,
+            poolLoss,
+        }
+    }, [managerEarnings, managerStake, loan])
+
     useEffect(() => {
         if (!account) return
         contract
@@ -668,6 +703,52 @@ export function LoanView({
                             and/or staked funds. If these funds are not sufficient, the lenders will take the loss."
                         />
                     </div>
+
+                    <p style={{ textAlign: 'center' }}>
+                        Revenue loss expected:
+                        <strong>
+                            {' '}
+                        {
+                        formatToken(
+                                closeInfo.revenueLoss,
+                                liquidityTokenDecimals,
+                                2,
+                                false
+                        )
+                        } {TOKEN_SYMBOL}
+                        </strong>
+                    </p>
+                    <p style={{ textAlign: 'center' }}>
+                        Stake loss expected:
+                        <strong>
+                            {' '}
+                            {
+                                formatToken(
+                                    closeInfo.stakeLoss,
+                                    liquidityTokenDecimals,
+                                    2,
+                                    false
+                                )
+                        } {TOKEN_SYMBOL}
+                        </strong>
+                    </p>
+
+                    <p style={{ textAlign: 'center' }}>
+                        Lender loss expected:
+                        <strong>
+                            {' '}
+                            {
+                                formatToken(
+                                    closeInfo.poolLoss,
+                                    liquidityTokenDecimals,
+                                    2,
+                                    false
+                                )
+                        } {TOKEN_SYMBOL}
+                        </strong>
+                    </p>
+
+
                     <Button
                         type="button"
                         loading={closeLoading}
@@ -698,7 +779,7 @@ export function LoanView({
                                 })
                         }}
                     >
-                        Confirm Close Loan
+                        Confirm and Close Loan
                     </Button>
                 </Modal>
             ) : (
