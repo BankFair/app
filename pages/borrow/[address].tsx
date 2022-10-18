@@ -592,9 +592,11 @@ function RepayLoan({
             .loanApplications(loan.applicationId)
             .then(({ profileId }) =>
                 getBorrowerInfo(loan.applicationId).then((info) =>
-                    info
-                        ? { info, profileId }
-                        : fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`)
+                    // temporarily ignore cached entries
+                    // info
+                    //     ? { info, profileId }
+                    //     :
+                    fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`)
                               .then(
                                   (response) =>
                                       response.json() as Promise<{

@@ -108,6 +108,7 @@ export function LoanView({
         getBorrowerInfo(applicationId)
             .then(async (info) => {
                 if (canceled) return
+                /*
                 if (info) {
                     setBorrowerInfoState(info)
 
@@ -123,6 +124,7 @@ export function LoanView({
 
                     return
                 }
+                */
 
                 const application = await loanDeskContract
                     .attach(loanDeskAddress)
