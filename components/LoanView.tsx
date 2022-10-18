@@ -159,7 +159,7 @@ export function LoanView({
 
     const schedule = useSimpleSchedule(
         isRepaid ? null : loan,
-        BigNumber.from((Number(borrowerInfoState?.localDetail?.localInstallmentAmount ?? 0) * 100).toFixed(0)),
+        BigNumber.from((Number(borrowerInfoState?.localDetail?.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
         borrowerInfoState?.localDetail?.fxRate ?? 1)
 
     return (
@@ -463,7 +463,7 @@ export function LoanView({
                                             <>
                                                 {formatToken(
                                                     item.localAmount,
-                                                    2,
+                                                    liquidityTokenDecimals,
                                                     2,
                                                     true,
                                                 )}{' '}

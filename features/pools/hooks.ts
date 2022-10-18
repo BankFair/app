@@ -915,5 +915,5 @@ export function useSimpleSchedule(
             }
             return array
         }, [])
-    }, [loan])
+    }, [loan, localInstallmentAmount, fxRate])
 }
