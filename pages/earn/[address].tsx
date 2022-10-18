@@ -458,13 +458,16 @@ function Earnings({
         if (!account) return
         contract
             .attach(poolAddress)
-            .protocolEarningsOf(account)
+            .revenueBalanceOf(account)
             .then((earnings) => {
                 if (!earnings.gt(BigNumber.from(0))) return
                 setEarnings({
                     amount: earnings,
                     account,
                 })
+            })
+            .catch((error) => {
+                console.error(error)
             })
     }, [account, poolAddress])
 
@@ -480,7 +483,7 @@ function Earnings({
                   contract
                       .attach(poolAddress)
                       .connect(provider.getSigner())
-                      .withdrawProtocolEarnings()
+                      .withdrawRevenue()
                       .then((tx) =>
                           trackTransaction(dispatch, {
                               name: 'Withdraw earnings',

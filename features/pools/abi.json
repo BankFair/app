@@ -1010,7 +1010,7 @@
                 "type": "address"
             }
         ],
-        "name": "protocolEarningsOf",
+        "name": "revenueBalanceOf",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -1353,7 +1353,7 @@
     },
     {
         "inputs": [],
-        "name": "withdrawProtocolEarnings",
+        "name": "withdrawRevenue",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
