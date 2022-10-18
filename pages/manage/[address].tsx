@@ -798,6 +798,8 @@ function OfferModal({
     const [isRejectLoading, setIsRejectLoading] = useState(false)
 
     const [interestOnly, setInterestOnly] = useState(false)
+    const [amortized, setAmortized] = useState(true)
+
     const [previousInstallmentAmount, setPreviousInstallmentAmount] = useState(
         '' as InputAmount,
     )
@@ -811,9 +813,18 @@ function OfferModal({
                       parseInt(installments, 10),
                       liquidityTokenDecimals,
                   )
-                : installmentAmount,
+                : amortized ? formatInputAmount(
+                    getInstallmentAmount(
+                        parseUnits(amount.length > 0 ? amount : "0", liquidityTokenDecimals),
+                        Number(interest.length > 0 && Number(interest) > 0 ? interest : "1"),
+                        Math.max(parseInt(installments.length > 0 ? installments : initialInstallments, 10), 1),
+                        Number(duration.length > 0 ? duration : loan.duration.toNumber()) * thirtyDays,
+                    ),
+                    liquidityTokenDecimals,
+                ) : installmentAmount,
         [
             interestOnly,
+            amortized,
             amount,
             liquidityTokenDecimals,
             interest,
@@ -825,11 +836,12 @@ function OfferModal({
 
     const localInstallmentAmountValue = useMemo(
         () =>
-            interestOnly
+            interestOnly || amortized
                 ? formatNumberInputAmount(Number.parseFloat((Number(installmentAmountValue) * Number(fxRate)).toFixed(2))) as InputAmount
                 : localInstallmentAmount,
         [
             interestOnly,
+            amortized,
             installmentAmountValue,
             localInstallmentAmount
         ],
@@ -1173,7 +1185,7 @@ function OfferModal({
                         decimals={2}
                         value={localInstallmentAmountValue}
                         onChange={updateLocalInstallmentAmount}
-                        disabled={isOfferLoading || interestOnly}
+                        disabled={isOfferLoading || interestOnly || amortized}
                         invalid={isLocalInstallmentAmountInvalid}
                         currency={loan.localDetail.localCurrencyCode}
                     />
@@ -1190,7 +1202,7 @@ function OfferModal({
                         decimals={liquidityTokenDecimals}
                         value={installmentAmountValue}
                         onChange={updateInstallmentAmount}
-                        disabled={isOfferLoading || interestOnly}
+                        disabled={isOfferLoading || interestOnly || amortized}
                         invalid={isInstallmentAmountInvalid}
                     />
                     <label className="checkbox">
@@ -1212,6 +1224,20 @@ function OfferModal({
                             }}
                         />
                         Interest only
+                    </label>
+                    <label className="checkbox">
+                        <input
+                            type="checkbox"
+                            checked={amortized}
+                            onChange={() => {
+                                if (amortized) {
+                                    setAmortized(false)
+                                } else {
+                                    setAmortized(true)
+                                }
+                            }}
+                        />
+                        Amortized
                     </label>
                     {isInstallmentAmountInvalid ? (
                         <Alert
