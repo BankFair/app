@@ -62,8 +62,8 @@ export interface CoreContract
     poolLiquidity: ContractFunction<BigNumber>
     currentLenderAPY: ContractFunction<number>
 
-    protocolEarningsOf: ContractFunction<BigNumber, [account: string]>
-    withdrawProtocolEarnings: ContractFunction<ContractTransaction>
+    revenueBalanceOf: ContractFunction<BigNumber, [account: string]>
+    withdrawRevenue: ContractFunction<ContractTransaction>
 
     exitFeePercent: ContractFunction<BigNumber>
 
