@@ -49,6 +49,10 @@ export interface CoreContract
         ContractTransaction,
         [loanId: BigNumber, amount: BigNumber]
     >
+    repayOnBehalf: ContractFunction<
+        ContractTransaction,
+        [loanId: BigNumber, amount: BigNumber, borrwer: string]
+        >
     defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
     canDefault: ContractFunction<
         boolean,

@@ -8,17 +8,17 @@ import '@formatjs/intl-listformat/locale-data/en'
 
 import {BigNumber} from 'ethers'
 import {Duration} from 'luxon'
-import {Fragment, useEffect, useMemo, useState} from 'react'
+import {FormEventHandler, Fragment, useCallback, useEffect, useMemo, useState} from 'react'
 import TimeAgo from 'timeago-react'
 
 import {
     Address,
     BORROWER_SERVICE_URL,
-    fetchBorrowerInfoAuthenticated,
+    fetchBorrowerInfoAuthenticated, formatPercent,
     formatToken,
-    getBorrowerInfo,
+    getBorrowerInfo, getERC20Contract, InputAmount,
     LocalDetail,
-    noop,
+    noop, oneDay,
     oneHundredMillion,
     rgbaLimeGreen21,
     rgbGreen,
@@ -35,12 +35,12 @@ import {
 } from '../app'
 
 import {
-    contract,
+    contract, fetchLoan,
     formatStatus,
     Loan,
     loanDeskContract,
-    LoanStatus,
-    trackTransaction,
+    LoanStatus, Pool,
+    trackTransaction, useAllowanceAndBalance, useLoans,
     useSimpleSchedule
 } from '../features'
 
@@ -48,8 +48,11 @@ import {EtherscanAddress} from './EtherscanLink'
 import {Button} from './Button'
 import {Progress} from './Progress'
 import {Modal} from "./Modal";
-import {useDispatch} from "../store";
+import {AppDispatch, useDispatch, useSelector} from "../store";
 import {Alert} from "./Alert";
+import {parseUnits} from "@ethersproject/units";
+import {Box} from "./Box";
+import {AmountInput} from "./AmountInput";
 
 export function LoanView({
     loan,
@@ -207,6 +210,10 @@ export function LoanView({
 
     const [closeLoading, setCloseLoading] = useState(false)
     const [showCloseModal, setShowCloseModal] = useState(false)
+
+    const pool = useSelector((s) => s.pools[poolAddress])
+    const [showRepayModal, setShowRepayModal] = useState(false)
+
 
     return (
         <div className="loan">
@@ -485,7 +492,16 @@ export function LoanView({
                             Contacts
                         </a>
                     ) : null}
-                    <a className="disabled">Repay</a>
+                    <a className={loan.status == LoanStatus.OUTSTANDING ? "" : "disabled"}
+
+                       onClick={(event) => {
+                           loan.status == LoanStatus.OUTSTANDING
+                               ? setShowRepayModal(true)
+                               : event.preventDefault()
+                       }}
+                        >
+                        Repay
+                    </a>
                     <a className={loan.status == LoanStatus.OUTSTANDING ? "" : "disabled"}
 
                        onClick={(event) => {
@@ -704,7 +720,505 @@ export function LoanView({
             ) : (
                 false
             )}
+            { showRepayModal ?
+                <Modal onClose={() => {setShowRepayModal(false)}}>
+                    <RepayLoanOnBehalf
+                        key={loan.id}
+                        pool={pool}
+                        poolAddress={poolAddress}
+                        loan={loan}
+                        provider={provider}
+                        dispatch={dispatch}
+                        account={account}
+                    />
+                </Modal>
+            : null
+            }
+
         </div>
+    )
+}
+
+function RepayLoanOnBehalf({
+    pool: { liquidityTokenAddress, liquidityTokenDecimals, loanDeskAddress },
+    poolAddress,
+    loan,
+    provider,
+    dispatch,
+    account,
+}: {
+    pool: Pool
+    poolAddress: Address
+    loan: ReturnType<typeof useLoans>[number]
+    provider: ReturnType<typeof useProvider>
+    dispatch: AppDispatch
+    account: Address | undefined
+}) {
+    const [amount, setAmount] = useState<InputAmount>('')
+
+    const outstandingNow = useAmountWithInterest(
+        loan.amount,
+        loan.details.baseAmountRepaid,
+        loan.details.interestPaidUntil,
+        loan.apr,
+    )
+    const repaid = useMemo(
+        () => BigNumber.from(loan.details.totalAmountRepaid),
+        [loan],
+    )
+
+    const { allowance, refetch: refetchAllowanceAndBalance } =
+        useAllowanceAndBalance(liquidityTokenAddress, poolAddress, account)
+
+    const needsApproval = useMemo(() => {
+        if (!allowance) return false
+
+        const approvalBigNumber = BigNumber.from(allowance)
+        return (
+            approvalBigNumber.eq(zero) ||
+            approvalBigNumber.lt(
+                amount ? parseUnits(amount, liquidityTokenDecimals) : zero,
+            )
+        )
+    }, [allowance, amount, liquidityTokenDecimals])
+
+    const [contactDetailsState, setContactDetailsState] = useState<{
+        profileId: string
+        applicationId: number
+        name: string
+        businessName: string
+        phone?: string
+        email?: string
+        isLocalCurrencyLoan?: boolean
+        localDetail?: LocalDetail
+    } | null>(null)
+    const contactDetails =
+        contactDetailsState &&
+        contactDetailsState.applicationId === loan.applicationId
+            ? contactDetailsState
+            : null
+    useEffect(() => {
+        loanDeskContract
+            .attach(loanDeskAddress)
+            .loanApplications(loan.applicationId)
+            .then(({ profileId }) =>
+                getBorrowerInfo(loan.applicationId).then((info) =>
+                    // temporarily ignore cached entries
+                    // info
+                    //     ? { info, profileId }
+                    //     :
+                    fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`)
+                        .then(
+                            (response) =>
+                                response.json() as Promise<{
+                                    name: string
+                                    businessName: string
+                                    phone?: string
+                                    email?: string
+                                    isLocalCurrencyLoan?: boolean
+                                    localDetail: LocalDetail
+                                }>,
+                        )
+                        .then(
+                            (info) => (
+                                setBorrowerInfo(loan.applicationId, info),
+                                    { info, profileId }
+                            ),
+                        ),
+                ),
+            )
+            .then(({ info, profileId }) =>
+                setContactDetailsState({
+                    ...info,
+                    profileId,
+                    applicationId: loan.applicationId,
+                }),
+            )
+    }, [loan, loanDeskAddress, provider])
+
+    const [isLoading, setIsLoading] = useState(false)
+
+    const handleRepay = useCallback<FormEventHandler<HTMLFormElement>>(
+        (event) => {
+            event.preventDefault()
+
+            setIsLoading(true)
+
+            const signer = provider!.getSigner()
+
+            const amountBigNumber = parseUnits(amount, liquidityTokenDecimals)
+
+            if (needsApproval) {
+                getERC20Contract(liquidityTokenAddress)
+                    .connect(signer)
+                    .approve(poolAddress, amountBigNumber)
+                    .then((tx) =>
+                        trackTransaction(dispatch, {
+                            name: `Step 1 of 2 ➜ Approve ${TOKEN_SYMBOL}`,
+                            tx,
+                        }),
+                    )
+                    .then(() => refetchAllowanceAndBalance())
+                    .then(() => {
+                        setIsLoading(false)
+                    })
+                    .catch((reason) => {
+                        console.error(reason)
+                        setIsLoading(false)
+                    })
+
+                return
+            }
+
+            contract
+                .connect(signer)
+                .attach(poolAddress)
+                .repayOnBehalf(BigNumber.from(loan.id), amountBigNumber, loan.borrower)
+                .then((tx) =>
+                    trackTransaction(dispatch, {tx, name: 'Repay loan'}),
+                )
+                .then(() =>
+                    dispatch(fetchLoan({poolAddress, loanId: loan.id})),
+                )
+                .then(() => {
+                    setIsLoading(false)
+                    setAmount('')
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+        },
+        [
+            provider,
+            needsApproval,
+            poolAddress,
+            loan,
+            amount,
+            liquidityTokenDecimals,
+            liquidityTokenAddress,
+            dispatch,
+            refetchAllowanceAndBalance,
+        ],
+    )
+
+    const wasRepaid = loan.status === LoanStatus.REPAID
+
+    const schedule = useSimpleSchedule(
+        wasRepaid ? null : loan,
+        BigNumber.from((Number(contactDetailsState?.localDetail?.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
+        contactDetailsState?.localDetail?.fxRate ?? 1)
+
+    const largerThanZero = Number(amount) > 0
+
+    return (
+        <>
+            <form className="main" onSubmit={handleRepay}>
+                <Box
+                    className="repay"
+                    overlay={
+                        loan.status === LoanStatus.REPAID
+                            ? 'Loan fully repaid'
+                            : undefined
+                    }
+                >
+                    <h2>Repay Loan on Behalf</h2>
+                    <AmountInput
+                        decimals={liquidityTokenDecimals}
+                        value={amount}
+                        onChange={setAmount}
+                    />
+                    <Button
+                        type="submit"
+                        loading={isLoading}
+                        disabled={!largerThanZero || isLoading}
+                    >
+                        {needsApproval && largerThanZero
+                            ? `Step 1 of 2 ➜ Approve ${TOKEN_SYMBOL}`
+                            : !(!largerThanZero || isLoading)
+                                ? 'Final Step ➜ Repay'
+                                : 'Repay'
+                        }
+                    </Button>
+                    <Alert
+                        style="warning"
+                        title="Late payments will affect your on chain credit rating"
+                    />
+                </Box>
+                <Box className="details">
+                    <h3>Loan Contract Details</h3>
+
+                    <div className="field">
+                        <span className="label">Initial loan amount:</span>{' '}
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    BigNumber.from((Number(contactDetailsState.localDetail?.localLoanAmount) * 100).toFixed(0)),
+                                    2,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {contactDetailsState.localDetail?.localCurrencyCode}
+                                {' '}
+                                (
+                            </>
+                        }
+                        {formatToken(loan.amount, liquidityTokenDecimals, 2, true)}{' '}
+                        {TOKEN_SYMBOL}
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
+                    </div>
+                    <div className="field">
+                        <span className="label">Repaid:</span>{' '}
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    repaid.mul((Number(contactDetailsState.localDetail?.fxRate) * 100).toFixed(0)).div(100),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {contactDetailsState.localDetail?.localCurrencyCode}
+                                {' '}
+                                (
+                            </>
+                        }
+                        {formatToken(repaid, liquidityTokenDecimals, 2, true)}{' '}
+                        {TOKEN_SYMBOL}
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
+                    </div>
+                    <div className="field">
+                        <span className="label">Total interest paid:</span>{' '}
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                            <>
+                                {formatToken(
+                                    BigNumber.from(loan.details.interestPaid).mul((Number(contactDetailsState.localDetail?.fxRate) * 100).toFixed(0)).div(100),
+                                    liquidityTokenDecimals,
+                                    2,
+                                    true,
+                                )}{' '}
+                                {contactDetailsState.localDetail?.localCurrencyCode}
+                                {' '}
+                                (
+                            </>
+                        }
+                        {formatToken(
+                            loan.details.interestPaid,
+                            liquidityTokenDecimals,
+                            2,
+                            true
+                        )}{' '}
+                        {TOKEN_SYMBOL}
+                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                            <>
+                                )
+                            </>
+                        }
+                    </div>
+                    {
+                        // TODO: Display time remaining and start date instead of duration
+                    }
+                    <div className="field">
+                        <span className="label">Duration:</span>{' '}
+                        {loan.duration / thirtyDays} months
+                    </div>
+                    <div className="field">
+                        <span className="label">Interest APR:</span>{' '}
+                        {formatPercent(loan.apr / 100)}
+                    </div>
+                    <div className="field">
+                        <span className="label">Grace default period:</span>{' '}
+                        {loan.gracePeriod / oneDay} days
+                    </div>
+
+                    <div className="field">
+                        <span className="label">Name:</span>{' '}
+                        {contactDetails?.name}
+                    </div>
+                    <div className="field">
+                        <span className="label">Business name:</span>{' '}
+                        {contactDetails?.businessName}
+                    </div>
+                    {contactDetails?.phone ? (
+                        <div className="field">
+                            <span className="label">Phone:</span>{' '}
+                            <a href={`tel:${contactDetails.phone}`}>
+                                {contactDetails.phone}
+                            </a>
+                        </div>
+                    ) : null}
+                    {contactDetails?.email ? (
+                        <div className="field">
+                            <span className="label">Email:</span>{' '}
+                            <a href={`mailto:${contactDetails.email}`}>
+                                {contactDetails.email}
+                            </a>
+                        </div>
+                    ) : null}
+                    {
+                        /*
+                        contactDetails &&
+                        !contactDetails.phone &&
+                        !contactDetails.email ? (
+                            <Button
+                                type="button"
+                                stone
+                                onClick={async () => {
+                                    const info =
+                                        await fetchBorrowerInfoAuthenticated(
+                                            poolAddress,
+                                            loan.applicationId,
+                                            contactDetails.profileId,
+                                            account!,
+                                            provider!.getSigner(),
+                                        )
+                                    setContactDetailsState({
+                                        ...contactDetails,
+                                        ...info,
+                                    })
+                                }}
+                            >
+                                Get contact information
+                            </Button>
+                        ) : null
+                        */
+                    }
+                </Box>
+            </form>
+
+            {wasRepaid ? null : (
+                <Box>
+                    <h3>Re-Payment Schedule</h3>
+
+                    <div className="schedule">
+                        <div className="label">Due</div>
+                        <div className="label">Amount</div>
+
+                        {schedule.map((item, index) =>
+                            item.skip ? null : (
+                                <Fragment key={index}>
+                                    <div>
+                                        {item.date}
+                                    </div>
+                                    <div>
+                                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                                            <>
+                                                {formatToken(
+                                                    item.localAmount,
+                                                    liquidityTokenDecimals,
+                                                    2,
+                                                    true,
+                                                )}{' '}
+                                                {contactDetailsState.localDetail?.localCurrencyCode}
+                                                {' '}
+                                                (
+                                            </>
+                                        }
+                                        {formatToken(
+                                            item.amount,
+                                            liquidityTokenDecimals,
+                                            2,
+                                            true,
+                                        )}{' '}
+                                        {TOKEN_SYMBOL}
+                                        {!contactDetailsState?.isLocalCurrencyLoan ? null :
+                                            <>
+                                                )
+                                            </>
+                                        }
+                                    </div>
+                                </Fragment>
+                            ),
+                        )}
+                    </div>
+                </Box>
+            )}
+
+            <style jsx>{`
+                h2,
+                h3 {
+                    margin-top: 0;
+                    margin-bottom: 16px;
+                }
+
+                .stats {
+                    > .stat {
+                        > .label {
+                            color: var(--color-secondary);
+                            font-weight: 400;
+                            margin-bottom: 8px;
+                        }
+
+                        > .value {
+                            font-weight: 700;
+                            font-size: 24px;
+                        }
+                    }
+                }
+
+                .main {
+                    > :global(.repay) {
+                        :global(button) {
+                            margin-top: 8px;
+                            margin-bottom: 16px;
+                            display: flex;
+                        }
+                    }
+                }
+
+                :global(.details) {
+                    > .field {
+                        margin-top: 8px;
+
+                        > .label {
+                            color: var(--color-secondary);
+                            font-weight: 400;
+                            margin-bottom: 8px;
+                        }
+                    }
+                }
+
+                .schedule {
+                    display: grid;
+                    grid-template-columns: minmax(auto, max-content) auto;
+                    row-gap: 8px;
+                    column-gap: 16px;
+
+                    > .label {
+                        color: var(--color-secondary);
+                    }
+
+                    > .red {
+                        color: ${rgbRed};
+                    }
+                }
+
+                @media screen and (min-width: 1000px) {
+                    .main {
+                        display: flex;
+
+                        > :global(.box) {
+                            flex-basis: 50%;
+                            margin: 0;
+
+                            &:first-child {
+                                margin-right: 8px;
+                            }
+
+                            &:last-child {
+                                margin-left: 8px;
+                            }
+                        }
+                    }
+                }
+            `}</style>
+        </>
     )
 }
 
