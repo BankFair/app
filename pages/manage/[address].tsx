@@ -588,18 +588,15 @@ function LoansAwaitingApproval({
                 }
 
                 .grid {
-                    display: flex;
-                    flex-direction: column;
+                    display: grid;
+                    grid-template-columns: 30% 50% 20%;
                     > :global(.name) {
-                        margin-right:24px;
+                        margin-right: 24px;
+                        margin-bottom: 12px;
                         > :global(span) {
                             color: ${rgbGreen};
                             cursor: pointer;
                         }
-                    }
-                    
-                    @media screen and (min-width: ${SIDEBAR_ALWAYS_VISIBLE_WIDTH}px) {
-                        flex-direction: row;
                     }
                 }
             `}</style>
@@ -636,6 +633,9 @@ function mapLoanRequest(
                     {' '}for{' '}
                     {formatDurationInMonths(loan.duration.toNumber())} months
                 </span>
+            </div>
+            <div>
+                {' '}
             </div>
         </Fragment>
     ))
