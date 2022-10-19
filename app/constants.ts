@@ -97,6 +97,14 @@ export const poolsConfig =
                   block: 33073758,
               },
               {
+                  name: 'Iki-Iki Farmers Pool (Uganda)',
+                  managerName: '',
+                  tokenSymbol: 'IKIFP',
+                  uniswapUrl: '',
+                  address: '0x70527768dB88924985460fCada217E2AEDb9a620' as Address,
+                  block: 34535380,
+              },
+              {
                   name: 'Training Pool',
                   address:
                       '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850' as Address,
