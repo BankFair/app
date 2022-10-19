@@ -127,7 +127,7 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
                 account={account}
                 offer={offer}
             />
-            {!offer && !outstandingLoans.length ? (
+            {!offer ? (
                 <RequestLoan
                     pool={pool}
                     poolAddress={address}

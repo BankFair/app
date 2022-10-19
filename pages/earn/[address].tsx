@@ -521,7 +521,7 @@ function Earnings({
                     margin: 0 auto;
                 }
             `}</style>
-            <form className="section" onSubmit={handleSubmit}>
+            <form className="section">
                 <h4>Earnings</h4>
 
                 <div>
@@ -538,7 +538,7 @@ function Earnings({
                     type="submit"
                     loading={isLoading}
                     disabled={
-                        isLoading || earnings?.amount.lte(BigNumber.from(0))
+                        true
                     }
                 >
                     Withdraw
