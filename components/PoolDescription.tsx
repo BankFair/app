@@ -53,10 +53,56 @@ const kitaleDescription = (
     </>
 )
 
+const ikiIkiPoolDescription = (
+    <>
+        <p>
+            The Iki-Iki Farmers Pool lends to a co-operative of over 40 farmers from
+            around the town of Iki-Iki in the Budaka region of Eastern Uganda, 20km
+            from the city of Mbale. Budaka&apos;s economy is dominated by agriculture with
+            the majority of farming activities undertaken by small holders who produce
+            perennial and annual crops such as bananas, coffee, cotton, maize, sweet
+            potatoes, tomatoes, beans, cassava and groundnuts.
+        </p>
+
+        <p>
+            The farming cooperative that will benefit from the loans made from Iki-Iki
+            Farmers Pool has been working together successfully for a number of years,
+            pooling savings and harvests whilst benefiting from collective training and
+            buying power. The Pool Manager will be Regina, who has led the Iki-Iki
+            Farmers collective for a number of years, and will be responsible for
+            distributing loans and collecting repayments from members of the cooperative.
+        </p>
+
+        <p>
+            Loans will be used to facilitate the growing of higher yield crops such as tomatoes.
+            A pre-condition of the Pool issuing a loan will be that the farmer in question has
+            purchased crop insurance or will use part of the loan to purchase crop insurance.
+            By enabling the cooperative members to purchase crop insurance policies, Pool loans
+            will allow the farmers to protect themselves against the downside risk of crop failure
+            (the higher yield crops in question have a higher failure rate) whilst benefiting
+            from the material upside of successful harvests.
+        </p>
+
+        <p>
+            The Pool Manager&apos;s risk management approach is facilitated by three key principles:
+            (1) crop insurance as a pre-requisite of loan issuance, (2) affordable rates for borrowers
+            and (3) familiarity with borrowers based on long-term relationships.
+        </p>
+
+        <p>
+            Prospective borrowers within the cooperative currently have difficulty accessing capital
+            from banks and microfinance firms. The aim of the pool is therefore to increase financial
+            inclusion in the area, generate higher crop yields and offer more affordable rates than
+            available elsewhere in the region, meaning that the end borrower can retain and reinvest
+            a greater amount of profit generated from their business.
+        </p>
+ </>
+)
+
 const descriptions: Record<string, JSX.Element> = {
     '0xA3e07757131E5587ebB58ABB08de10783FC090Be': kitaleDescription,
     '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19': kitaleDescription,
-    '0x70527768dB88924985460fCada217E2AEDb9a620': <></>,
+    '0x70527768dB88924985460fCada217E2AEDb9a620': ikiIkiPoolDescription,
     '0x063527eeB60ba6E6240b898315cee9E637CABe13': <>Training Pool</>,
     '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850': <>Training Pool for user training under live network conditions</>
 }
