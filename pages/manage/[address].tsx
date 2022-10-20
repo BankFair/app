@@ -225,31 +225,30 @@ function LoansAwaitingApproval({
                             Promise.all([
                                 getBorrowerInfo(request.id.toNumber()).then(
                                     (info) =>
-                                        info
-                                            ? info
-                                            : fetch(
-                                                  `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                                              )
-                                                  .then(
-                                                      (response) =>
-                                                          response.json() as Promise<{
-                                                              name: string
-                                                              businessName: string
-                                                              phone?: string
-                                                              email?: string
-                                                              isLocalCurrencyLoan?: boolean
-                                                              localDetail: LocalDetail
-                                                          }>,
-                                                  )
-                                                  .then(
-                                                      (info) => (
-                                                          setBorrowerInfo(
-                                                              request.id.toNumber(),
-                                                              info,
-                                                          ),
-                                                          info
-                                                      ),
-                                                  ),
+                                        // Hotfix - ignore cached entry
+                                        fetch(
+                                            `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
+                                        )
+                                            .then(
+                                                (response) =>
+                                                    response.json() as Promise<{
+                                                        name: string
+                                                        businessName: string
+                                                        phone?: string
+                                                        email?: string
+                                                        isLocalCurrencyLoan?: boolean
+                                                        localDetail: LocalDetail
+                                                    }>,
+                                            )
+                                            .then(
+                                                (info) => (
+                                                    setBorrowerInfo(
+                                                        request.id.toNumber(),
+                                                        info,
+                                                    ),
+                                                        info
+                                                ),
+                                            ),
                                 ),
                                 request.status ===
                                 LoanApplicationStatus.OFFER_MADE
