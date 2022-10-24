@@ -35,6 +35,7 @@ import {
     rgbYellowDarker,
     rgbYellowLighter,
     checkAmountValidity,
+    checkAmountMaxValidity,
     oneYear,
     amountWithInterest,
     chains,
@@ -70,7 +71,7 @@ import {
     Pool,
     refetchStatsIfUsed,
     trackTransaction,
-    useManagerInfo,
+    useManagerInfo, usePoolLiquidity,
     useSimpleSchedule,
     useStatsState,
 } from '../../features'
@@ -380,6 +381,7 @@ function LoansAwaitingApproval({
                     loan={offerModalRequest}
                     liquidityTokenDecimals={liquidityTokenDecimals}
                     borrowInfo={borrowInfo!}
+                    poolAddress={poolAddress}
                     onClose={() => setOfferModalRequest(null)}
                     onOffer={(
                         amount,
@@ -644,6 +646,7 @@ function OfferModal({
     loan,
     liquidityTokenDecimals,
     borrowInfo,
+    poolAddress,
     onClose,
     onOffer,
     onReject,
@@ -652,6 +655,7 @@ function OfferModal({
     loan: LoanRequest
     liquidityTokenDecimals: number
     borrowInfo: BorrowInfo
+    poolAddress: Address
     onClose(): void
     onOffer(
         amount: BigNumber,
@@ -665,6 +669,8 @@ function OfferModal({
     onReject(): Promise<void>
     onFetchBorrowerInfo(): void
 }) {
+    const [poolLiquidity] = usePoolLiquidity(poolAddress)
+
     const isOfferActive = loan.status === LoanApplicationStatus.OFFER_MADE
 
     const {
@@ -947,14 +953,40 @@ function OfferModal({
         })
     }, [onReject])
 
-    const isAmountInvalid = useMemo(
-        () =>
-            !checkAmountValidity(
+    const amountInvalidMessage = useMemo(
+        () => {
+
+            let isGteMin = checkAmountValidity(
                 amount,
                 liquidityTokenDecimals,
                 borrowInfo.minLoanAmount,
-            ),
-        [amount, borrowInfo.minLoanAmount, liquidityTokenDecimals],
+            )
+
+            let isLteMax = poolLiquidity
+                ? checkAmountMaxValidity(
+                    amount,
+                    liquidityTokenDecimals,
+                    poolLiquidity,
+                )
+                : true
+
+            return !isGteMin
+                ? `Minimum amount is ${formatToken(
+                    BigNumber.from(borrowInfo.minLoanAmount),
+                    liquidityTokenDecimals,
+                    2,
+                    true
+                )}`
+                : !isLteMax
+                    ? `Maximum available amount is ${formatToken(
+                        BigNumber.from(poolLiquidity),
+                        liquidityTokenDecimals,
+                        2,
+                        false
+                    )}`
+                    : ''
+        },
+        [amount, borrowInfo.minLoanAmount, poolLiquidity, liquidityTokenDecimals],
     )
 
     const isAmountLocalInvalid = useMemo(
@@ -1104,16 +1136,10 @@ function OfferModal({
                         value={amount}
                         onChange={updateAmount}
                         disabled={isOfferLoading}
-                        invalid={isAmountInvalid}
+                        invalid={Boolean(amountInvalidMessage)}
                     />
-                    {isAmountInvalid ? (
-                        <Alert
-                            style="error"
-                            title={`Minimum amount is ${formatToken(
-                                BigNumber.from(borrowInfo.minLoanAmount),
-                                liquidityTokenDecimals,
-                            )}`}
-                        />
+                    {amountInvalidMessage ? (
+                        <Alert style="error" title={amountInvalidMessage} />
                     ) : null}
                 </label>
                 {!loan.isLocalCurrencyLoan ? null :
@@ -1281,7 +1307,7 @@ function OfferModal({
                         disabled={Boolean(
                             isOfferLoading ||
                                 isRejectLoading ||
-                                isAmountInvalid ||
+                                amountInvalidMessage ||
                                 durationInvalidMessage ||
                                 installmentsInvalidMessage ||
                                 isInterestInvalid ||

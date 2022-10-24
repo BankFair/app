@@ -12,3 +12,13 @@ export function checkAmountValidity(
         ? parseUnits(value, liquidityTokenDecimals).gte(minLoanAmount)
         : false
 }
+
+export function checkAmountMaxValidity(
+    value: InputAmount,
+    liquidityTokenDecimals: number,
+    maxLoanAmount: Hexadecimal | BigNumber,
+) {
+    return value
+        ? parseUnits(value, liquidityTokenDecimals).lte(maxLoanAmount)
+        : false
+}
