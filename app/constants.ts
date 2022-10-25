@@ -105,6 +105,14 @@ export const poolsConfig =
                   block: 34535380,
               },
               {
+                  name: 'Namirembe Women’s Pool',
+                  managerName: '',
+                  tokenSymbol: 'NAMWP',
+                  uniswapUrl: '',
+                  address: '0x925A62Cd68f73111730AC0E99F8b116Ef767EE01' as Address,
+                  block: 34777549,
+              },
+              {
                   name: 'Training Pool',
                   address:
                       '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850' as Address,

@@ -99,10 +99,27 @@ const ikiIkiPoolDescription = (
  </>
 )
 
+const namirembePoolDescription = (
+    <>
+        <p>
+            The Namirembe Women&apos;s Pool is the first Sapling lending pool focussed exclusively on providing
+            loans to small businesses owned and operated by women. The pool will lend to a group of 50 women in
+            the Budaka region of Eastern Uganda who already operate a savings and loans cooperative in which
+            they pool resources and provide credit to each other; the pool will be managed by Regina who is
+            already acting as the Pool Manager for the Iki-Iki Farmers&apos; Pool. The Namirembe Women&apos;s
+            Pool will provide additional capital to the group to allow them to invest in and grow their existing
+            businesses at an accelerated rate that they would otherwise be unable to achieve via their savings
+            and loans cooperative. The businesses operated by the women in the group are all established and
+            diverse in their nature, including retail shops, vegetable vendors, produce vendors and farms.
+        </p>
+    </>
+)
+
 const descriptions: Record<string, JSX.Element> = {
     '0xA3e07757131E5587ebB58ABB08de10783FC090Be': kitaleDescription,
     '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19': kitaleDescription,
     '0x70527768dB88924985460fCada217E2AEDb9a620': ikiIkiPoolDescription,
+    '0x925A62Cd68f73111730AC0E99F8b116Ef767EE01': namirembePoolDescription,
     '0x063527eeB60ba6E6240b898315cee9E637CABe13': <>Training Pool</>,
     '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850': <>Training Pool for user training under live network conditions</>
 }
