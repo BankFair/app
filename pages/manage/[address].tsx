@@ -803,7 +803,7 @@ function OfferModal({
     const [isRejectLoading, setIsRejectLoading] = useState(false)
 
     const [interestOnly, setInterestOnly] = useState(false)
-    const [amortized, setAmortized] = useState(true)
+    const [amortized, setAmortized] = useState(!isOfferActive)
 
     const [previousInstallmentAmount, setPreviousInstallmentAmount] = useState(
         '' as InputAmount,
