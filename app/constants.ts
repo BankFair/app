@@ -105,7 +105,7 @@ export const poolsConfig =
                   block: 34535380,
               },
               {
-                  name: 'Namirembe Women’s Pool',
+                  name: 'Namirembe Women’s Pool (Uganda)',
                   managerName: '',
                   tokenSymbol: 'NAMWP',
                   uniswapUrl: '',
