@@ -98,15 +98,15 @@ export const poolsConfig =
               },
               {
                   name: 'Iki-Iki Farmers Pool (Uganda)',
-                  managerName: '',
+                  managerName: 'Regina Nagudi',
                   tokenSymbol: 'IKIFP',
                   uniswapUrl: '',
                   address: '0x70527768dB88924985460fCada217E2AEDb9a620' as Address,
                   block: 34535380,
               },
               {
-                  name: 'Namirembe Women’s Pool',
-                  managerName: '',
+                  name: 'Namirembe Women’s Pool (Uganda)',
+                  managerName: 'Regina Nagudi',
                   tokenSymbol: 'NAMWP',
                   uniswapUrl: '',
                   address: '0x925A62Cd68f73111730AC0E99F8b116Ef767EE01' as Address,

@@ -68,7 +68,7 @@ const ikiIkiPoolDescription = (
             The farming cooperative that will benefit from the loans made from Iki-Iki
             Farmers Pool has been working together successfully for a number of years,
             pooling savings and harvests whilst benefiting from collective training and
-            buying power. The Pool Manager will be Regina, who has led the Iki-Iki
+            buying power. The Pool Manager will be Regina Nagudi, who has led the Iki-Iki
             Farmers collective for a number of years, and will be responsible for
             distributing loans and collecting repayments from members of the cooperative.
         </p>
@@ -105,7 +105,7 @@ const namirembePoolDescription = (
             The Namirembe Women&apos;s Pool is the first Sapling lending pool focussed exclusively on providing
             loans to small businesses owned and operated by women. The pool will lend to a group of 50 women in
             the Budaka region of Eastern Uganda who already operate a savings and loans cooperative in which
-            they pool resources and provide credit to each other; the pool will be managed by Regina who is
+            they pool resources and provide credit to each other; the pool will be managed by Regina Nagudi who is
             already acting as the Pool Manager for the Iki-Iki Farmers&apos; Pool. The Namirembe Women&apos;s
             Pool will provide additional capital to the group to allow them to invest in and grow their existing
             businesses at an accelerated rate that they would otherwise be unable to achieve via their savings
