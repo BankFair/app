@@ -171,7 +171,7 @@ function useOffer(
 
         const contract = loanDeskContract.attach(pool.loanDeskAddress)
 
-        const max = CHAIN_ID === chains.mumbai ? 40 : 20
+        const max = CHAIN_ID === chains.mumbai ? 80 : 40
         for (let i = 1; i <= max; i++) {
             contract
                 .loanApplications(i)
