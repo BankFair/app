@@ -115,13 +115,49 @@ const namirembePoolDescription = (
     </>
 )
 
+const trainingPoolDescription = (
+    <>
+        <p>
+            Training Pool for user training under live network conditions
+        </p>
+    </>
+)
+
+const testPoolDescription = (
+    <>
+        <p>
+            Test Pool
+        </p>
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam convallis, risus et vehicula tincidunt,
+            mauris sem luctus felis, ut maximus nunc magna ac nunc. Maecenas vulputate, mauris a fringilla laoreet,
+            dui ante iaculis augue, id convallis urna nibh quis orci. Vestibulum consectetur consectetur imperdiet.
+            Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nulla quam,
+            pellentesque ac tortor sit amet, aliquam volutpat justo. Integer lacinia commodo velit, sed scelerisque urna
+            dignissim eleifend. Vestibulum ornare, nisl vitae finibus consequat, felis ex venenatis ex, ac finibus nunc
+            sapien ac velit. Duis imperdiet lacus ut suscipit accumsan. Nunc rhoncus elit magna, at posuere nibh lacinia
+            non.
+        </p>
+        <p>
+            Vestibulum orci erat, malesuada ut libero quis, placerat porta lorem. Cras dignissim ut sem eu tincidunt.
+            Maecenas a pulvinar justo. Sed euismod mattis felis, vitae vulputate sem placerat in. Fusce molestie dictum
+            nisl, ultricies vestibulum mauris imperdiet vel. Nam sodales non lectus nec auctor. Duis egestas in urna sit
+            amet blandit. Suspendisse vehicula maximus tortor vel fringilla. Integer et pharetra est. Sed molestie
+            ligula ac nibh lacinia ultricies. Aliquam erat volutpat. Aliquam at blandit dolor, vel pharetra lectus.
+        </p>
+    </>
+)
+
 const descriptions: Record<string, JSX.Element> = {
+    // live pools
     '0xA3e07757131E5587ebB58ABB08de10783FC090Be': kitaleDescription,
-    '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19': kitaleDescription,
     '0x70527768dB88924985460fCada217E2AEDb9a620': ikiIkiPoolDescription,
     '0x925A62Cd68f73111730AC0E99F8b116Ef767EE01': namirembePoolDescription,
-    '0x063527eeB60ba6E6240b898315cee9E637CABe13': <>Training Pool</>,
-    '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850': <>Training Pool for user training under live network conditions</>
+    '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850': trainingPoolDescription,
+
+    // testnet pools
+    '0x3Ade73672bE14F2C97e6d290bF01bE5969871273': testPoolDescription,
+    '0xB2b978a45F4d07E0533f1Ef16837Be2e0D5F5E25': testPoolDescription,
 }
 
 let nextMountShowMoreState = false
