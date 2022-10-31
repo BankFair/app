@@ -121,16 +121,14 @@ export const poolsConfig =
           ]
         : [
               {
-                  name: 'Kitale Community Pool (Uganda)',
-                  address:
-                      '0x32e32bbEf75dc75FA09326B64799CDc5CB831a19' as Address,
-                  block: 27778687,
+                  name: 'Test Pool 1',
+                  address: '0x3Ade73672bE14F2C97e6d290bF01bE5969871273' as Address,
+                  block: 28907401,
               },
               {
-                  name: 'Kitale Community Training Pool',
-                  address:
-                      '0x063527eeB60ba6E6240b898315cee9E637CABe13' as Address,
-                  block: 27974361,
+                  name: 'Test Pool 2',
+                  address: '0xB2b978a45F4d07E0533f1Ef16837Be2e0D5F5E25' as Address,
+                  block: 28907569,
               },
           ]
 
