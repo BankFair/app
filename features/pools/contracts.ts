@@ -32,8 +32,9 @@ export interface CoreContract
 
     manager: ContractFunction<Address>
     loanDesk: ContractFunction<Address>
-    poolToken: ContractFunction<Address>
-    liquidityToken: ContractFunction<Address>
+    tokenConfig: ContractFunction<TokenConfig>
+    poolConfig: ContractFunction<PoolConfig>
+    poolBalance: ContractFunction<PoolBalance>
     loansCount: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [account: string]>
@@ -66,14 +67,10 @@ export interface CoreContract
     loans: ContractFunction<EVMLoan, [loanId: BigNumberish]>
     loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumberish]>
 
-    poolFunds: ContractFunction<BigNumber>
-    poolLiquidity: ContractFunction<BigNumber>
     currentLenderAPY: ContractFunction<number>
 
     revenueBalanceOf: ContractFunction<BigNumber, [account: string]>
     withdrawRevenue: ContractFunction<ContractTransaction>
-
-    exitFeePercent: ContractFunction<BigNumber>
 
     filters: {
         /**
@@ -122,6 +119,40 @@ export interface CoreContract
         filter: EventFilterWithType<T, K>,
         fromBlock?: number,
     ): Promise<TypedEvent<T, K>[]>
+}
+
+export interface TokenConfig {
+    poolToken: Address
+    liquidityToken: Address
+    decimals: number
+}
+
+export interface PoolConfig {
+    poolFundsLimit: BigNumber
+    exitFeePercent: number
+    maxProtocolFeePercent: number
+    targetStakePercent: number
+    protocolFeePercent: number
+    managerEarnFactorMax: number
+    managerEarnFactor: number
+    targetLiquidityPercent: number
+}
+
+export interface PoolBalance {
+    tokenBalance: BigNumber
+    poolFunds: BigNumber
+    poolLiquidity: BigNumber
+    allocatedFunds: BigNumber
+    strategizedFunds: BigNumber
+    stakedShares: BigNumber
+}
+
+export interface LoanTemplate {
+    minAmount: BigNumber
+    minDuration: BigNumber
+    maxDuration: BigNumber
+    gracePeriod: BigNumber
+    apr: number
 }
 
 export enum LoanApplicationStatus {
@@ -224,10 +255,8 @@ export interface LoanDeskContract
         { hasOpenApplication: boolean },
         [account: string]
     >
-    templateLoanAPR: ContractFunction<number>
-    maxLoanDuration: ContractFunction<BigNumber>
-    minLoanAmount: ContractFunction<BigNumber>
-    minLoanDuration: ContractFunction<BigNumber>
+
+    loanTemplate: ContractFunction<LoanTemplate>
 
     filters: {
         /**

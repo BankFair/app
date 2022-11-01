@@ -108,19 +108,17 @@ export const fetchStats = createAsyncThunk(
             loansCount,
             balanceStaked,
             amountDepositable,
-            poolFunds,
-            poolLiquidity,
             apy,
-            exitFeePercent,
+            poolBalance,
+            poolConfig,
             blockNumber,
         ] = await Promise.all([
             connected.loansCount(),
             connected.balanceStaked(),
             connected.amountDepositable(),
-            connected.poolFunds(),
-            connected.poolLiquidity(),
             connected.currentLenderAPY(),
-            connected.exitFeePercent(),
+            connected.poolBalance(),
+            connected.poolConfig(),
             provider.getCurrentBlockNumber(),
         ])
 
@@ -128,10 +126,10 @@ export const fetchStats = createAsyncThunk(
             loans: loansCount.toNumber(),
             balanceStaked: balanceStaked.toHexString() as Hexadecimal,
             amountDepositable: amountDepositable.toHexString() as Hexadecimal,
-            poolFunds: poolFunds.toHexString() as Hexadecimal,
-            poolLiquidity: poolLiquidity.toHexString() as Hexadecimal,
+            poolFunds: poolBalance.poolFunds.toHexString() as Hexadecimal,
+            poolLiquidity: poolBalance.poolLiquidity.toHexString() as Hexadecimal,
             apy: convertPercent(apy),
-            exitFeePercent: convertPercent(exitFeePercent.toNumber()),
+            exitFeePercent: poolConfig.exitFeePercent,
             blockNumber,
         }
 
@@ -255,24 +253,18 @@ export const fetchBorrowInfo = createAsyncThunk(
             )
 
         const [
-            minLoanAmount,
-            minLoanDuration,
-            maxLoanDuration,
-            apr,
+            loanTemplate,
             blockNumber,
         ] = await Promise.all([
-            connected.minLoanAmount(),
-            connected.minLoanDuration(),
-            connected.maxLoanDuration(),
-            connected.templateLoanAPR(),
+            connected.loanTemplate(),
             provider.getCurrentBlockNumber(),
         ])
 
         const info: BorrowInfo = {
-            minLoanAmount: minLoanAmount.toHexString() as Hexadecimal,
-            minLoanDuration: minLoanDuration.toNumber(),
-            maxLoanDuration: maxLoanDuration.toNumber(),
-            apr: convertPercent(apr),
+            minLoanAmount: loanTemplate.minAmount.toHexString() as Hexadecimal,
+            minLoanDuration: loanTemplate.minDuration.toNumber(),
+            maxLoanDuration: loanTemplate.maxDuration.toNumber(),
+            apr: convertPercent(loanTemplate.apr),
             blockNumber,
         }
 

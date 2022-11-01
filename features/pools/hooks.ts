@@ -22,7 +22,7 @@ import {
     CoreContract,
     getBatchProviderAndContract,
     EVMLoan,
-    EVMLoanDetails,
+    EVMLoanDetails, PoolConfig, TokenConfig,
 } from './contracts'
 import {
     updateLoans,
@@ -200,8 +200,7 @@ async function fetchAndSetPoolInfo([
     pool,
     managerAddress,
     loanDeskAddress,
-    poolTokenAddress,
-    liquidityTokenAddress,
+    tokenConfig
 ]: [
     {
         name: string
@@ -210,11 +209,10 @@ async function fetchAndSetPoolInfo([
     },
     Address,
     Address,
-    Address,
-    Address,
+    TokenConfig
 ]) {
-    const poolTokenContract = getERC20Contract(poolTokenAddress)
-    const liquidityTokenContract = getERC20Contract(liquidityTokenAddress)
+    const poolTokenContract = getERC20Contract(tokenConfig.poolToken)
+    const liquidityTokenContract = getERC20Contract(tokenConfig.liquidityToken)
     const [poolTokenDecimals, liquidityTokenDecimals] = await Promise.all([
         poolTokenContract.decimals(),
         liquidityTokenContract.decimals(),
@@ -226,9 +224,9 @@ async function fetchAndSetPoolInfo([
         address: pool.address,
         managerAddress,
         loanDeskAddress,
-        poolTokenAddress,
+        poolTokenAddress: tokenConfig.poolToken,
         poolTokenDecimals,
-        liquidityTokenAddress,
+        liquidityTokenAddress: tokenConfig.liquidityToken,
         liquidityTokenDecimals,
     })
 }
@@ -247,8 +245,7 @@ export function useFetchPoolsPropertiesOnce() {
                 pool,
                 attachedContract.manager(),
                 attachedContract.loanDesk(),
-                attachedContract.poolToken(),
-                attachedContract.liquidityToken(),
+                attachedContract.tokenConfig(),
             ])
                 .then(fetchAndSetPoolInfo)
                 .then(dispatch)

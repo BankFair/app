@@ -1,36 +1,5 @@
 [
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_poolToken",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_liquidityToken",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_governance",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_protocol",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_manager",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
         "anonymous": false,
         "inputs": [
             {
@@ -41,6 +10,106 @@
             }
         ],
         "name": "Closed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "tokensIssued",
+                "type": "uint256"
+            }
+        ],
+        "name": "FundsDeposited",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "tokensIssued",
+                "type": "uint256"
+            }
+        ],
+        "name": "FundsStaked",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "tokensRedeemed",
+                "type": "uint256"
+            }
+        ],
+        "name": "FundsUnstaked",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "tokensRedeemed",
+                "type": "uint256"
+            }
+        ],
+        "name": "FundsWithdrawn",
         "type": "event"
     },
     {
@@ -67,6 +136,19 @@
         "inputs": [
             {
                 "indexed": false,
+                "internalType": "uint8",
+                "name": "version",
+                "type": "uint8"
+            }
+        ],
+        "name": "Initialized",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
                 "internalType": "uint256",
                 "name": "loanId",
                 "type": "uint256"
@@ -85,6 +167,25 @@
             }
         ],
         "name": "LoanBorrowed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+            }
+        ],
+        "name": "LoanClosed",
         "type": "event"
     },
     {
@@ -155,6 +256,132 @@
         "inputs": [
             {
                 "indexed": false,
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "payer",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "interestAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "LoanRepaymentMade",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "prevValue",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "newValue",
+                "type": "uint16"
+            }
+        ],
+        "name": "ManagerEarnFactorMaxSet",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "prevValue",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "newValue",
+                "type": "uint16"
+            }
+        ],
+        "name": "ManagerEarnFactorSet",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            }
+        ],
+        "name": "ManagerTransferred",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "OfferLiquidityAllocated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "prevAmount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "OfferLiquidityUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
                 "internalType": "address",
                 "name": "account",
                 "type": "address"
@@ -181,18 +408,156 @@
         "inputs": [
             {
                 "indexed": false,
+                "internalType": "uint16",
+                "name": "prevValue",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "newValue",
+                "type": "uint16"
+            }
+        ],
+        "name": "ProtocolFeePercentSet",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
                 "internalType": "address",
-                "name": "from",
+                "name": "wallet",
                 "type": "address"
             },
             {
                 "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "RevenueWithdrawn",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "previousAdminRole",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "newAdminRole",
+                "type": "bytes32"
+            }
+        ],
+        "name": "RoleAdminChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
                 "internalType": "address",
-                "name": "to",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "sender",
                 "type": "address"
             }
         ],
-        "name": "ProtocolWalletSet",
+        "name": "RoleGranted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            }
+        ],
+        "name": "RoleRevoked",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "StakedAssetsDepleted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "prevValue",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "newValue",
+                "type": "uint16"
+            }
+        ],
+        "name": "TargetLiqudityPercentSet",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "prevValue",
+                "type": "uint16"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "newValue",
+                "type": "uint16"
+            }
+        ],
+        "name": "TargetStakePercentSet",
         "type": "event"
     },
     {
@@ -211,13 +576,7 @@
                 "type": "address"
             }
         ],
-        "name": "ProtocolWalletTransferred",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [],
-        "name": "StakedAssetsDepleted",
+        "name": "TreasuryWalletTransferred",
         "type": "event"
     },
     {
@@ -248,6 +607,19 @@
     },
     {
         "inputs": [],
+        "name": "DEFAULT_ADMIN_ROLE",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "MANAGER_INACTIVITY_GRACE_PERIOD",
         "outputs": [
             {
@@ -261,12 +633,12 @@
     },
     {
         "inputs": [],
-        "name": "MAX_PROTOCOL_EARNING_PERCENT",
+        "name": "POOL_MANAGER_ROLE",
         "outputs": [
             {
-                "internalType": "uint16",
+                "internalType": "bytes32",
                 "name": "",
-                "type": "uint16"
+                "type": "bytes32"
             }
         ],
         "stateMutability": "view",
@@ -274,51 +646,12 @@
     },
     {
         "inputs": [],
-        "name": "ONE_HUNDRED_PERCENT",
+        "name": "TREASURY_ROLE",
         "outputs": [
             {
-                "internalType": "uint16",
+                "internalType": "bytes32",
                 "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "ONE_TOKEN",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "PERCENT_DECIMALS",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "allocatedFunds",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
+                "type": "bytes32"
             }
         ],
         "stateMutability": "view",
@@ -603,7 +936,63 @@
     },
     {
         "inputs": [],
-        "name": "exitFeePercent",
+        "name": "disableIntitializers",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getRoleAdmin",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            }
+        ],
+        "name": "getRoleMember",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getRoleMemberCount",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -628,16 +1017,78 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "liquidityToken",
-        "outputs": [
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
             {
                 "internalType": "address",
-                "name": "",
+                "name": "account",
                 "type": "address"
             }
         ],
+        "name": "grantRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "hasRole",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_poolToken",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_liquidityToken",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_governance",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_treasury",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_manager",
+                "type": "address"
+            }
+        ],
+        "name": "initialize",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -694,7 +1145,7 @@
             },
             {
                 "internalType": "uint256",
-                "name": "baseAmountRepaid",
+                "name": "principalAmountRepaid",
                 "type": "uint256"
             },
             {
@@ -782,7 +1233,7 @@
                 "type": "uint256"
             },
             {
-                "internalType": "enum SaplingLendingPool.LoanStatus",
+                "internalType": "enum ILendingPool.LoanStatus",
                 "name": "status",
                 "type": "uint8"
             }
@@ -811,32 +1262,6 @@
                 "internalType": "address",
                 "name": "",
                 "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "managerEarnFactor",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "managerEarnFactorMax",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
             }
         ],
         "stateMutability": "view",
@@ -875,6 +1300,19 @@
     },
     {
         "inputs": [],
+        "name": "oneHundredPercent",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "open",
         "outputs": [],
         "stateMutability": "nonpayable",
@@ -902,6 +1340,57 @@
     },
     {
         "inputs": [],
+        "name": "percentDecimals",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "poolBalance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenBalance",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "poolFunds",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "poolLiquidity",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "allocatedFunds",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "strategizedFunds",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "stakedShares",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "poolCanLend",
         "outputs": [
             {
@@ -915,51 +1404,47 @@
     },
     {
         "inputs": [],
-        "name": "poolFunds",
+        "name": "poolConfig",
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "poolFundsLimit",
                 "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "poolFundsLimit",
-        "outputs": [
+            },
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "poolLiquidity",
-        "outputs": [
+                "internalType": "uint16",
+                "name": "exitFeePercent",
+                "type": "uint16"
+            },
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "poolToken",
-        "outputs": [
+                "internalType": "uint16",
+                "name": "maxProtocolFeePercent",
+                "type": "uint16"
+            },
             {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
+                "internalType": "uint16",
+                "name": "targetStakePercent",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint16",
+                "name": "protocolFeePercent",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint16",
+                "name": "managerEarnFactorMax",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint16",
+                "name": "managerEarnFactor",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint16",
+                "name": "targetLiquidityPercent",
+                "type": "uint16"
             }
         ],
         "stateMutability": "view",
@@ -990,48 +1475,21 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "protocol",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "protocolEarningPercent",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
                 "internalType": "address",
-                "name": "wallet",
+                "name": "account",
                 "type": "address"
             }
         ],
-        "name": "revenueBalanceOf",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
+        "name": "renounceRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -1101,6 +1559,43 @@
         "inputs": [
             {
                 "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
+        ],
+        "name": "revenueBalanceOf",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "revokeRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
                 "name": "_loanDesk",
                 "type": "address"
             }
@@ -1152,19 +1647,6 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "_protocol",
-                "type": "address"
-            }
-        ],
-        "name": "setProtocolWallet",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "internalType": "uint16",
                 "name": "_targetLiquidityPercent",
                 "type": "uint16"
@@ -1203,32 +1685,6 @@
     },
     {
         "inputs": [],
-        "name": "stakedShares",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "strategizedFunds",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "strategyLiquidity",
         "outputs": [
             {
@@ -1241,13 +1697,19 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "targetLiquidityPercent",
+        "inputs": [
+            {
+                "internalType": "bytes4",
+                "name": "interfaceId",
+                "type": "bytes4"
+            }
+        ],
+        "name": "supportsInterface",
         "outputs": [
             {
-                "internalType": "uint16",
+                "internalType": "bool",
                 "name": "",
-                "type": "uint16"
+                "type": "bool"
             }
         ],
         "stateMutability": "view",
@@ -1255,51 +1717,22 @@
     },
     {
         "inputs": [],
-        "name": "targetStakePercent",
+        "name": "tokenConfig",
         "outputs": [
             {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "tokenBalance",
-        "outputs": [
+                "internalType": "address",
+                "name": "poolToken",
+                "type": "address"
+            },
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "tokenDecimals",
-        "outputs": [
+                "internalType": "address",
+                "name": "liquidityToken",
+                "type": "address"
+            },
             {
                 "internalType": "uint8",
-                "name": "",
+                "name": "decimals",
                 "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "totalPoolShares",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -1322,13 +1755,39 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "_protocol",
+                "name": "_manager",
                 "type": "address"
             }
         ],
-        "name": "transferProtocolWallet",
+        "name": "transferManager",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_treasury",
+                "type": "address"
+            }
+        ],
+        "name": "transferTreasury",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "treasury",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
