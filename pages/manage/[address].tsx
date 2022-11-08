@@ -966,7 +966,9 @@ function OfferModal({
                 ? checkAmountMaxValidity(
                     amount,
                     liquidityTokenDecimals,
-                    poolLiquidity,
+                    isOfferActive 
+                        ? BigNumber.from(poolLiquidity).add(parseUnits(initialAmount, liquidityTokenDecimals))
+                        : poolLiquidity,
                 )
                 : true
 
@@ -979,7 +981,9 @@ function OfferModal({
                 )}`
                 : !isLteMax
                     ? `Maximum available amount is ${formatToken(
-                        BigNumber.from(poolLiquidity),
+                        isOfferActive 
+                            ? BigNumber.from(poolLiquidity).add(parseUnits(initialAmount, liquidityTokenDecimals))
+                            : BigNumber.from(poolLiquidity),
                         liquidityTokenDecimals,
                         2,
                         false
