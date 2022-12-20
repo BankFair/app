@@ -7,6 +7,7 @@ import {
     CoreContract,
     fetchLoan,
     formatStatus,
+    LoanDeskContract,
     LoanStatus,
     Pool,
     useLoadAccountLoans,
@@ -174,17 +175,6 @@ export function Loans(props: {
                     loanDeskAddress={pool.loanDeskAddress}
                 />
             ))}
-
-            {repay ? (
-                <RepayModal
-                    poolAddress={poolAddress}
-                    loanId={repay.id}
-                    liquidityTokenDecimals={pool.liquidityTokenDecimals}
-                    liquidityTokenAddress={pool.liquidityTokenAddress}
-                    max={repay.max}
-                    onClose={() => setRepay(null)}
-                />
-            ) : null}
         </div>
     )
 
@@ -193,58 +183,5 @@ export function Loans(props: {
             {header}
             {loansElement}
         </>
-    )
-}
-
-function RepayModal({
-    poolAddress,
-    loanId,
-    liquidityTokenAddress,
-    liquidityTokenDecimals,
-    max,
-    onClose,
-}: {
-    poolAddress: string
-    loanId: number
-    liquidityTokenAddress: string
-    liquidityTokenDecimals: number
-    max: BigNumber
-    onClose(): void
-}) {
-    const dispatch = useDispatch()
-
-    const { form } = useAmountForm({
-        liquidityTokenAddress,
-        liquidityTokenDecimals,
-        poolAddress,
-        onSumbit: (contract: CoreContract, amount: BigNumber) =>
-            contract.repay(BigNumber.from(loanId), amount),
-        refetch: () =>
-            dispatch(fetchLoan({ poolAddress, loanId })).then(onClose),
-        max,
-        disabled: false,
-        type: 'Repay',
-    })
-
-    return (
-        <Modal onClose={onClose} autoWidth>
-            <div>
-                <style jsx>{`
-                    div {
-                        padding: 16px 24px;
-
-                        > :global(form) {
-                            margin: 0;
-                        }
-                    }
-                    h3 {
-                        text-align: center;
-                        margin: 0 0 8px;
-                    }
-                `}</style>
-                <h3>Repay</h3>
-                {form}
-            </div>
-        </Modal>
     )
 }
