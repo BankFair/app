@@ -198,16 +198,18 @@ function LoansAwaitingApproval({
         let canceled = false
 
         const contract = loanDeskContract.attach(loanDeskAddress)
+        const directQueryContract = loanDeskContract.attach(loanDeskAddress)
+
 
         const toLoad = CHAIN_ID === chains.mumbai ? 80 : 40
-        const { contract: attached } = getBatchProviderAndLoanDeskContract(
+        const { loanDeskContract: attached } = getBatchProviderAndLoanDeskContract(
             toLoad,
             contract,
         )
 
         Promise.all(
             Array.from({ length: toLoad }).map((_, i) =>
-                attached.loanApplications(i + 1),
+            attached.loanApplications(i + 1),
             ),
         )
             .then((requests) => {
@@ -253,7 +255,7 @@ function LoansAwaitingApproval({
                                 ),
                                 request.status ===
                                 LoanApplicationStatus.OFFER_MADE
-                                    ? contract
+                                    ? directQueryContract
                                           .loanOffers(request.id)
                                           .then((offer) => ({
                                               graceDefaultPeriod:

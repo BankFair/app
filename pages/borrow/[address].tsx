@@ -100,7 +100,6 @@ const Borrow: NextPage<{ address: string }> = ({ address }) => {
         () => loans.filter((l) => l.status === LoanStatus.OUTSTANDING),
         [loans],
     )
-
     useLoadAccountLoans(address, account, dispatch, pool)
     // const accountLoaded = pool?.loadedAccounts[account || '']
 
@@ -423,8 +422,8 @@ function Offer({
                     setIsLoading(true)
 
                     try {
-                        const tx = await contract
-                            .attach(poolAddress)
+                        const tx = await loanDeskContract
+                            .attach(loanDeskAddress)
                             .connect(provider!.getSigner())
                             .borrow(offer.details.applicationId)
 
@@ -442,6 +441,7 @@ function Offer({
                                 await dispatch(
                                     fetchLoan({
                                         poolAddress,
+                                        loanDeskAddress,
                                         loanId: BigNumber.from(
                                             event.args!.array[0],
                                         ),
@@ -659,15 +659,15 @@ function RepayLoan({
                 return
             }
 
-            contract
+            loanDeskContract
                 .connect(signer)
-                .attach(poolAddress)
+                .attach(loanDeskAddress)
                 .repay(BigNumber.from(loan.id), amountBigNumber)
                 .then((tx) =>
                     trackTransaction(dispatch, { tx, name: 'Repay loan' }),
                 )
                 .then(() =>
-                    dispatch(fetchLoan({ poolAddress, loanId: loan.id })),
+                    dispatch(fetchLoan({ poolAddress, loanDeskAddress, loanId: loan.id })),
                 )
                 .then(() => {
                     setIsLoading(false)
@@ -1083,10 +1083,10 @@ function RequestLoan({
 
         loanDeskContract
             .attach(loanDeskAddress)
-            .borrowerStats(account)
-            .then(({ hasOpenApplication }) => {
+            .hasOpenApplication(account)
+            .then(( value ) => {
                 setLoanPendingApproval({
-                    hasOpenApplication,
+                    hasOpenApplication: value,
                     account,
                     loanDeskAddress,
                 })

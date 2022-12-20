@@ -214,10 +214,10 @@ export function LoanView({
         if (!account) return
         contract
             .attach(poolAddress)
-            .revenueBalanceOf(account)
-            .then((earnings) => {
-                if (!earnings.gt(BigNumber.from(0))) return
-                setEarnings(earnings)
+            .balances()
+            .then((balances) => {
+                if (account != pool.managerAddress || !balances.managerRevenue.gt(BigNumber.from(0))) return
+                setEarnings(balances.managerRevenue)           
             })
             .catch((error) => {
                 console.error(error)
@@ -772,15 +772,15 @@ export function LoanView({
                         style={{ display: 'flex', margin: '24px auto 20px' }}
                         onClick={() => {
                             setCloseLoading(true)
-                            contract
-                                .attach(poolAddress)
+                            loanDeskContract
+                                .attach(loanDeskAddress)
                                 .connect(provider!.getSigner())
                                 .closeLoan(
                                     loan.id
                                 )
                                 .then((tx) =>
                                     trackTransaction(dispatch, {
-                                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
+                                        name: `Close Loan`,
                                         tx,
                                     }),
                                 )
@@ -951,15 +951,15 @@ function RepayLoanOnBehalf({
                 return
             }
 
-            contract
+            loanDeskContract
                 .connect(signer)
-                .attach(poolAddress)
+                .attach(loanDeskAddress)
                 .repayOnBehalf(BigNumber.from(loan.id), amountBigNumber, loan.borrower)
                 .then((tx) =>
                     trackTransaction(dispatch, {tx, name: 'Repay loan'}),
                 )
                 .then(() =>
-                    dispatch(fetchLoan({poolAddress, loanId: loan.id})),
+                    dispatch(fetchLoan({poolAddress, loanDeskAddress, loanId: loan.id})),
                 )
                 .then(() => {
                     setIsLoading(false)
@@ -1341,7 +1341,7 @@ function onlyPositive<T, R extends { [key in keyof T]?: number }>(
 
     for (const i in object) {
         const value = object[i]
-        if (value <= 0) continue
+        if (!value || value <= 0) continue
         newObject[i] = value
     }
 

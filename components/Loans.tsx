@@ -61,7 +61,7 @@ export function Loans(props: {
 
     if (showAllLoans) {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        useLoadManagerState(poolAddress, dispatch, pool)
+        useLoadManagerState(poolAddress, pool.loanDeskAddress, dispatch, pool)
     } else {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         useLoadAccountLoans(poolAddress, account, dispatch, pool)

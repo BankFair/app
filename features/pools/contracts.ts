@@ -30,11 +30,10 @@ export interface CoreContract
     connect(...args: Parameters<CustomBaseContract['connect']>): this
     attach(...args: Parameters<CustomBaseContract['attach']>): this
 
-    manager: ContractFunction<Address>
     loanDesk: ContractFunction<Address>
-    poolToken: ContractFunction<Address>
-    liquidityToken: ContractFunction<Address>
-    loansCount: ContractFunction<BigNumber>
+    tokenConfig: ContractFunction<TokenConfig>
+    config: ContractFunction<PoolConfig>
+    balances: ContractFunction<PoolBalance>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [account: string]>
     stake: ContractFunction<ContractTransaction, [amount: BigNumber]>
@@ -44,67 +43,14 @@ export interface CoreContract
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber, [account: string]>
-    borrow: ContractFunction<ContractTransaction, [applicationId: BigNumberish]>
-    repay: ContractFunction<
-        ContractTransaction,
-        [loanId: BigNumber, amount: BigNumber]
-    >
-    repayOnBehalf: ContractFunction<
-        ContractTransaction,
-        [loanId: BigNumber, amount: BigNumber, borrwer: string]
-        >
-    defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
-    canDefault: ContractFunction<
-        boolean,
-        [loanId: BigNumberish, account: string]
-    >
-    closeLoan: ContractFunction<
-        ContractTransaction,
-        [loanId: BigNumberish]
-        >
 
-    loans: ContractFunction<EVMLoan, [loanId: BigNumberish]>
-    loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumberish]>
+    currentAPY: ContractFunction<APYBreakdown>
 
-    poolFunds: ContractFunction<BigNumber>
-    poolLiquidity: ContractFunction<BigNumber>
-    currentLenderAPY: ContractFunction<number>
-
-    revenueBalanceOf: ContractFunction<BigNumber, [account: string]>
-    withdrawRevenue: ContractFunction<ContractTransaction>
-
-    exitFeePercent: ContractFunction<BigNumber>
+    collectProtocolRevenue: ContractFunction<ContractTransaction, [amount: BigNumber]>
+    collectManagerRevenue: ContractFunction<ContractTransaction, [amount: BigNumber]>
 
     filters: {
-        /**
-         * ```solidity
-         * event LoanBorrowed(uint256 loanId, address borrower)
-         * ```
-         */
-        LoanBorrowed: EventFilterFactory<
-            [loanId: BigNumber, borrower: string, applicationId: BigNumber],
-            ['loanId', 'borrower', 'applicationId']
-        >
-
-        /**
-         * ```solidity
-         * event LoanRepaid(uint256 loanId, address borrower)
-         * ```
-         */
-        LoanRepaid: EventFilterFactory<
-            [loanId: BigNumber, borrower: string],
-            ['loanId', 'borrower']
-        >
-
-        /**
-         * ```solidity
-         * event LoanDefaulted(uint256 loanId, address borrower, uint256 amountLost)
-         * ```
-         */
-        LoanDefaulted: EventFilterFactory<
-            [loanId: BigNumber, borrower: string, amountLost: BigNumber],
-            ['loanId', 'borrower', 'amountLost']
-        >
+        
     }
 
     on<
@@ -122,6 +68,51 @@ export interface CoreContract
         filter: EventFilterWithType<T, K>,
         fromBlock?: number,
     ): Promise<TypedEvent<T, K>[]>
+}
+
+export interface TokenConfig {
+    poolToken: Address
+    liquidityToken: Address
+    decimals: number
+}
+
+export interface PoolConfig {
+    weightedAvgStrategyAPR: BigNumber
+    exitFeePercent: number
+    maxProtocolFeePercent: number
+    minWithdrawalRequestAmount: BigNumber
+    targetStakePercent: number
+    protocolFeePercent: number
+    managerEarnFactorMax: number
+    managerEarnFactor: number
+    targetLiquidityPercent: number
+}
+
+export interface PoolBalance {
+    tokenBalance: BigNumber
+    rawLiquidity: BigNumber
+    poolFunds: BigNumber
+    allocatedFunds: BigNumber
+    strategizedFunds: BigNumber
+    withdrawalRequestedShares: BigNumber
+    stakedShares: BigNumber
+    managerRevenue: BigNumber
+    protocolRevenue: BigNumber
+}
+
+export interface APYBreakdown {
+    totalPoolAPY: number
+    protocolRevenueComponent: number
+    managerRevenueComponent: number
+    lenderComponent: number
+}
+
+export interface LoanTemplate {
+    minAmount: BigNumber
+    minDuration: BigNumber
+    maxDuration: BigNumber
+    gracePeriod: BigNumber
+    apr: number
 }
 
 export enum LoanApplicationStatus {
@@ -202,32 +193,37 @@ export interface LoanDeskContract
         ContractTransaction,
         [applicationId: BigNumberish]
     >
-    approveLoan: ContractFunction<
-        ContractTransaction,
-        [applicationId: BigNumberish]
-    >
     denyLoan: ContractFunction<
         ContractTransaction,
         [applicationId: BigNumberish]
     >
-    canDefault: ContractFunction<
-        boolean,
-        [loanId: BigNumberish, account: string]
+    borrow: ContractFunction<ContractTransaction, [applicationId: BigNumberish]>
+    repay: ContractFunction<
+        ContractTransaction,
+        [loanId: BigNumber, amount: BigNumber]
     >
+    repayOnBehalf: ContractFunction<
+        ContractTransaction,
+        [loanId: BigNumber, amount: BigNumber, borrwer: string]
+        >
+    defaultLoan: ContractFunction<ContractTransaction, [loanId: BigNumberish]>
+    closeLoan: ContractFunction<
+        ContractTransaction,
+        [loanId: BigNumberish]
+        >
+    canDefault: ContractFunction<boolean, [loanId: BigNumberish]>
+    hasOpenApplication: ContractFunction<boolean, [account: string]>
 
-    loanApplications: ContractFunction<
-        LoanRequest,
-        [applicationId: BigNumberish]
-    >
+    loanTemplate: ContractFunction<LoanTemplate>
+
+    applicationsCount: ContractFunction<BigNumber>
+    loansCount: ContractFunction<BigNumber>
+    outstandingLoansCount: ContractFunction<BigNumber>
+
+    loanApplications: ContractFunction<LoanRequest,[applicationId: BigNumberish]>
     loanOffers: ContractFunction<LoanOffer, [applicationId: BigNumberish]>
-    borrowerStats: ContractFunction<
-        { hasOpenApplication: boolean },
-        [account: string]
-    >
-    templateLoanAPR: ContractFunction<number>
-    maxLoanDuration: ContractFunction<BigNumber>
-    minLoanAmount: ContractFunction<BigNumber>
-    minLoanDuration: ContractFunction<BigNumber>
+    loans: ContractFunction<EVMLoan, [loanId: BigNumberish]>
+    loanDetails: ContractFunction<EVMLoanDetails, [loanId: BigNumberish]>
 
     filters: {
         /**
@@ -277,6 +273,36 @@ export interface LoanDeskContract
         //     [loanId: BigNumber, borrower: string],
         //     ['loanId', 'borrower']
         // >
+
+        /**
+         * ```solidity
+         * event LoanRepaid(uint256 loanId, address borrower)
+         * ```
+         */
+        LoanFullyRepaid: EventFilterFactory<
+            [loanId: BigNumber, borrower: string],
+            ['loanId', 'borrower']
+        >
+
+        /**
+         * ```solidity
+         * event LoanDefaulted(uint256 loanId, address borrower, uint256 amountLost)
+         * ```
+         */
+        LoanDefaulted: EventFilterFactory<
+            [loanId: BigNumber, borrower: string, managerLoss: BigNumber, lenderLoss: BigNumber],
+            ['loanId', 'borrower', 'managerLoss', 'lenderLoss']
+        >
+
+        /**
+         * ```solidity
+         * event LoanBorrowed(uint256 loanId, address borrower)
+         * ```
+         */
+        LoanBorrowed: EventFilterFactory<
+            [loanId: BigNumber, borrower: string, applicationId: BigNumber],
+            ['loanId', 'borrower', 'applicationId']
+        >
     }
 
     on<
@@ -326,10 +352,9 @@ export interface EVMLoan {
 export interface EVMLoanDetails {
     loanId: BigNumber
     totalAmountRepaid: BigNumber
-    baseAmountRepaid: BigNumber
+    principalAmountRepaid: BigNumber
     interestPaid: BigNumber
     interestPaidTillTime: BigNumber
-    lastPaymentTime: BigNumber
 }
 
 export enum LoanStatus {
@@ -370,6 +395,6 @@ export function getBatchProviderAndLoanDeskContract(
     const provider = new CustomBatchProvider(count)
     return {
         provider,
-        contract: loanDeskContract.connect(provider),
+        loanDeskContract: loanDeskContract.connect(provider),
     }
 }

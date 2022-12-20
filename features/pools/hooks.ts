@@ -20,9 +20,12 @@ import {
 import {
     contract,
     CoreContract,
-    getBatchProviderAndContract,
+    loanDeskContract,
+    LoanDeskContract,
+    getBatchProviderAndLoanDeskContract,
     EVMLoan,
-    EVMLoanDetails,
+    EVMLoanDetails, 
+    TokenConfig,
 } from './contracts'
 import {
     updateLoans,
@@ -104,7 +107,6 @@ export function useStats(poolAddress: string, liquidityTokenDecimals: number) {
     const balanceStaked = BigNumber.from(stats.balanceStaked)
 
     return {
-        loans: stats.loans,
         lossBuffer: poolFunds.eq(zero)
             ? 0
             : balanceStaked.mul(oneMillion).div(poolFunds).toNumber() /
@@ -200,8 +202,7 @@ async function fetchAndSetPoolInfo([
     pool,
     managerAddress,
     loanDeskAddress,
-    poolTokenAddress,
-    liquidityTokenAddress,
+    tokenConfig
 ]: [
     {
         name: string
@@ -210,11 +211,10 @@ async function fetchAndSetPoolInfo([
     },
     Address,
     Address,
-    Address,
-    Address,
+    TokenConfig
 ]) {
-    const poolTokenContract = getERC20Contract(poolTokenAddress)
-    const liquidityTokenContract = getERC20Contract(liquidityTokenAddress)
+    const poolTokenContract = getERC20Contract(tokenConfig.poolToken)
+    const liquidityTokenContract = getERC20Contract(tokenConfig.liquidityToken)
     const [poolTokenDecimals, liquidityTokenDecimals] = await Promise.all([
         poolTokenContract.decimals(),
         liquidityTokenContract.decimals(),
@@ -226,9 +226,9 @@ async function fetchAndSetPoolInfo([
         address: pool.address,
         managerAddress,
         loanDeskAddress,
-        poolTokenAddress,
+        poolTokenAddress: tokenConfig.poolToken,
         poolTokenDecimals,
-        liquidityTokenAddress,
+        liquidityTokenAddress: tokenConfig.liquidityToken,
         liquidityTokenDecimals,
     })
 }
@@ -245,10 +245,9 @@ export function useFetchPoolsPropertiesOnce() {
 
             Promise.all([
                 pool,
-                attachedContract.manager(),
+                pool.manager,
                 attachedContract.loanDesk(),
-                attachedContract.poolToken(),
-                attachedContract.liquidityToken(),
+                attachedContract.tokenConfig(),
             ])
                 .then(fetchAndSetPoolInfo)
                 .then(dispatch)
@@ -271,7 +270,9 @@ export function useLoadAccountLoans(
         if (map[key]) return
         map[key] = true
 
-        const attached = contract.attach(poolAddress)
+        const loanDeskAddress = `${pool.loanDeskAddress}`
+
+        const attached = loanDeskContract.attach(pool.loanDeskAddress)
         Promise.all(
             Array.from({ length: 20 }).map((_, i) => attached.loans(i + 1)),
         )
@@ -298,14 +299,14 @@ export function useLoadAccountLoans(
             attached.filters.LoanBorrowed(null, account),
             handleLoanEvent,
         )
-        attached.on(attached.filters.LoanRepaid(null, account), handleLoanEvent)
+        attached.on(attached.filters.LoanFullyRepaid(null, account), handleLoanEvent)
         attached.on(
             attached.filters.LoanDefaulted(null, account),
             handleLoanEvent,
         )
 
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            dispatch(fetchLoan({ poolAddress, loanId }))
+            dispatch(fetchLoan({ poolAddress, loanDeskAddress, loanId }))
         }
     }, [account, pool, dispatch, poolAddress])
 }
@@ -313,6 +314,7 @@ export function useLoadAccountLoans(
 const loaded: Record<string, boolean> = {}
 export function useLoadManagerState(
     poolAddress: string,
+    loanDeskAddress: string,
     dispatch: AppDispatch,
     pool: Pool | undefined,
 ) {
@@ -320,7 +322,7 @@ export function useLoadManagerState(
         if (typeof window !== 'object' || loaded[poolAddress] || !pool) return
         loaded[poolAddress] = true
 
-        const attached = contract.attach(poolAddress)
+        const attached = loanDeskContract.attach(loanDeskAddress)
         attached.loansCount().then(async (count) => {
             const length = count.toNumber()
 
@@ -342,26 +344,26 @@ export function useLoadManagerState(
         // attached.on(attached.filters.LoanApproved(), handleLoanEvent)
         // attached.on(attached.filters.LoanDenied(), handleLoanEvent)
         // attached.on(attached.filters.LoanCancelled(), handleLoanEvent)
-        attached.on(attached.filters.LoanRepaid(), handleLoanEvent)
+        attached.on(attached.filters.LoanFullyRepaid(), handleLoanEvent)
         attached.on(attached.filters.LoanDefaulted(), handleLoanEvent)
         function handleLoanEvent<_T>(loanId: BigNumber) {
-            dispatch(fetchLoan({ poolAddress, loanId }))
+            dispatch(fetchLoan({ poolAddress, loanDeskAddress, loanId }))
         }
     }, [poolAddress, dispatch, pool])
 }
 
 export function fetchLoans(
-    attachedContract: CoreContract,
+    attachedContract: LoanDeskContract,
     ids: (number | BigNumber)[],
 ): Promise<[EVMLoan[], EVMLoanDetails[], number]> {
-    const { provider, contract } = getBatchProviderAndContract(
+    const { provider, loanDeskContract } = getBatchProviderAndLoanDeskContract(
         ids.length * 2 + 1,
         attachedContract,
     )
 
     return Promise.all([
-        Promise.all(ids.map((id) => contract.loans(id))),
-        Promise.all(ids.map((id) => contract.loanDetails(id))),
+        Promise.all(ids.map((id) => loanDeskContract.loans(id))),
+        Promise.all(ids.map((id) => loanDeskContract.loanDetails(id))),
         provider.getCurrentBlockNumber(),
     ])
 }
@@ -437,7 +439,7 @@ export function useLoans(address: string, account?: string): StateLoan[] {
 // #endregion
 
 export function useCanDefaultLoan(
-    poolAddress: string,
+    loanDeskAddress: string,
     loanId: number,
     account: string | undefined,
 ) {
@@ -446,9 +448,9 @@ export function useCanDefaultLoan(
         if (!account) return
         let canceled = false
 
-        contract
-            .attach(poolAddress)
-            .canDefault(loanId, account)
+        loanDeskContract
+            .attach(loanDeskAddress)
+            .canDefault(loanId)
             .then((canDefault) => {
                 if (!canDefault || canceled) return
 
@@ -458,7 +460,7 @@ export function useCanDefaultLoan(
         return () => {
             canceled = true
         }
-    }, [account, loanId, poolAddress])
+    }, [account, loanId, loanDeskAddress])
 
     return `${loanId}_${account}` === canDefaultId
 }

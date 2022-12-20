@@ -100,38 +100,47 @@ export const fetchStats = createAsyncThunk(
     'pools/fetchStats',
     async (poolAddress: string) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            8,
+            7,
             contract.attach(poolAddress),
+        )
+        
+        const [
+            loanDeskAddress,
+            balanceStaked,
+            amountDepositable,
+            apyBreakdown,
+            poolBalances,
+            poolConfig,
+            blockNumber,
+        ] = await Promise.all([
+            connected.loanDesk(),
+            connected.balanceStaked(),
+            connected.amountDepositable(),
+            connected.currentAPY(),
+            connected.balances(),
+            connected.config(),
+            provider.getCurrentBlockNumber(),
+        ])
+
+        const { provider: loanDeskProvider, loanDeskContract: connectedLoanDesk } = getBatchProviderAndLoanDeskContract(
+            1,
+            loanDeskContract.attach(loanDeskAddress),
         )
 
         const [
             loansCount,
-            balanceStaked,
-            amountDepositable,
-            poolFunds,
-            poolLiquidity,
-            apy,
-            exitFeePercent,
-            blockNumber,
         ] = await Promise.all([
-            connected.loansCount(),
-            connected.balanceStaked(),
-            connected.amountDepositable(),
-            connected.poolFunds(),
-            connected.poolLiquidity(),
-            connected.currentLenderAPY(),
-            connected.exitFeePercent(),
-            provider.getCurrentBlockNumber(),
+            connectedLoanDesk.loansCount(),
         ])
 
         const stats: Stats = {
             loans: loansCount.toNumber(),
             balanceStaked: balanceStaked.toHexString() as Hexadecimal,
             amountDepositable: amountDepositable.toHexString() as Hexadecimal,
-            poolFunds: poolFunds.toHexString() as Hexadecimal,
-            poolLiquidity: poolLiquidity.toHexString() as Hexadecimal,
-            apy: convertPercent(apy),
-            exitFeePercent: convertPercent(exitFeePercent.toNumber()),
+            poolFunds: poolBalances.poolFunds.toHexString() as Hexadecimal,
+            poolLiquidity: poolBalances.rawLiquidity.toHexString() as Hexadecimal,
+            apy: convertPercent(apyBreakdown.lenderComponent),
+            exitFeePercent: convertPercent(poolConfig.exitFeePercent),
             blockNumber,
         }
 
@@ -248,31 +257,25 @@ export const fetchBorrowInfo = createAsyncThunk(
         poolAddress: string
         loanDeskAddress: string
     }) => {
-        const { provider, contract: connected } =
+        const { provider, loanDeskContract: connected } =
             getBatchProviderAndLoanDeskContract(
-                5,
+                2,
                 loanDeskContract.attach(loanDeskAddress),
             )
 
         const [
-            minLoanAmount,
-            minLoanDuration,
-            maxLoanDuration,
-            apr,
+            loanTemplate,
             blockNumber,
         ] = await Promise.all([
-            connected.minLoanAmount(),
-            connected.minLoanDuration(),
-            connected.maxLoanDuration(),
-            connected.templateLoanAPR(),
+            connected.loanTemplate(),
             provider.getCurrentBlockNumber(),
         ])
 
         const info: BorrowInfo = {
-            minLoanAmount: minLoanAmount.toHexString() as Hexadecimal,
-            minLoanDuration: minLoanDuration.toNumber(),
-            maxLoanDuration: maxLoanDuration.toNumber(),
-            apr: convertPercent(apr),
+            minLoanAmount: loanTemplate.minAmount.toHexString() as Hexadecimal,
+            minLoanDuration: loanTemplate.minDuration.toNumber(),
+            maxLoanDuration: loanTemplate.maxDuration.toNumber(),
+            apr: convertPercent(loanTemplate.apr),
             blockNumber,
         }
 
@@ -317,14 +320,16 @@ export const fetchLoan = createAsyncThunk(
     'pools/fetchLoan',
     ({
         loanId,
+        loanDeskAddress,
         poolAddress,
     }: {
         poolAddress: string
+        loanDeskAddress: string
         loanId: BigNumberish
     }) => {
-        const { provider, contract: connected } = getBatchProviderAndContract(
+        const { provider, loanDeskContract: connected } = getBatchProviderAndLoanDeskContract(
             3,
-            contract.attach(poolAddress),
+            loanDeskContract.attach(loanDeskAddress),
         )
 
         return Promise.all([
@@ -622,7 +627,7 @@ export function transformToStateLoanDetails(
     details: EVMLoanDetails,
 ): LoanDetails {
     return {
-        baseAmountRepaid: details.baseAmountRepaid.toString() as Hexadecimal,
+        baseAmountRepaid: details.principalAmountRepaid.toString() as Hexadecimal,
         interestPaid: details.interestPaid.toString() as Hexadecimal,
         totalAmountRepaid: details.totalAmountRepaid.toString() as Hexadecimal,
         interestPaidUntil: details.interestPaidTillTime.toNumber(),

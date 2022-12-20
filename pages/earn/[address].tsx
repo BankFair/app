@@ -439,7 +439,7 @@ function YourMoney({
 }
 
 function Earnings({
-    pool: { liquidityTokenDecimals },
+    pool: { managerAddress, liquidityTokenDecimals },
     poolAddress,
 }: {
     pool: Pool
@@ -455,14 +455,14 @@ function Earnings({
     const dispatch = useDispatch()
 
     useEffect(() => {
-        if (!account) return
+        if (!account || managerAddress !== account) return
         contract
             .attach(poolAddress)
-            .revenueBalanceOf(account)
-            .then((earnings) => {
-                if (!earnings.gt(BigNumber.from(0))) return
+            .balances()
+            .then((balances) => {
+                if (!balances.managerRevenue.gt(BigNumber.from(0))) return
                 setEarnings({
-                    amount: earnings,
+                    amount: balances.managerRevenue,
                     account,
                 })
             })
@@ -480,10 +480,24 @@ function Earnings({
                   event.preventDefault()
 
                   setIsLoading(true)
+
+                  //TODO remake revenue withdrawal UI with customizable amount
+                  let withdrawAmount = BigNumber.from(0);
+                  contract
+                        .attach(poolAddress)
+                        .balances()
+                        .then((balances) => {
+                            withdrawAmount = balances.managerRevenue;
+                        })
+                        .catch((error) => {
+                            setIsLoading(false)
+                            console.error(error)
+                        })
+
                   contract
                       .attach(poolAddress)
                       .connect(provider.getSigner())
-                      .withdrawRevenue()
+                      .collectManagerRevenue(withdrawAmount)
                       .then((tx) =>
                           trackTransaction(dispatch, {
                               name: 'Withdraw earnings',
