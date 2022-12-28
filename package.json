@@ -56,6 +56,7 @@
     },
     "resolutions": {
         "@web3-react/eip1193@8.0.18-beta.0": "patch:@web3-react/eip1193@npm:8.0.18-beta.0#.yarn/patches/@web3-react-eip1193-npm-8.0.18-beta.0-6d3120cc18.patch",
-        "@web3-react/store@^8.0.17-beta.0": "patch:@web3-react/store@npm:8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch"
+        "@web3-react/store@^8.0.17-beta.0": "patch:@web3-react/store@npm:8.0.17-beta.0#.yarn/patches/@web3-react-store-npm-8.0.17-beta.0-b94311f642.patch",
+        "decode-uri-component": "0.2.1"
     }
 }
