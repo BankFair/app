@@ -360,6 +360,7 @@ export function LoanView({
             `}</style>
 
             <h4 className="amount">
+                {loan.id}{'. '}
                 {borrowerInfoState ? borrowerInfoState.name : <></>}
                 {hasDebt
                     ? ` ${formatToken(debt, liquidityTokenDecimals, 2, true)}`
