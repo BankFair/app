@@ -60,9 +60,9 @@ export function Button({
                     justify-content: center;
                     background-color: var(--old-gradient);
 
-                    &:not(.disabled):hover {
-                        background-color: var(--old-gradient-hover);
-                    }
+                    // &:not(.disabled):hover {
+                    //     background-color: var(--old-gradient-hover);
+                    // }
 
                     &.disabled {
                         filter: grayscale(100%);
