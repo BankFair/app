@@ -164,7 +164,7 @@ export interface LoanDeskContract
             profileDigest: string,
         ]
     >
-    offerLoan: ContractFunction<
+    draftOffer: ContractFunction<
         ContractTransaction,
         [
             applicationId: BigNumberish,
@@ -176,7 +176,7 @@ export interface LoanDeskContract
             apr: number,
         ]
     >
-    updateOffer: ContractFunction<
+    updateDraftOffer: ContractFunction<
         ContractTransaction,
         [
             applicationId: BigNumberish,
