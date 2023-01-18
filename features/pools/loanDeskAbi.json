@@ -189,27 +189,9 @@
         "internalType": "uint256",
         "name": "applicationId",
         "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "borrower",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "prevAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newAmount",
-        "type": "uint256"
       }
     ],
-    "name": "LoanOfferUpdated",
+    "name": "LoanOfferDraftLocked",
     "type": "event"
   },
   {
@@ -234,7 +216,20 @@
         "type": "uint256"
       }
     ],
-    "name": "LoanOffered",
+    "name": "LoanOfferDrafted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "applicationId",
+        "type": "uint256"
+      }
+    ],
+    "name": "LoanOfferMade",
     "type": "event"
   },
   {
@@ -379,6 +374,37 @@
       }
     ],
     "name": "MinLoanDurationSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "applicationId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "prevAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "OfferDraftUpdated",
     "type": "event"
   },
   {
@@ -598,6 +624,49 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "appId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_duration",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_gracePeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_installmentAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_installments",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_apr",
+        "type": "uint16"
+      }
+    ],
+    "name": "draftOffer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -632,6 +701,11 @@
         "type": "bytes32"
       },
       {
+        "internalType": "bytes32",
+        "name": "_lenderGovernanceRole",
+        "type": "bytes32"
+      },
+      {
         "internalType": "uint8",
         "name": "_decimals",
         "type": "uint8"
@@ -640,6 +714,19 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lenderGovernanceRole",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1076,36 +1163,19 @@
         "internalType": "uint256",
         "name": "appId",
         "type": "uint256"
-      },
+      }
+    ],
+    "name": "lockDraftOffer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "uint256",
-        "name": "_amount",
+        "name": "appId",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_duration",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_gracePeriod",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_installmentAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_installments",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_apr",
-        "type": "uint16"
       }
     ],
     "name": "offerLoan",
@@ -1390,7 +1460,7 @@
         "type": "uint16"
       }
     ],
-    "name": "updateOffer",
+    "name": "updateDraftOffer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

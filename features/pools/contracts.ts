@@ -77,15 +77,14 @@ export interface TokenConfig {
 }
 
 export interface PoolConfig {
-    weightedAvgStrategyAPR: BigNumber
-    exitFeePercent: number
-    maxProtocolFeePercent: number
     minWithdrawalRequestAmount: BigNumber
     targetStakePercent: number
     protocolFeePercent: number
     managerEarnFactorMax: number
     managerEarnFactor: number
     targetLiquidityPercent: number
+    weightedAvgStrategyAPR: BigNumber
+    exitFeePercent: number
 }
 
 export interface PoolBalance {

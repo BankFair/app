@@ -103,7 +103,7 @@ export const fetchStats = createAsyncThunk(
             7,
             contract.attach(poolAddress),
         )
-        
+        console.log("000")
         const [
             loanDeskAddress,
             balanceStaked,
@@ -121,6 +121,8 @@ export const fetchStats = createAsyncThunk(
             connected.config(),
             provider.getCurrentBlockNumber(),
         ])
+
+        console.log("111")
 
         const { provider: loanDeskProvider, loanDeskContract: connectedLoanDesk } = getBatchProviderAndLoanDeskContract(
             1,
