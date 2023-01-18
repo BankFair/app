@@ -616,7 +616,7 @@ function mapLoanRequest(
         <Fragment key={loan.id}>
             <div className="name">
                 <span onClick={() => setOfferModalRequest(loan)}>
-                    {loan.name}
+                    {loan.id}{'. '}{loan.name}
                 </span>
             </div>
             <div className="description">
@@ -1323,7 +1323,7 @@ function OfferModal({
                         loading={isOfferLoading}
                         type="submit"
                     >
-                        {isOfferActive ? 'Update Offer' : 'Offer Loan'}
+                        {isOfferActive ? 'Update Draft Offer' : 'Draft Offer'}
                     </Button>
                     <Button
                         disabled={isOfferLoading || isRejectLoading}
@@ -1332,7 +1332,7 @@ function OfferModal({
                         type="button"
                         stone
                     >
-                        {isOfferActive ? 'Cancel Offer' : 'Reject Application'}
+                        {isOfferActive ? 'Cancel' : 'Reject Application'}
                     </Button>
                 </div>
 
