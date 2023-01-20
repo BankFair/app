@@ -171,12 +171,20 @@ type LoanRequest =
           status: LoanApplicationStatus.DENIED
       })
     | (BaseLoanRequest &
+        OfferValues & {
+            status: LoanApplicationStatus.OFFER_DRAFTED
+        })
+    | (BaseLoanRequest &
+        OfferValues & {
+            status: LoanApplicationStatus.OFFER_DRAFT_LOCKED
+        })
+    | (BaseLoanRequest &
           OfferValues & {
               status: LoanApplicationStatus.OFFER_MADE
           })
     | (BaseLoanRequest &
           OfferValues & {
-              status: LoanApplicationStatus.OFFER_CANCELLED
+              status: LoanApplicationStatus.CANCELLED
           })
     | (BaseLoanRequest &
           OfferValues & {
@@ -219,10 +227,10 @@ function LoansAwaitingApproval({
                     requests
                         .filter(
                             (request) =>
-                                request.status ===
-                                    LoanApplicationStatus.APPLIED ||
-                                request.status ===
-                                    LoanApplicationStatus.OFFER_MADE,
+                                request.status === LoanApplicationStatus.APPLIED ||
+                                request.status === LoanApplicationStatus.OFFER_DRAFTED ||
+                                request.status === LoanApplicationStatus.OFFER_DRAFT_LOCKED ||
+                                request.status === LoanApplicationStatus.OFFER_MADE,
                         )
                         .map((request) =>
                             Promise.all([
@@ -253,8 +261,8 @@ function LoansAwaitingApproval({
                                                 ),
                                             ),
                                 ),
-                                request.status ===
-                                LoanApplicationStatus.OFFER_MADE
+                                request.status !==
+                                LoanApplicationStatus.APPLIED
                                     ? directQueryContract
                                           .loanOffers(request.id)
                                           .then((offer) => ({
@@ -320,7 +328,7 @@ function LoansAwaitingApproval({
     return (
         <>
             <Box>
-                <h2>Loans awaiting approval</h2>
+                <h2>Loan requests</h2>
                 <div className={requests === null ? undefined : 'grid'}>
                     {requests ? (
                         requests.length ? (
@@ -335,6 +343,65 @@ function LoansAwaitingApproval({
                             )
                         ) : (
                             'No loans awaiting approval'
+                        )
+                    ) : (
+                        <div className="loading">
+                            <Oval
+                                speed={0.7}
+                                stroke={rgbGreen}
+                                width={32}
+                                height={32}
+                            />
+                        </div>
+                    )}
+                </div>
+            </Box>
+
+            <Box>
+                <h2>Draft offers</h2>
+                <div className={requests === null ? undefined : 'grid'}>
+                    {requests ? (
+                        requests.length ? (
+                            mapLoanRequest(
+                                requests.filter(
+                                    (request) =>
+                                        request.status === LoanApplicationStatus.OFFER_DRAFTED,
+                                ),
+                                setOfferModalRequest,
+                                liquidityTokenDecimals,
+                            )
+                        ) : (
+                            'No active offers'
+                        )
+                    ) : (
+                        <div className="loading">
+                            <Oval
+                                speed={0.7}
+                                stroke={rgbGreen}
+                                width={32}
+                                height={32}
+                            />
+                        </div>
+                    )}
+                </div>
+            </Box>
+
+            <Box>
+                <h2>Votable offers</h2>
+                <div className={requests === null ? undefined : 'grid'}>
+                    {requests ? (
+                        requests.length ? (
+                            mapLoanRequest(
+                                requests.filter(
+                                    (request) =>
+                                        request.status ===
+                                        LoanApplicationStatus.OFFER_DRAFT_LOCKED,
+                                ),
+                                setOfferModalRequest,
+                                liquidityTokenDecimals,
+                            )
+                        ) : (
+                            'No active offers'
                         )
                     ) : (
                         <div className="loading">
@@ -398,9 +465,7 @@ function LoansAwaitingApproval({
                             .attach(loanDeskAddress)
                             .connect(provider!.getSigner())
 
-                        const isOfferActive =
-                            offerModalRequest.status ===
-                            LoanApplicationStatus.OFFER_MADE
+                        const isApplicationActive = offerModalRequest.status === LoanApplicationStatus.APPLIED
 
                         const signer = provider!.getSigner()
 
@@ -441,9 +506,9 @@ function LoansAwaitingApproval({
                                         }
                                     }
                                 ).then(() => (
-                                    isOfferActive
+                                    isApplicationActive
                                         ? contract
-                                            .updateOffer(
+                                            .draftOffer(
                                                 offerModalRequest.id,
                                                 amount,
                                                 duration,
@@ -457,7 +522,7 @@ function LoansAwaitingApproval({
                                                 name: 'Update offer',
                                             }))
                                         : contract
-                                            .offerLoan(
+                                            .updateDraftOffer(
                                                 offerModalRequest.id,
                                                 amount,
                                                 duration,
@@ -468,7 +533,7 @@ function LoansAwaitingApproval({
                                             )
                                             .then((tx) => ({
                                                 tx,
-                                                name: `Offer a loan for ${formatToken(
+                                                name: `Draft a loan offer for ${formatToken(
                                                     amount,
                                                     liquidityTokenDecimals,
                                                 )} ${TOKEN_SYMBOL}`,
@@ -484,7 +549,7 @@ function LoansAwaitingApproval({
                                         loan === offerModalRequest
                                             ? {
                                                   ...loan,
-                                                  status: LoanApplicationStatus.OFFER_MADE,
+                                                  status: LoanApplicationStatus.OFFER_DRAFTED,
                                                   amount,
                                                   duration,
                                                   graceDefaultPeriod,
@@ -507,8 +572,9 @@ function LoansAwaitingApproval({
                             .connect(provider!.getSigner())
 
                         const isOfferActive =
-                            offerModalRequest.status ===
-                            LoanApplicationStatus.OFFER_MADE
+                            offerModalRequest.status === LoanApplicationStatus.OFFER_DRAFTED ||
+                            offerModalRequest.status === LoanApplicationStatus.OFFER_DRAFT_LOCKED ||
+                            offerModalRequest.status === LoanApplicationStatus.OFFER_MADE;
 
                         return (
                             isOfferActive
@@ -518,7 +584,7 @@ function LoansAwaitingApproval({
                                           tx,
                                           name: 'Cancel loan',
                                           newStatus:
-                                              LoanApplicationStatus.OFFER_CANCELLED,
+                                              LoanApplicationStatus.CANCELLED,
                                       }))
                                 : contract
                                       .denyLoan(offerModalRequest.id)
@@ -543,6 +609,45 @@ function LoansAwaitingApproval({
                                                   ...loan,
                                                   status: newStatus as any,
                                               }
+                                            : loan,
+                                    ),
+                                )
+                            })
+                            .catch((error) => {
+                                console.error(error)
+                                throw error
+                            })
+                    }}
+                    onLock={() => {
+                        const contract = loanDeskContract
+                            .attach(loanDeskAddress)
+                            .connect(provider!.getSigner())
+
+                        return (
+                            contract
+                                    .lockDraftOffer(offerModalRequest.id)
+                                    .then((tx) => ({
+                                        tx,
+                                        name: 'Lock draft offer',
+                                        newStatus:
+                                        LoanApplicationStatus.OFFER_DRAFT_LOCKED,
+                                    }))
+
+                        )
+                            .then(({ tx, name, newStatus }) =>
+                                trackTransaction(dispatch, { name, tx }).then(
+                                    () => newStatus,
+                                ),
+                            )
+                            .then((newStatus) => {
+                                setOfferModalRequest(null)
+                                setRequests(
+                                    requests!.map((loan) =>
+                                        loan === offerModalRequest
+                                            ? {
+                                                ...loan,
+                                                status: newStatus as any,
+                                            }
                                             : loan,
                                     ),
                                 )
@@ -652,6 +757,7 @@ function OfferModal({
     onClose,
     onOffer,
     onReject,
+    onLock,
     onFetchBorrowerInfo,
 }: {
     loan: LoanRequest
@@ -669,11 +775,20 @@ function OfferModal({
         localDetail: LocalDetail,
     ): Promise<void | object>
     onReject(): Promise<void>
+    onLock(): Promise<void>
     onFetchBorrowerInfo(): void
 }) {
     const [poolLiquidity] = usePoolLiquidity(poolAddress)
 
-    const isOfferActive = loan.status === LoanApplicationStatus.OFFER_MADE
+    const isOfferDrafted = loan.status === LoanApplicationStatus.OFFER_DRAFTED
+    const isOfferDraftLocked = loan.status === LoanApplicationStatus.OFFER_DRAFT_LOCKED
+    const isOfferMade = loan.status === LoanApplicationStatus.OFFER_MADE
+    const isOfferActive =
+        loan.status === LoanApplicationStatus.OFFER_DRAFTED ||
+        loan.status === LoanApplicationStatus.OFFER_DRAFT_LOCKED ||
+        loan.status === LoanApplicationStatus.OFFER_MADE
+
+    const isEditable = !isOfferDraftLocked && !isOfferMade
 
     const {
         initialAmount,
@@ -803,6 +918,7 @@ function OfferModal({
 
     const [isOfferLoading, setIsOfferLoading] = useState(false)
     const [isRejectLoading, setIsRejectLoading] = useState(false)
+    const [isLockLoading, setIsLockLoading] = useState(false)
 
     const [interestOnly, setInterestOnly] = useState(false)
     const [amortized, setAmortized] = useState(!isOfferActive)
@@ -955,6 +1071,13 @@ function OfferModal({
         })
     }, [onReject])
 
+    const handleLock = useCallback(() => {
+        setIsLockLoading(true)
+        onLock().catch(() => {
+            setIsLockLoading(false)
+        })
+    }, [onLock])
+
     const amountInvalidMessage = useMemo(
         () => {
 
@@ -1071,7 +1194,7 @@ function OfferModal({
     return (
         <Modal onClose={onClose}>
             <form onSubmit={handleSubmit}>
-                <h3>{isOfferActive ? 'Update Offer' : 'Offer a Loan'}</h3>
+                <h3>{isOfferDrafted ? 'Update Offer' : 'Offer a Loan'}</h3>
 
                 <div className="field">
                     <div className="label">Account</div>
@@ -1309,24 +1432,47 @@ function OfferModal({
                 </div>
 
                 <div className="buttons">
-                    <Button
-                        disabled={Boolean(
-                            isOfferLoading ||
+                    { !isEditable ? null :
+                        <Button
+                            disabled={Boolean(
+                                isOfferLoading ||
+                                    isRejectLoading ||
+                                    isLockLoading ||
+                                    amountInvalidMessage ||
+                                    durationInvalidMessage ||
+                                    installmentsInvalidMessage ||
+                                    isInterestInvalid ||
+                                    isInstallmentAmountInvalid ||
+                                    graceDefaultPeriodInvalidMessage,
+                            )}
+                            loading={isOfferLoading}
+                            type="submit"
+                        >
+                            {isOfferDrafted ? 'Update Draft Offer' : 'Draft Offer'}
+                        </Button>
+                    }
+                    { !isOfferDrafted ? null :
+                        <Button
+                            disabled={Boolean(
+                                isOfferLoading ||
                                 isRejectLoading ||
+                                isLockLoading ||
                                 amountInvalidMessage ||
                                 durationInvalidMessage ||
                                 installmentsInvalidMessage ||
                                 isInterestInvalid ||
                                 isInstallmentAmountInvalid ||
                                 graceDefaultPeriodInvalidMessage,
-                        )}
-                        loading={isOfferLoading}
-                        type="submit"
-                    >
-                        {isOfferActive ? 'Update Draft Offer' : 'Draft Offer'}
-                    </Button>
+                            )}
+                            loading={isLockLoading}
+                            onClick={handleLock}
+                            type="button"
+                        >
+                            {'Lock for Voting'}
+                        </Button>
+                    }
                     <Button
-                        disabled={isOfferLoading || isRejectLoading}
+                        disabled={isOfferLoading || isRejectLoading || isLockLoading}
                         loading={isRejectLoading}
                         onClick={handleReject}
                         type="button"

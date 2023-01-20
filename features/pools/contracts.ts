@@ -118,9 +118,11 @@ export enum LoanApplicationStatus {
     NULL,
     APPLIED,
     DENIED,
+    OFFER_DRAFTED,
+    OFFER_DRAFT_LOCKED,
     OFFER_MADE,
     OFFER_ACCEPTED,
-    OFFER_CANCELLED,
+    CANCELLED,
 }
 
 export interface LoanRequest {
@@ -187,6 +189,10 @@ export interface LoanDeskContract
             installments: number,
             apr: number,
         ]
+    >
+    lockDraftOffer: ContractFunction<
+        ContractTransaction,
+        [applicationId: BigNumberish]
     >
     cancelLoan: ContractFunction<
         ContractTransaction,
