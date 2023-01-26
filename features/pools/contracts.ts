@@ -47,7 +47,7 @@ export interface CoreContract
     currentAPY: ContractFunction<APYBreakdown>
 
     collectProtocolRevenue: ContractFunction<ContractTransaction, [amount: BigNumber]>
-    collectManagerRevenue: ContractFunction<ContractTransaction, [amount: BigNumber]>
+    collectStakerEarnings: ContractFunction<ContractTransaction, [amount: BigNumber]>
 
     filters: {
         
@@ -80,8 +80,8 @@ export interface PoolConfig {
     minWithdrawalRequestAmount: BigNumber
     targetStakePercent: number
     protocolFeePercent: number
-    managerEarnFactorMax: number
-    managerEarnFactor: number
+    stakerEarnFactorMax: number
+    stakerEarnFactor: number
     targetLiquidityPercent: number
     weightedAvgStrategyAPR: BigNumber
     exitFeePercent: number
@@ -95,14 +95,14 @@ export interface PoolBalance {
     strategizedFunds: BigNumber
     withdrawalRequestedShares: BigNumber
     stakedShares: BigNumber
-    managerRevenue: BigNumber
+    stakerEarnings: BigNumber
     protocolRevenue: BigNumber
 }
 
 export interface APYBreakdown {
     totalPoolAPY: number
     protocolRevenueComponent: number
-    managerRevenueComponent: number
+    stakerEarningsComponent: number
     lenderComponent: number
 }
 
@@ -146,6 +146,7 @@ export interface LoanOffer {
     installmentAmount: BigNumber
     installments: number
     apr: number
+    lockedTime: BigNumber
     offeredTime: BigNumber
 }
 
@@ -194,6 +195,12 @@ export interface LoanDeskContract
         ContractTransaction,
         [applicationId: BigNumberish]
     >
+
+    offerLoan: ContractFunction<
+        ContractTransaction,
+        [applicationId: BigNumberish]
+    >
+
     cancelLoan: ContractFunction<
         ContractTransaction,
         [applicationId: BigNumberish]
@@ -233,12 +240,12 @@ export interface LoanDeskContract
     filters: {
         /**
          * ```solidity
-         * event LoanRequested(uint256 applicationId, address borrower)
+         *     event LoanRequested(uint256 applicationId, address indexed borrower, uint256 amount, uint256 duration)
          * ```
          */
         LoanRequested: EventFilterFactory<
-            [applicationId: BigNumber, borrower: string],
-            ['applicationId', 'borrower']
+            [applicationId: BigNumber, borrower: string, amount: BigNumber, duration: number],
+            ['applicationId', 'borrower', 'amount', 'duration']
         >
         /**
          * ```solidity
@@ -301,12 +308,12 @@ export interface LoanDeskContract
 
         /**
          * ```solidity
-         * event LoanBorrowed(uint256 loanId, address borrower)
+         * event LoanBorrowed(uint256 loanId, uint256 applicationId, address indexed borrower, uint256 amount)
          * ```
          */
         LoanBorrowed: EventFilterFactory<
-            [loanId: BigNumber, borrower: string, applicationId: BigNumber],
-            ['loanId', 'borrower', 'applicationId']
+            [loanId: BigNumber, applicationId: BigNumber, borrower: string, amount: BigNumber],
+            ['loanId', 'applicationId', 'borrower', 'amount']
         >
     }
 

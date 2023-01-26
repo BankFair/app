@@ -124,9 +124,9 @@ export const poolsConfig =
         : [
               {
                   name: 'Test Pool 1',
-                  address: '0x9cFEc86397202702EC34F6966B05b6e8362F9F51' as Address,
+                  address: '0x59f5C1CaBb00457Ac2e4A89bAEFEFC49424dfad3' as Address,
                   manager: '0x457aBC13c93D34FEc541C78aF91f64531eEe2516' as Address,
-                  block: 31087416,
+                  block: 31374175,
               },
           ]
 

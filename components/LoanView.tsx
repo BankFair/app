@@ -14,9 +14,11 @@ import TimeAgo from 'timeago-react'
 import {
     Address,
     BORROWER_SERVICE_URL,
-    fetchBorrowerInfoAuthenticated, formatPercent,
+    formatPercent,
     formatToken,
-    getBorrowerInfo, getERC20Contract, InputAmount,
+    getBorrowerMetadata,
+    getERC20Contract,
+    InputAmount,
     LocalDetail,
     noop, oneDay,
     oneHundredMillion,
@@ -120,10 +122,10 @@ export function LoanView({
     const [profileId, setProfileId] = useState('')
     useEffect(() => {
         let canceled = false
-        getBorrowerInfo(applicationId)
+        getBorrowerMetadata(borrower)
             .then(async (info) => {
                 if (canceled) return
-                /*
+
                 if (info) {
                     setBorrowerInfoState(info)
 
@@ -139,8 +141,8 @@ export function LoanView({
 
                     return
                 }
-                */
 
+                /*
                 const application = await loanDeskContract
                     .attach(loanDeskAddress)
                     .loanApplications(applicationId)
@@ -161,6 +163,7 @@ export function LoanView({
                 setProfileId(application.profileId)
                 setBorrowerInfo(applicationId, fetchedInfo)
                 setBorrowerInfoState(fetchedInfo)
+                */
             })
             .catch((error) => {
                 console.error(error)
@@ -509,7 +512,7 @@ export function LoanView({
 
 
                 <div className="actions">
-                    {borrowerInfoState &&
+                    {/*borrowerInfoState &&
                     !borrowerInfoState.phone &&
                     !borrowerInfoState.email &&
                     profileId ? (
@@ -527,7 +530,7 @@ export function LoanView({
                             >
                             Contacts
                         </a>
-                    ) : null}
+                    ) : null */}
                     <a className={loan.status == LoanStatus.OUTSTANDING ? "" : "disabled"}
 
                        onClick={(event) => {
@@ -884,37 +887,17 @@ function RepayLoanOnBehalf({
             .attach(loanDeskAddress)
             .loanApplications(loan.applicationId)
             .then(({ profileId }) =>
-                getBorrowerInfo(loan.applicationId).then((info) =>
-                    // temporarily ignore cached entries
-                    // info
-                    //     ? { info, profileId }
-                    //     :
-                    fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`)
-                        .then(
-                            (response) =>
-                                response.json() as Promise<{
-                                    name: string
-                                    businessName: string
-                                    phone?: string
-                                    email?: string
-                                    isLocalCurrencyLoan?: boolean
-                                    localDetail: LocalDetail
-                                }>,
-                        )
-                        .then(
-                            (info) => (
-                                setBorrowerInfo(loan.applicationId, info),
-                                    { info, profileId }
-                            ),
-                        ),
+                getBorrowerMetadata(loan.borrower).then(async (info) =>
+                    {
+                        if(info) {
+                            setContactDetailsState({
+                                ...info,
+                                profileId,
+                                applicationId: loan.applicationId,
+                            })
+                        }
+                    }
                 ),
-            )
-            .then(({ info, profileId }) =>
-                setContactDetailsState({
-                    ...info,
-                    profileId,
-                    applicationId: loan.applicationId,
-                }),
             )
     }, [loan, loanDeskAddress, provider])
 

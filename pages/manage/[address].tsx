@@ -24,9 +24,8 @@ import {
     thirtyDays,
     oneDay,
     getInstallmentAmount,
-    getBorrowerInfo,
+    getBorrowerMetadata,
     setBorrowerInfo,
-    fetchBorrowerInfoAuthenticated,
     InputAmount,
     formatInputAmount,
     formatToken,
@@ -161,6 +160,7 @@ interface OfferValues {
     installmentAmount: BigNumber
     installments: number
     interest: number
+    lockedTime: number
 }
 
 type LoanRequest =
@@ -234,32 +234,14 @@ function LoansAwaitingApproval({
                         )
                         .map((request) =>
                             Promise.all([
-                                getBorrowerInfo(request.id.toNumber()).then(
-                                    (info) =>
-                                        // Hotfix - ignore cached entry
-                                        fetch(
-                                            `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                                        )
-                                            .then(
-                                                (response) =>
-                                                    response.json() as Promise<{
-                                                        name: string
-                                                        businessName: string
-                                                        phone?: string
-                                                        email?: string
-                                                        isLocalCurrencyLoan?: boolean
-                                                        localDetail: LocalDetail
-                                                    }>,
-                                            )
-                                            .then(
-                                                (info) => (
-                                                    setBorrowerInfo(
-                                                        request.id.toNumber(),
-                                                        info,
-                                                    ),
-                                                        info
-                                                ),
-                                            ),
+                                getBorrowerMetadata(request.borrower).then(
+                                    (info) => (
+                                        setBorrowerInfo(
+                                            request.id.toNumber(),
+                                            info,
+                                        ),
+                                            info
+                                    )
                                 ),
                                 request.status !==
                                 LoanApplicationStatus.APPLIED
@@ -274,6 +256,7 @@ function LoansAwaitingApproval({
                                               interest: offer.apr,
                                               amount: offer.amount,
                                               duration: offer.duration,
+                                              lockedTime: offer.lockedTime.toNumber()
                                           }))
                                     : undefined,
                             ]).then(
@@ -452,7 +435,7 @@ function LoansAwaitingApproval({
                     borrowInfo={borrowInfo!}
                     poolAddress={poolAddress}
                     onClose={() => setOfferModalRequest(null)}
-                    onOffer={(
+                    onDraftOffer={(
                         amount,
                         duration,
                         installmentAmount,
@@ -467,78 +450,50 @@ function LoansAwaitingApproval({
 
                         const isApplicationActive = offerModalRequest.status === LoanApplicationStatus.APPLIED
 
-                        const signer = provider!.getSigner()
+                        if (offerModalRequest) {
+                            getBorrowerMetadata(offerModalRequest?.borrower).then(
+                                (info) => {
+                                    if (info) {
+                                        setBorrowerInfo(offerModalRequest?.id, {...info, localDetail})
+                                    }
+                                }
+                            )
+                        }
 
                         return (
-                            authenticateUser(account, signer)
-                                .then((auth) =>
-                                    fetch(
-                                        `${BORROWER_SERVICE_URL}/profile/${offerModalRequest.profileId}?${new URLSearchParams({
-                                            ...auth,
-                                            poolAddress,
-                                        })}`,
-                                        {
-                                            method: 'PATCH',
-                                            headers: {
-                                                'Content-Type' : 'application/json',
-                                            },
-                                            body: JSON.stringify({
-                                                localDetail: localDetail,
-                                            })
-                                        }
+                            isApplicationActive
+                                ? contract
+                                    .draftOffer(
+                                        offerModalRequest.id,
+                                        amount,
+                                        duration,
+                                        graceDefaultPeriod,
+                                        installmentAmount,
+                                        installments,
+                                        interest,
                                     )
-                                )
-                                .then(
-                                    (response) => {
-                                        if (!response.ok) {
-                                            throw new Error("Error when updating loan application!")
-                                            return
-                                        }
-
-                                        if (offerModalRequest) {
-                                            getBorrowerInfo(offerModalRequest?.id).then(
-                                                (info) => {
-                                                    if (info) {
-                                                        setBorrowerInfo(offerModalRequest?.id, {...info, localDetail})
-                                                    }
-                                                }
-                                            )
-                                        }
-                                    }
-                                ).then(() => (
-                                    isApplicationActive
-                                        ? contract
-                                            .draftOffer(
-                                                offerModalRequest.id,
-                                                amount,
-                                                duration,
-                                                graceDefaultPeriod,
-                                                installmentAmount,
-                                                installments,
-                                                interest,
-                                            )
-                                            .then((tx) => ({
-                                                tx,
-                                                name: 'Update offer',
-                                            }))
-                                        : contract
-                                            .updateDraftOffer(
-                                                offerModalRequest.id,
-                                                amount,
-                                                duration,
-                                                graceDefaultPeriod,
-                                                installmentAmount,
-                                                installments,
-                                                interest,
-                                            )
-                                            .then((tx) => ({
-                                                tx,
-                                                name: `Draft a loan offer for ${formatToken(
-                                                    amount,
-                                                    liquidityTokenDecimals,
-                                                )} ${TOKEN_SYMBOL}`,
-                                            }))
-                            )))
+                                    .then((tx) => ({
+                                        tx,
+                                        name: 'Update offer',
+                                    }))
+                                : contract
+                                    .updateDraftOffer(
+                                        offerModalRequest.id,
+                                        amount,
+                                        duration,
+                                        graceDefaultPeriod,
+                                        installmentAmount,
+                                        installments,
+                                        interest,
+                                    )
+                                    .then((tx) => ({
+                                        tx,
+                                        name: `Draft a loan offer for ${formatToken(
+                                            amount,
+                                            liquidityTokenDecimals,
+                                        )} ${TOKEN_SYMBOL}`,
+                                    }))
+                            )
                             .then(({ tx, name }) =>
                                 trackTransaction(dispatch, { name, tx }),
                             )
@@ -556,6 +511,7 @@ function LoansAwaitingApproval({
                                                   installmentAmount,
                                                   installments,
                                                   interest,
+                                                  lockedTime: 0,
                                               }
                                             : loan,
                                     ),
@@ -657,27 +613,47 @@ function LoansAwaitingApproval({
                                 throw error
                             })
                     }}
-                    onFetchBorrowerInfo={async () => {
-                        const info = await fetchBorrowerInfoAuthenticated(
-                            poolAddress,
-                            offerModalRequest.id,
-                            offerModalRequest.profileId,
-                            account!,
-                            provider!.getSigner(),
+
+                    onOffer={() => {
+                        const contract = loanDeskContract
+                            .attach(loanDeskAddress)
+                            .connect(provider!.getSigner())
+
+                        console.log(offerModalRequest)
+
+                        return (
+                            contract
+                                .offerLoan(offerModalRequest.id)
+                                .then((tx) => ({
+                                    tx,
+                                    name: 'Activate Loan Offer',
+                                    newStatus:
+                                    LoanApplicationStatus.OFFER_MADE,
+                                }))
+
                         )
-                        const newOffer = {
-                            ...offerModalRequest,
-                            phone: info.phone,
-                            email: info.email,
-                        }
-                        setOfferModalRequest(newOffer)
-                        setRequests(
-                            requests!.map((request) =>
-                                request === offerModalRequest
-                                    ? newOffer
-                                    : request,
-                            ),
-                        )
+                            .then(({ tx, name, newStatus }) =>
+                                trackTransaction(dispatch, { name, tx }).then(
+                                    () => newStatus,
+                                ),
+                            )
+                            .then((newStatus) => {
+                                setOfferModalRequest(null)
+                                setRequests(
+                                    requests!.map((loan) =>
+                                        loan === offerModalRequest
+                                            ? {
+                                                ...loan,
+                                                status: newStatus as any,
+                                            }
+                                            : loan,
+                                    ),
+                                )
+                            })
+                            .catch((error) => {
+                                console.error(error)
+                                throw error
+                            })
                     }}
                 />
             ) : null}
@@ -755,17 +731,17 @@ function OfferModal({
     borrowInfo,
     poolAddress,
     onClose,
-    onOffer,
+    onDraftOffer,
     onReject,
     onLock,
-    onFetchBorrowerInfo,
+    onOffer,
 }: {
     loan: LoanRequest
     liquidityTokenDecimals: number
     borrowInfo: BorrowInfo
     poolAddress: Address
     onClose(): void
-    onOffer(
+    onDraftOffer(
         amount: BigNumber,
         duration: BigNumber,
         installmentAmount: BigNumber,
@@ -776,14 +752,14 @@ function OfferModal({
     ): Promise<void | object>
     onReject(): Promise<void>
     onLock(): Promise<void>
-    onFetchBorrowerInfo(): void
+    onOffer(): Promise<void>
 }) {
     const [poolLiquidity] = usePoolLiquidity(poolAddress)
 
     const isOfferDrafted = loan.status === LoanApplicationStatus.OFFER_DRAFTED
     const isOfferDraftLocked = loan.status === LoanApplicationStatus.OFFER_DRAFT_LOCKED
     const isOfferMade = loan.status === LoanApplicationStatus.OFFER_MADE
-    const isOfferActive =
+    const isDraftedOrActive =
         loan.status === LoanApplicationStatus.OFFER_DRAFTED ||
         loan.status === LoanApplicationStatus.OFFER_DRAFT_LOCKED ||
         loan.status === LoanApplicationStatus.OFFER_MADE
@@ -806,7 +782,7 @@ function OfferModal({
         const initialMonthsNumber = formatDurationInMonths(duration)
         const initialMonths = initialMonthsNumber.toString() as InputAmount
 
-        if (isOfferActive) {
+        if (isDraftedOrActive) {
             return {
                 initialAmount,
                 initialMonths,
@@ -843,7 +819,7 @@ function OfferModal({
             initialInterestValue: borrowInfo.apr.toString() as InputAmount,
             initialGraceDefaultPeriod: '35' as InputAmount,
         }
-    }, [isOfferActive, liquidityTokenDecimals, loan, borrowInfo])
+    }, [isDraftedOrActive, liquidityTokenDecimals, loan, borrowInfo])
     const [amount, setAmount] = useState<InputAmount>(initialAmount)
 
     const [amountLocal, setAmountLocal] = useState<InputAmount>(
@@ -916,12 +892,13 @@ function OfferModal({
         initialGraceDefaultPeriod,
     )
 
-    const [isOfferLoading, setIsOfferLoading] = useState(false)
+    const [isDraftOfferLoading, setIsDraftOfferLoading] = useState(false)
     const [isRejectLoading, setIsRejectLoading] = useState(false)
     const [isLockLoading, setIsLockLoading] = useState(false)
+    const [isMakeActiveLoading, setIsMakeActiveLoading] = useState(false)
 
     const [interestOnly, setInterestOnly] = useState(false)
-    const [amortized, setAmortized] = useState(!isOfferActive)
+    const [amortized, setAmortized] = useState(!isDraftedOrActive)
 
     const [previousInstallmentAmount, setPreviousInstallmentAmount] = useState(
         '' as InputAmount,
@@ -1032,8 +1009,8 @@ function OfferModal({
     const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (event) => {
             event.preventDefault()
-            setIsOfferLoading(true)
-            onOffer(
+            setIsDraftOfferLoading(true)
+            onDraftOffer(
                 parseUnits(amount, liquidityTokenDecimals),
                 BigNumber.from(Number(duration) * thirtyDays),
                 parseUnits(installmentAmountValue, liquidityTokenDecimals),
@@ -1042,12 +1019,12 @@ function OfferModal({
                 Number(graceDefaultPeriod) * oneDay,
                 {
                     localLoanAmount: amountLocal.toString(),
-                    localCurrencyCode: loan.localDetail.localCurrencyCode,
+                    localCurrencyCode: loan.localDetail?.localCurrencyCode,
                     fxRate: Number(fxRate),
                     localInstallmentAmount: localInstallmentAmountValue,
                 },
             ).catch(() => {
-                setIsOfferLoading(false)
+                setIsDraftOfferLoading(false)
             })
         },
         [
@@ -1060,7 +1037,7 @@ function OfferModal({
             installments,
             interest,
             liquidityTokenDecimals,
-            onOffer,
+            onDraftOffer,
         ],
     )
 
@@ -1078,6 +1055,13 @@ function OfferModal({
         })
     }, [onLock])
 
+    const handleMakeActive = useCallback(() => {
+        setIsMakeActiveLoading(true)
+        onOffer().catch(() => {
+            setIsMakeActiveLoading(false)
+        })
+    }, [onOffer])
+
     const amountInvalidMessage = useMemo(
         () => {
 
@@ -1091,7 +1075,7 @@ function OfferModal({
                 ? checkAmountMaxValidity(
                     amount,
                     liquidityTokenDecimals,
-                    isOfferActive 
+                    isDraftedOrActive
                         ? BigNumber.from(poolLiquidity).add(parseUnits(initialAmount, liquidityTokenDecimals))
                         : poolLiquidity,
                 )
@@ -1106,7 +1090,7 @@ function OfferModal({
                 )}`
                 : !isLteMax
                     ? `Maximum available amount is ${formatToken(
-                        isOfferActive 
+                        isDraftedOrActive 
                             ? BigNumber.from(poolLiquidity).add(parseUnits(initialAmount, liquidityTokenDecimals))
                             : BigNumber.from(poolLiquidity),
                         liquidityTokenDecimals,
@@ -1151,15 +1135,15 @@ function OfferModal({
         [installmentAmountValue, liquidityTokenDecimals],
     )
 
-    const isLocalInstallmentAmountInvalid = useMemo(
-        () =>
-            !checkAmountValidity(
-                localInstallmentAmountValue,
-                2,
-                zero,
-            ),
-        [localInstallmentAmountValue],
-    )
+    // const isLocalInstallmentAmountInvalid = useMemo(
+    //     () =>
+    //         !checkAmountValidity(
+    //             localInstallmentAmountValue,
+    //             2,
+    //             zero,
+    //         ),
+    //     [localInstallmentAmountValue],
+    // )
     const isInterestInvalid = useMemo(() => {
         return Number(interest) <= 0
     }, [interest])
@@ -1184,7 +1168,7 @@ function OfferModal({
         () => {
             return {
                 localLoanAmount: amountLocal,
-                localCurrencyCode: loan.localDetail.localCurrencyCode,
+                localCurrencyCode: loan.localDetail?.localCurrencyCode,
                 fxRate: Number(fxRate),
             }
         },
@@ -1194,7 +1178,7 @@ function OfferModal({
     return (
         <Modal onClose={onClose}>
             <form onSubmit={handleSubmit}>
-                <h3>{isOfferDrafted ? 'Update Offer' : 'Offer a Loan'}</h3>
+                <h3>{isOfferMade ? 'Active Loan Offer' : 'Draft Loan Offer'}</h3>
 
                 <div className="field">
                     <div className="label">Account</div>
@@ -1226,6 +1210,7 @@ function OfferModal({
                         </div>
                     </div>
                 ) : null}
+                {/*
                 {!loan.email && !loan.phone ? (
                     <Button
                         type="button"
@@ -1236,6 +1221,7 @@ function OfferModal({
                         Get contact information
                     </Button> // TODO: If auth is valid fetch automatically
                 ) : null}
+                */}
                 {!loan.isLocalCurrencyLoan ? null :
                     <label>
                         <div className="label">Amount in Local Currency</div>
@@ -1244,7 +1230,7 @@ function OfferModal({
                             decimals={2}
                             value={amountLocal}
                             onChange={updateAmountLocal}
-                            disabled={isOfferLoading}
+                            disabled={isDraftOfferLoading || !isEditable}
                             currency={loan.localDetail.localCurrencyCode}
                         />
                         {isAmountLocalInvalid ? (
@@ -1264,7 +1250,7 @@ function OfferModal({
                         decimals={liquidityTokenDecimals}
                         value={amount}
                         onChange={updateAmount}
-                        disabled={isOfferLoading}
+                        disabled={isDraftOfferLoading || !isEditable}
                         invalid={Boolean(amountInvalidMessage)}
                     />
                     {amountInvalidMessage ? (
@@ -1279,7 +1265,7 @@ function OfferModal({
                             decimals={2}
                             value={fxRate}
                             onChange={updateFxRate}
-                            disabled={isOfferLoading}
+                            disabled={isDraftOfferLoading || !isEditable}
                             currency={loan.localDetail.localCurrencyCode}
                         />
                     </label>
@@ -1290,7 +1276,7 @@ function OfferModal({
                         decimals={100}
                         value={duration}
                         onChange={setDuration}
-                        disabled={isOfferLoading}
+                        disabled={isDraftOfferLoading || !isEditable}
                         invalid={Boolean(durationInvalidMessage)}
                         noToken
                         label="months"
@@ -1306,7 +1292,7 @@ function OfferModal({
                         decimals={0}
                         value={installments}
                         onChange={setInstallments}
-                        disabled={isOfferLoading}
+                        disabled={isDraftOfferLoading || !isEditable}
                         invalid={Boolean(installmentsInvalidMessage)}
                         noToken
                     />
@@ -1323,7 +1309,7 @@ function OfferModal({
                         decimals={1}
                         value={interest}
                         onChange={setInterest}
-                        disabled={isOfferLoading}
+                        disabled={isDraftOfferLoading || !isEditable}
                         invalid={isInterestInvalid}
                         noToken
                         label="%"
@@ -1333,15 +1319,16 @@ function OfferModal({
                         <Alert style="error" title="Invalid interest" />
                     ) : null}
                 </label>
+                {/*
                 <label>
                     <div className="label">Local Installment Amount</div>
                     <AmountInput
                         decimals={2}
                         value={localInstallmentAmountValue}
                         onChange={updateLocalInstallmentAmount}
-                        disabled={isOfferLoading || interestOnly || amortized}
+                        disabled={!isEditable || isOfferLoading || interestOnly || amortized}
                         invalid={isLocalInstallmentAmountInvalid}
-                        currency={loan.localDetail.localCurrencyCode}
+                        currency={loan.localDetail?.localCurrencyCode}
                     />
                     {isLocalInstallmentAmountInvalid ? (
                         <Alert
@@ -1350,19 +1337,21 @@ function OfferModal({
                         />
                     ) : null}
                 </label>
+                */}
                 <label>
                     <div className="label">Installment Amount</div>
                     <AmountInput
                         decimals={liquidityTokenDecimals}
                         value={installmentAmountValue}
                         onChange={updateInstallmentAmount}
-                        disabled={isOfferLoading || interestOnly || amortized}
+                        disabled={!isEditable || isDraftOfferLoading || interestOnly || amortized}
                         invalid={isInstallmentAmountInvalid}
                     />
                     <label className="checkbox">
                         <input
                             type="checkbox"
                             checked={interestOnly}
+                            disabled={isDraftOfferLoading || !isEditable}
                             onChange={() => {
                                 if (interestOnly) {
                                     setInstallmentAmount(
@@ -1383,6 +1372,7 @@ function OfferModal({
                         <input
                             type="checkbox"
                             checked={amortized}
+                            disabled={isDraftOfferLoading || !isEditable}
                             onChange={() => {
                                 if (amortized) {
                                     setAmortized(false)
@@ -1406,7 +1396,7 @@ function OfferModal({
                         decimals={2}
                         value={graceDefaultPeriod}
                         onChange={setGraceDefaultPeriod}
-                        disabled={isOfferLoading}
+                        disabled={isDraftOfferLoading || !isEditable}
                         invalid={Boolean(graceDefaultPeriodInvalidMessage)}
                         noToken
                         label="days"
@@ -1435,9 +1425,10 @@ function OfferModal({
                     { !isEditable ? null :
                         <Button
                             disabled={Boolean(
-                                isOfferLoading ||
+                                isDraftOfferLoading ||
                                     isRejectLoading ||
                                     isLockLoading ||
+                                    isMakeActiveLoading ||
                                     amountInvalidMessage ||
                                     durationInvalidMessage ||
                                     installmentsInvalidMessage ||
@@ -1445,7 +1436,7 @@ function OfferModal({
                                     isInstallmentAmountInvalid ||
                                     graceDefaultPeriodInvalidMessage,
                             )}
-                            loading={isOfferLoading}
+                            loading={isDraftOfferLoading}
                             type="submit"
                         >
                             {isOfferDrafted ? 'Update Draft Offer' : 'Draft Offer'}
@@ -1454,9 +1445,10 @@ function OfferModal({
                     { !isOfferDrafted ? null :
                         <Button
                             disabled={Boolean(
-                                isOfferLoading ||
+                                isDraftOfferLoading ||
                                 isRejectLoading ||
                                 isLockLoading ||
+                                isMakeActiveLoading ||
                                 amountInvalidMessage ||
                                 durationInvalidMessage ||
                                 installmentsInvalidMessage ||
@@ -1471,14 +1463,39 @@ function OfferModal({
                             {'Lock for Voting'}
                         </Button>
                     }
+                    { !isOfferDraftLocked ? null :
+                        <Button
+                            disabled={Boolean(
+                                isDraftOfferLoading ||
+                                isRejectLoading ||
+                                isLockLoading ||
+                                isMakeActiveLoading ||
+                                amountInvalidMessage ||
+                                durationInvalidMessage ||
+                                installmentsInvalidMessage ||
+                                isInterestInvalid ||
+                                isInstallmentAmountInvalid ||
+                                graceDefaultPeriodInvalidMessage ||
+                                Math.ceil((loan.lockedTime+48*60*60 - Date.now()/1000)/60/60) > 0
+                            )}
+                            loading={isMakeActiveLoading}
+                            onClick={handleMakeActive}
+                            type="button"
+                        >
+                            {'Make Active'}
+                            {Math.ceil((loan.lockedTime+48*60*60 - Date.now()/1000)/60/60) > 0
+                                ? ' - Locked for ' + Math.ceil((loan.lockedTime+48*60*60 - Date.now()/1000)/60/60) + 'H'
+                                : null}
+                        </Button>
+                    }
                     <Button
-                        disabled={isOfferLoading || isRejectLoading || isLockLoading}
+                        disabled={isDraftOfferLoading || isRejectLoading || isLockLoading || isMakeActiveLoading}
                         loading={isRejectLoading}
                         onClick={handleReject}
                         type="button"
                         stone
                     >
-                        {isOfferActive ? 'Cancel' : 'Reject Application'}
+                        {isDraftedOrActive ? 'Cancel' : 'Reject Application'}
                     </Button>
                 </div>
 

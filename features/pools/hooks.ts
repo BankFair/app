@@ -296,7 +296,7 @@ export function useLoadAccountLoans(
             })
 
         attached.on(
-            attached.filters.LoanBorrowed(null, account),
+            attached.filters.LoanBorrowed(null, null, account),
             handleLoanEvent,
         )
         attached.on(attached.filters.LoanFullyRepaid(null, account), handleLoanEvent)

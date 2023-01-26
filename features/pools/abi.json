@@ -30,7 +30,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "tokensIssued",
+        "name": "sharesIssued",
         "type": "uint256"
       }
     ],
@@ -55,7 +55,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "tokensIssued",
+        "name": "sharesIssued",
         "type": "uint256"
       }
     ],
@@ -80,7 +80,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "tokensRedeemed",
+        "name": "sharesRedeemed",
         "type": "uint256"
       }
     ],
@@ -105,7 +105,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "tokensRedeemed",
+        "name": "sharesRedeemed",
         "type": "uint256"
       }
     ],
@@ -143,13 +143,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "managerLossAmount",
+        "name": "stakerLoss",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "lenderLossAmount",
+        "name": "lenderLoss",
         "type": "uint256"
       }
     ],
@@ -174,7 +174,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "managerLoss",
+        "name": "stakerLoss",
         "type": "uint256"
       },
       {
@@ -193,13 +193,13 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "from",
+        "name": "prevAddress",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "to",
+        "name": "newAddress",
         "type": "address"
       }
     ],
@@ -265,45 +265,7 @@
         "type": "uint256"
       }
     ],
-    "name": "LoanRepaymentConfirmed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "prevValue",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "newValue",
-        "type": "uint16"
-      }
-    ],
-    "name": "ManagerEarnFactorMaxSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "prevValue",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "newValue",
-        "type": "uint16"
-      }
-    ],
-    "name": "ManagerEarnFactorSet",
+    "name": "LoanRepaymentProcessed",
     "type": "event"
   },
   {
@@ -399,13 +361,32 @@
         "type": "uint256"
       }
     ],
-    "name": "RevenueWithdrawn",
+    "name": "ProtocolRevenueCollected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fromLoanId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SharedLenderLoss",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [],
-    "name": "StakedAssetsDepleted",
+    "name": "StakedFundsDepleted",
     "type": "event"
   },
   {
@@ -424,7 +405,83 @@
         "type": "uint16"
       }
     ],
-    "name": "TargetLiqudityPercentSet",
+    "name": "StakerEarnFactorMaxSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "prevValue",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "newValue",
+        "type": "uint16"
+      }
+    ],
+    "name": "StakerEarnFactorSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "StakerEarningsCollected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fromLoanId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "StakerLoss",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "prevValue",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "newValue",
+        "type": "uint16"
+      }
+    ],
+    "name": "TargetLiquidityPercentSet",
     "type": "event"
   },
   {
@@ -465,21 +522,14 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "UnstakedLoss",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "id",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
       }
     ],
     "name": "WithdrawalRequestCancelled",
@@ -493,6 +543,12 @@
         "internalType": "uint256",
         "name": "id",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -515,14 +571,20 @@
       },
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "prevTokensLocked",
+        "name": "prevSharesLocked",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "tokensLocked",
+        "name": "sharesLocked",
         "type": "uint256"
       }
     ],
@@ -547,7 +609,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "tokensLocked",
+        "name": "sharesLocked",
         "type": "uint256"
       }
     ],
@@ -685,7 +747,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "managerRevenue",
+        "name": "stakerEarnings",
         "type": "uint256"
       },
       {
@@ -757,7 +819,7 @@
         "type": "uint256"
       }
     ],
-    "name": "collectManagerRevenue",
+    "name": "collectProtocolRevenue",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -770,7 +832,7 @@
         "type": "uint256"
       }
     ],
-    "name": "collectProtocolRevenue",
+    "name": "collectStakerEarnings",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -796,12 +858,12 @@
       },
       {
         "internalType": "uint16",
-        "name": "managerEarnFactorMax",
+        "name": "stakerEarnFactorMax",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "managerEarnFactor",
+        "name": "stakerEarnFactor",
         "type": "uint16"
       },
       {
@@ -841,7 +903,7 @@
           },
           {
             "internalType": "uint16",
-            "name": "managerRevenueComponent",
+            "name": "stakerEarningsComponent",
             "type": "uint16"
           },
           {
@@ -921,11 +983,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "liquidityTokens",
+        "name": "funds",
         "type": "uint256"
       }
     ],
-    "name": "fundsToTokens",
+    "name": "fundsToShares",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1047,7 +1109,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "_managerRole",
+        "name": "_stakerRole",
         "type": "bytes32"
       }
     ],
@@ -1299,7 +1361,7 @@
   },
   {
     "inputs": [],
-    "name": "poolManagerRole",
+    "name": "poolStakerRole",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -1344,7 +1406,7 @@
       },
       {
         "internalType": "uint16",
-        "name": "_managerEarnFactor",
+        "name": "_stakerEarnFactor",
         "type": "uint16"
       }
     ],
@@ -1364,7 +1426,7 @@
           },
           {
             "internalType": "uint16",
-            "name": "managerRevenueComponent",
+            "name": "stakerEarningsComponent",
             "type": "uint16"
           },
           {
@@ -1411,37 +1473,37 @@
     "inputs": [
       {
         "internalType": "uint16",
-        "name": "_managerEarnFactor",
-        "type": "uint16"
-      }
-    ],
-    "name": "setManagerEarnFactor",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint16",
-        "name": "_managerEarnFactorMax",
-        "type": "uint16"
-      }
-    ],
-    "name": "setManagerEarnFactorMax",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint16",
         "name": "_protocolEarningPercent",
         "type": "uint16"
       }
     ],
     "name": "setProtocolEarningPercent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "_stakerEarnFactor",
+        "type": "uint16"
+      }
+    ],
+    "name": "setStakerEarnFactor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "_stakerEarnFactorMax",
+        "type": "uint16"
+      }
+    ],
+    "name": "setStakerEarnFactorMax",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1475,6 +1537,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "shares",
+        "type": "uint256"
+      }
+    ],
+    "name": "sharesToFunds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint16",
         "name": "strategyRate",
         "type": "uint16"
@@ -1501,7 +1582,7 @@
           },
           {
             "internalType": "uint16",
-            "name": "managerRevenueComponent",
+            "name": "stakerEarningsComponent",
             "type": "uint16"
           },
           {
@@ -1562,25 +1643,6 @@
         "internalType": "uint8",
         "name": "decimals",
         "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "poolTokens",
-        "type": "uint256"
-      }
-    ],
-    "name": "tokensToFunds",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",

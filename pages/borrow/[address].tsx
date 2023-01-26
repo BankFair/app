@@ -20,11 +20,10 @@ import {
     CHAIN_ID,
     checkAmountValidity,
     convertPercent,
-    fetchBorrowerInfoAuthenticated,
     formatPercent,
     formatToken,
     getAddress,
-    getBorrowerInfo,
+    getBorrowerMetadata,
     getERC20Contract,
     InputAmount,
     oneDay,
@@ -77,6 +76,7 @@ import {
     useSimpleSchedule,
 } from '../../features'
 import { AppDispatch, useDispatch, useSelector } from '../../store'
+import {any, string} from "prop-types";
 
 const title = `Borrow - ${APP_NAME}`
 
@@ -183,33 +183,7 @@ function useOffer(
 
                     const [offer, contactDetails] = await Promise.all([
                         contract.loanOffers(request.id),
-                        getBorrowerInfo(request.id.toNumber()).then((info) =>
-                            info
-                                ? info
-                                : fetch(
-                                      `${BORROWER_SERVICE_URL}/profile/${request.profileId}`,
-                                  )
-                                      .then(
-                                          (response) =>
-                                              response.json() as Promise<{
-                                                  name: string
-                                                  businessName: string
-                                                  phone?: string
-                                                  email?: string
-                                                  isLocalCurrencyLoan?: boolean
-                                                  localDetail: LocalDetail
-                                              }>,
-                                      )
-                                      .then(
-                                          (info) => (
-                                              setBorrowerInfo(
-                                                  request.id.toNumber(),
-                                                  info,
-                                              ),
-                                              info
-                                          ),
-                                      ),
-                        ),
+                        getBorrowerMetadata(request.borrower)
                     ])
 
                     setOffer({
@@ -591,37 +565,7 @@ function RepayLoan({
             .attach(loanDeskAddress)
             .loanApplications(loan.applicationId)
             .then(({ profileId }) =>
-                getBorrowerInfo(loan.applicationId).then((info) =>
-                    // temporarily ignore cached entries
-                    // info
-                    //     ? { info, profileId }
-                    //     :
-                    fetch(`${BORROWER_SERVICE_URL}/profile/${profileId}`)
-                              .then(
-                                  (response) =>
-                                      response.json() as Promise<{
-                                          name: string
-                                          businessName: string
-                                          phone?: string
-                                          email?: string
-                                          isLocalCurrencyLoan?: boolean
-                                          localDetail: LocalDetail
-                                      }>,
-                              )
-                              .then(
-                                  (info) => (
-                                      setBorrowerInfo(loan.applicationId, info),
-                                      { info, profileId }
-                                  ),
-                              ),
-                ),
-            )
-            .then(({ info, profileId }) =>
-                setContactDetailsState({
-                    ...info,
-                    profileId,
-                    applicationId: loan.applicationId,
-                }),
+                getBorrowerMetadata(loan.borrower)
             )
     }, [loan, loanDeskAddress, provider])
 
@@ -1109,6 +1053,16 @@ function RequestLoan({
     const [phone, setPhone] = useState('')
     const [email, setEmail] = useState('')
 
+    useEffect(() => {
+        if (account) {
+            getBorrowerMetadata(account).then(metadata => {
+                    setName(metadata.name)
+                    setBusinessName(metadata.businessName)
+                }
+            )
+        }
+    }, [account])
+
     const [amount, setAmount] = useState<InputAmount>(initialValue)
     const [amountLocal, setAmountLocal] = useState<InputAmount>(initialValue)
 
@@ -1205,14 +1159,14 @@ function RequestLoan({
     const disabledSubmit = Boolean(
         loading ||
             disabled ||
-            !amountLocal ||
+            // !amountLocal ||
             !amount ||
-            isNameInvalid ||
-            isBusinessNameInvalid ||
-            isPhoneAndEmailEmpty ||
-            isEmailInvalid ||
+            // isNameInvalid ||
+            // isBusinessNameInvalid ||
+            // isPhoneAndEmailEmpty ||
+            // isEmailInvalid ||
             invalidAmountMessage ||
-            invalidAmountLocalMessage ||
+            // invalidAmountLocalMessage ||
             invalidDurationMessage ||
             isLoanPendingApproval ||
             isSubmitted,
@@ -1231,6 +1185,95 @@ function RequestLoan({
     } | null>(null)
     const [stepTwoLoading, setStepTwoLoading] = useState(false)
 
+    const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
+        (event) => {
+            event.preventDefault()
+            if (!account) {
+                setShowConnectModal(true)
+                return
+            }
+
+            if (disabledSubmit) return
+
+            setLoading(true)
+
+            const parsedAmount = parseUnits(amount, liquidityTokenDecimals)
+            const parsedDuration = BigNumber.from(
+                Number(duration) * Number(durationMultiplier),
+            )
+
+            // TODO: Handle errors
+            // TODO: Handle user cancelation
+
+            loanDeskContract
+                .attach(loanDeskAddress)
+                .connect(provider!.getSigner())
+                .requestLoan(
+                    parsedAmount,
+                    parsedDuration,
+                    '00000000-0000-0000-0000-000000000000',
+                    '0000000000000000000000000000000000000000000000000000000000000000',
+                )
+                .then((tx) =>
+                    trackTransaction(dispatch, {
+                        name: `Request loan for ${amount} ${TOKEN_SYMBOL}`,
+                        tx,
+                    }),
+                )
+                .then((action) => {
+                    setIsSubmitted(true)
+                    setLoading(false)
+
+                    const event =
+                        action.payload.receipt.events?.[0]
+                    if (
+                        event?.eventSignature ===
+                        'LoanRequested(uint256,address,uint256,uint256)'
+                    ) {
+                        setBorrowerInfo(
+                            BigNumber.from(
+                                event!.args!.array[0],
+                            ).toNumber(),
+                            {
+                                name: stepTwo!.name,
+                                businessName:
+                                stepTwo!.businessName,
+                                phone: stepTwo!.phone,
+                                email: stepTwo!.email,
+                                isLocalCurrencyLoan: false,
+                                localDetail :{
+                                    localLoanAmount: amountLocal,
+                                    localCurrencyCode: UGX_CODE,
+                                    fxRate: USD_TO_UGX_FX,
+                                    localInstallmentAmount: "0"
+                                },
+                            },
+                        )
+                    }
+                })
+                .catch((error) => {
+                    console.error(error)
+                    setLoading(false)
+                })
+        },
+        [
+            account,
+            disabledSubmit,
+            amount,
+            amountLocal,
+            liquidityTokenDecimals,
+            duration,
+            durationMultiplier,
+            provider,
+            name,
+            businessName,
+            phone,
+            email,
+            poolAddress,
+        ],
+    )
+
+    /*
     const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (event) => {
             event.preventDefault()
@@ -1322,6 +1365,7 @@ function RequestLoan({
             poolAddress,
         ],
     )
+    */
 
     return (
         <Box
@@ -1431,8 +1475,9 @@ function RequestLoan({
                         required={Boolean(account)}
                         placeholder="John Smith"
                         value={name}
-                        onChange={(event) => setName(event.target.value)}
-                        onBlur={() => setNameBlurred(true)}
+                        readOnly={true}
+                        // onChange={(event) => setName(event.target.value)}
+                        // onBlur={() => setNameBlurred(true)}
                     />
                     {nameBlurred && isNameInvalid ? (
                         <Alert style="error" title="Please enter your name" />
@@ -1450,10 +1495,11 @@ function RequestLoan({
                         required={Boolean(account)}
                         placeholder="Green LLC"
                         value={businessName}
-                        onChange={(event) =>
-                            setBusinessName(event.target.value)
-                        }
-                        onBlur={() => setBusinessNameBlurred(true)}
+                        readOnly={true}
+                        // onChange={(event) =>
+                        //     setBusinessName(event.target.value)
+                        // }
+                        // onBlur={() => setBusinessNameBlurred(true)}
                     />
                     {businessNameBlurred && isBusinessNameInvalid ? (
                         <Alert
@@ -1462,6 +1508,7 @@ function RequestLoan({
                         />
                     ) : null}
                 </label>
+                {/*
                 <label>
                     <div className="label">Phone</div>
                     <input
@@ -1513,7 +1560,6 @@ function RequestLoan({
                         ) : null
                     ) : null}
                 </label>
-
                 <label>
                     <div className="label">Amount in Local Currency</div>
                     <AmountInput
@@ -1534,6 +1580,7 @@ function RequestLoan({
                         <Alert style="error" title={invalidAmountLocalMessage} />
                     ) : null}
                 </label>
+                */}
                 <label>
                     <div className="label">Amount</div>
                     <AmountInput
@@ -1553,6 +1600,7 @@ function RequestLoan({
                         <Alert style="error" title={invalidAmountMessage} />
                     ) : null}
                 </label>
+                {/*
                 <label>
                     <div className="label">FX Rate, 1 USDT = </div>
                     <input
@@ -1561,6 +1609,7 @@ function RequestLoan({
                         value={USD_TO_UGX_FX + ' UGX'}
                     />
                 </label>
+                */}
                 <label>
                     <div className="label">Duration</div>
                     <AmountInput
@@ -1660,7 +1709,7 @@ function RequestLoan({
                                         action.payload.receipt.events?.[0]
                                     if (
                                         event?.eventSignature ===
-                                        'LoanRequested(uint256,address)'
+                                        'LoanRequested(uint256,address,uint256,uint256)'
                                     ) {
                                         setBorrowerInfo(
                                             BigNumber.from(
@@ -1672,7 +1721,7 @@ function RequestLoan({
                                                     stepTwo!.businessName,
                                                 phone: stepTwo!.phone,
                                                 email: stepTwo!.email,
-                                                isLocalCurrencyLoan: true,
+                                                isLocalCurrencyLoan: false,
                                                 localDetail :{
                                                     localLoanAmount: amountLocal,
                                                     localCurrencyCode: UGX_CODE,

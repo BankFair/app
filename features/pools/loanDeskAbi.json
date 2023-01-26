@@ -35,6 +35,12 @@
         "type": "uint256"
       },
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "applicationId",
+        "type": "uint256"
+      },
+      {
         "indexed": true,
         "internalType": "address",
         "name": "borrower",
@@ -43,7 +49,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "applicationId",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -68,13 +74,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "managerLossAmount",
+        "name": "stakerLoss",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "lenderLossAmount",
+        "name": "lenderLoss",
         "type": "uint256"
       }
     ],
@@ -99,7 +105,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "managerLoss",
+        "name": "stakerLoss",
         "type": "uint256"
       },
       {
@@ -110,6 +116,81 @@
       }
     ],
     "name": "LoanDefaulted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "applicationId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      }
+    ],
+    "name": "LoanDraftLocked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "applicationId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "prevAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "LoanDraftUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "applicationId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "LoanDrafted",
     "type": "event"
   },
   {
@@ -189,47 +270,15 @@
         "internalType": "uint256",
         "name": "applicationId",
         "type": "uint256"
-      }
-    ],
-    "name": "LoanOfferDraftLocked",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "applicationId",
-        "type": "uint256"
       },
       {
         "indexed": true,
         "internalType": "address",
         "name": "borrower",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
       }
     ],
-    "name": "LoanOfferDrafted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "applicationId",
-        "type": "uint256"
-      }
-    ],
-    "name": "LoanOfferMade",
+    "name": "LoanOffered",
     "type": "event"
   },
   {
@@ -283,12 +332,6 @@
         "internalType": "address",
         "name": "borrower",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
       }
     ],
     "name": "LoanRequestDenied",
@@ -313,6 +356,12 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "duration",
         "type": "uint256"
       }
     ],
@@ -374,37 +423,6 @@
       }
     ],
     "name": "MinLoanDurationSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "applicationId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "borrower",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "prevAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "OfferDraftUpdated",
     "type": "event"
   },
   {
@@ -697,7 +715,7 @@
       },
       {
         "internalType": "bytes32",
-        "name": "_managerRole",
+        "name": "_stakerRole",
         "type": "bytes32"
       },
       {
@@ -1030,6 +1048,11 @@
       },
       {
         "internalType": "uint256",
+        "name": "lockedTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "offeredTime",
         "type": "uint256"
       }
@@ -1251,7 +1274,7 @@
   },
   {
     "inputs": [],
-    "name": "poolManagerRole",
+    "name": "poolStakerRole",
     "outputs": [
       {
         "internalType": "bytes32",
