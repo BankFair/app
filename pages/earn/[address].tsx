@@ -460,9 +460,9 @@ function Earnings({
             .attach(poolAddress)
             .balances()
             .then((balances) => {
-                if (!balances.managerRevenue.gt(BigNumber.from(0))) return
+                if (!balances.stakerEarnings.gt(BigNumber.from(0))) return
                 setEarnings({
-                    amount: balances.managerRevenue,
+                    amount: balances.stakerEarnings,
                     account,
                 })
             })
@@ -487,7 +487,7 @@ function Earnings({
                         .attach(poolAddress)
                         .balances()
                         .then((balances) => {
-                            withdrawAmount = balances.managerRevenue;
+                            withdrawAmount = balances.stakerEarnings;
                         })
                         .catch((error) => {
                             setIsLoading(false)
@@ -497,7 +497,7 @@ function Earnings({
                   contract
                       .attach(poolAddress)
                       .connect(provider.getSigner())
-                      .collectManagerRevenue(withdrawAmount)
+                      .collectStakerEarnings(withdrawAmount)
                       .then((tx) =>
                           trackTransaction(dispatch, {
                               name: 'Withdraw earnings',

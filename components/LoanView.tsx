@@ -219,8 +219,8 @@ export function LoanView({
             .attach(poolAddress)
             .balances()
             .then((balances) => {
-                if (account != pool.managerAddress || !balances.managerRevenue.gt(BigNumber.from(0))) return
-                setEarnings(balances.managerRevenue)           
+                if (account != pool.managerAddress || !balances.stakerEarnings.gt(BigNumber.from(0))) return
+                setEarnings(balances.stakerEarnings)
             })
             .catch((error) => {
                 console.error(error)
