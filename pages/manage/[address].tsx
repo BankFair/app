@@ -199,7 +199,7 @@ function LoansAwaitingApproval({
 
         const contract = loanDeskContract.attach(loanDeskAddress)
 
-        const toLoad = CHAIN_ID === chains.mumbai ? 80 : 40
+        const toLoad = CHAIN_ID === chains.mumbai ? 80 : 60
         const { contract: attached } = getBatchProviderAndLoanDeskContract(
             toLoad,
             contract,
