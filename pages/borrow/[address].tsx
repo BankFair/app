@@ -251,7 +251,7 @@ function Offer({
     }, [offer])
     const schedule = useSimpleSchedule(
         scheduleArg,
-        BigNumber.from((Number(offer?.contactDetails?.localDetail.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
+        BigNumber.from((Number(offer?.contactDetails?.localDetail?.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
         Number(fxRate)
     )
 
