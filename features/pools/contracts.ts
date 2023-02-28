@@ -31,6 +31,7 @@ export interface CoreContract
     attach(...args: Parameters<CustomBaseContract['attach']>): this
 
     loanDesk: ContractFunction<Address>
+    staker: ContractFunction<Address>
     tokenConfig: ContractFunction<TokenConfig>
     config: ContractFunction<PoolConfig>
     balances: ContractFunction<PoolBalance>
@@ -84,20 +85,13 @@ export interface PoolConfig {
     stakerEarnFactorMax: number
     stakerEarnFactor: number
     targetLiquidityPercent: number
-    weightedAvgStrategyAPR: BigNumber
     exitFeePercent: number
 }
 
 export interface PoolBalance {
-    tokenBalance: BigNumber
     rawLiquidity: BigNumber
-    poolFunds: BigNumber
-    allocatedFunds: BigNumber
-    strategizedFunds: BigNumber
-    withdrawalRequestedShares: BigNumber
+    preSettledYield: BigNumber
     stakedShares: BigNumber
-    stakerEarnings: BigNumber
-    protocolRevenue: BigNumber
 }
 
 export interface APYBreakdown {
@@ -231,7 +225,6 @@ export interface LoanDeskContract
 
     applicationsCount: ContractFunction<BigNumber>
     loansCount: ContractFunction<BigNumber>
-    outstandingLoansCount: ContractFunction<BigNumber>
 
     loanApplications: ContractFunction<LoanRequest,[applicationId: BigNumberish]>
     loanOffers: ContractFunction<LoanOffer, [applicationId: BigNumberish]>
@@ -303,7 +296,7 @@ export interface LoanDeskContract
          * ```
          */
         LoanDefaulted: EventFilterFactory<
-            [loanId: BigNumber, borrower: string, managerLoss: BigNumber, lenderLoss: BigNumber],
+            [loanId: BigNumber, borrower: string, stakerLoss: BigNumber, lenderLoss: BigNumber],
             ['loanId', 'borrower', 'managerLoss', 'lenderLoss']
         >
 

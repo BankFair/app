@@ -245,7 +245,7 @@ export function useFetchPoolsPropertiesOnce() {
 
             Promise.all([
                 pool,
-                pool.manager,
+                attachedContract.staker(),
                 attachedContract.loanDesk(),
                 attachedContract.tokenConfig(),
             ])

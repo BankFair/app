@@ -217,17 +217,6 @@ export function LoanView({
         if (!account) return
         contract
             .attach(poolAddress)
-            .balances()
-            .then((balances) => {
-                if (account != pool.managerAddress || !balances.stakerEarnings.gt(BigNumber.from(0))) return
-                setEarnings(balances.stakerEarnings)
-            })
-            .catch((error) => {
-                console.error(error)
-            })
-
-        contract
-            .attach(poolAddress)
             .balanceStaked()
             .then((stake) => {
                 if (!stake.gt(BigNumber.from(0))) return
@@ -245,9 +234,6 @@ export function LoanView({
         isRepaid ? null : loan,
         BigNumber.from((Number(borrowerInfoState?.localDetail?.localInstallmentAmount ?? 0) * 1000000).toFixed(0)),
         borrowerInfoState?.localDetail?.fxRate ?? 1)
-
-    const [closeLoading, setCloseLoading] = useState(false)
-    const [showCloseModal, setShowCloseModal] = useState(false)
 
     const pool = useSelector((s) => s.pools[poolAddress])
     const [showRepayModal, setShowRepayModal] = useState(false)
@@ -541,16 +527,6 @@ export function LoanView({
                         >
                         Repay
                     </a>
-                    <a className={loan.status == LoanStatus.OUTSTANDING ? "" : "disabled"}
-
-                       onClick={(event) => {
-                           loan.status == LoanStatus.OUTSTANDING
-                               ? setShowCloseModal(true)
-                               : event.preventDefault()
-                       }}
-                        >
-                        Close
-                    </a>
                     <a className="disabled">Default</a>
                 </div>
 
@@ -635,176 +611,6 @@ export function LoanView({
                     }
                 </div>
             </div>
-
-            {showCloseModal ? (
-                <Modal onClose={() => {setShowCloseModal(false)}}>
-                    <h3 style={{ textAlign: 'center' }}>
-                        Close loan
-                    </h3>
-
-                    <div className="stats">
-                        <div className="item">
-                            <div className="label">Borrower</div>
-                            <div className="value">
-                                {borrowerInfoState?.name ?? "..."}
-                            </div>
-                        </div>
-                        <div className="item">
-                            <div className="label">Account</div>
-                            <div className="value">
-                                <EtherscanAddress address={borrower} />
-                            </div>
-                        </div>
-                        <div className="item">
-                            <div className="label">Approved</div>
-                            <div className="value">
-                                <TimeAgo datetime={borrowedTime * 1000} />
-                            </div>
-                        </div>
-                        <div className="item">
-                            <div className="label">Remaining</div>
-                            <div className="value">
-                                <Remaining timestamp={borrowedTime + duration} noHoursAndLess={true} />
-                            </div>
-                        </div>
-                        <div className="item">
-                            <div className="label">Principal</div>
-                            <div className="value">
-                                {formatToken(amount, liquidityTokenDecimals, 2, true)}{' '}
-                                {TOKEN_SYMBOL}
-                            </div>
-                        </div>
-
-                        <div className="item">
-                            <div className="label">Principal Outstanding</div>
-                            <div className="value">
-                                {formatToken(
-                                    BigNumber.from(loan.amount).sub(details.baseAmountRepaid),
-                                    liquidityTokenDecimals,
-                                    2,
-                                    false
-                                )}{' '}
-                                {TOKEN_SYMBOL}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="stats">
-                        <div className="item">
-                            <div className="label">Manager&apos;s Revenue</div>
-                            <div className="value">
-                                {formatToken(
-                                    managerEarnings ?? zero,
-                                    liquidityTokenDecimals,
-                                    2,
-                                    false
-                                )}{' '}
-                                {TOKEN_SYMBOL}
-                            </div>
-                        </div>
-
-                        <div className="item">
-                            <div className="label">Manager&apos;s Stake</div>
-                            <div className="value">
-                                {formatToken(
-                                    managerStake ?? zero,
-                                    liquidityTokenDecimals,
-                                    2,
-                                    false
-                                )}{' '}
-                                {TOKEN_SYMBOL}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style={{margin:'24px'}}>
-                        <Alert
-                            style="warning"
-                            title="Closing this loan will repay the outstanding principal using the pool manager's revenue
-                            and/or staked funds. If these funds are not sufficient, the lenders will take the loss."
-                        />
-                    </div>
-
-                    <p style={{ textAlign: 'center' }}>
-                        Revenue loss expected:
-                        <strong>
-                            {' '}
-                        {
-                        formatToken(
-                                closeInfo.revenueLoss,
-                                liquidityTokenDecimals,
-                                2,
-                                false
-                        )
-                        } {TOKEN_SYMBOL}
-                        </strong>
-                    </p>
-                    <p style={{ textAlign: 'center' }}>
-                        Stake loss expected:
-                        <strong>
-                            {' '}
-                            {
-                                formatToken(
-                                    closeInfo.stakeLoss,
-                                    liquidityTokenDecimals,
-                                    2,
-                                    false
-                                )
-                        } {TOKEN_SYMBOL}
-                        </strong>
-                    </p>
-
-                    <p style={{ textAlign: 'center' }}>
-                        Lender loss expected:
-                        <strong>
-                            {' '}
-                            {
-                                formatToken(
-                                    closeInfo.poolLoss,
-                                    liquidityTokenDecimals,
-                                    2,
-                                    false
-                                )
-                        } {TOKEN_SYMBOL}
-                        </strong>
-                    </p>
-
-
-                    <Button
-                        type="button"
-                        loading={closeLoading}
-                        disabled={closeLoading}
-                        style={{ display: 'flex', margin: '24px auto 20px' }}
-                        onClick={() => {
-                            setCloseLoading(true)
-                            loanDeskContract
-                                .attach(loanDeskAddress)
-                                .connect(provider!.getSigner())
-                                .closeLoan(
-                                    loan.id
-                                )
-                                .then((tx) =>
-                                    trackTransaction(dispatch, {
-                                        name: `Close Loan`,
-                                        tx,
-                                    }),
-                                )
-                                .then((action) => {
-                                    setShowCloseModal(false)
-                                    setCloseLoading(false)
-                                })
-                                .catch((error) => {
-                                    console.error(error)
-                                    setShowCloseModal(false)
-                                    setCloseLoading(false)
-                                })
-                        }}
-                    >
-                        Confirm and Close Loan
-                    </Button>
-                </Modal>
-            ) : (
-                false
-            )}
             { showRepayModal ?
                 <Modal onClose={() => {setShowRepayModal(false)}}>
                     <RepayLoanOnBehalf

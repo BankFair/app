@@ -93,7 +93,6 @@ export const poolsConfig =
                   tokenSymbol: 'KITCP',
                   uniswapUrl: 'https://app.uniswap.org/#/swap?exactField=input&exactAmount=10&inputCurrency=0xc2132D05D31c914a87C6611C10748AEb04B58e8F&outputCurrency=0xcC9Fa0dBA57C1E22029aA81cB1144917DADe8BCc',
                   address: '0xA3e07757131E5587ebB58ABB08de10783FC090Be' as Address,
-                  manager: '0x9e998fE5504b55ACD6ce68fdA1b29958AD3Bc7cc' as Address,
                   block: 33073758,
               },
               {
@@ -102,7 +101,6 @@ export const poolsConfig =
                   tokenSymbol: 'IKIFP',
                   uniswapUrl: '',
                   address: '0x70527768dB88924985460fCada217E2AEDb9a620' as Address,
-                  manager: '0x03E07430eb36B9b7E5CBFaBF3c4501fDd9449902' as Address,
                   block: 34535380,
               },
               {
@@ -111,7 +109,6 @@ export const poolsConfig =
                   tokenSymbol: 'NAMWP',
                   uniswapUrl: '',
                   address: '0x925A62Cd68f73111730AC0E99F8b116Ef767EE01' as Address,
-                  manager: '0xE3DFa260ea263fc43BEb2C1bDd488A0bFBf54B48' as Address,
                   block: 34777549,
               },
               {
@@ -125,7 +122,6 @@ export const poolsConfig =
               {
                   name: 'Test Pool 1',
                   address: '0xC8A5E515EB748F453a1cE89dF96dB167A368BaA2' as Address,
-                  manager: '0x457aBC13c93D34FEc541C78aF91f64531eEe2516' as Address,
                   block: 32537474,
               },
           ]
