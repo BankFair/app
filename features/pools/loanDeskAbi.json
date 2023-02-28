@@ -456,6 +456,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "prevAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "StakerSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "prevValue",
         "type": "uint256"
@@ -517,12 +536,48 @@
   },
   {
     "inputs": [],
+    "name": "allocatedFunds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "applicationsCount",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "balances",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "allocatedFunds",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lentFunds",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "weightedAvgAPR",
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -581,19 +636,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
-      }
-    ],
-    "name": "closeLoan",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "closed",
     "outputs": [
@@ -601,6 +643,29 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "config",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "lenderGovernanceRole",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "pool",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "liquidityToken",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -710,23 +775,23 @@
       },
       {
         "internalType": "address",
+        "name": "_liquidityToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "_accessControl",
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "_stakerRole",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "_stakerAddress",
+        "type": "address"
       },
       {
         "internalType": "bytes32",
         "name": "_lenderGovernanceRole",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint8",
-        "name": "_decimals",
-        "type": "uint8"
       }
     ],
     "name": "initialize",
@@ -736,12 +801,12 @@
   },
   {
     "inputs": [],
-    "name": "lenderGovernanceRole",
+    "name": "lentFunds",
     "outputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "uint256",
         "name": "",
-        "type": "bytes32"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -935,11 +1000,6 @@
           },
           {
             "internalType": "uint256",
-            "name": "paymentCarry",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
             "name": "interestPaidTillTime",
             "type": "uint256"
           }
@@ -980,11 +1040,6 @@
       {
         "internalType": "uint256",
         "name": "interestPaid",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paymentCarry",
         "type": "uint256"
       },
       {
@@ -1208,35 +1263,9 @@
   },
   {
     "inputs": [],
-    "name": "offeredFunds",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "open",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "outstandingLoansCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1254,32 +1283,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pool",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "poolStakerRole",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -1415,6 +1418,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_staker",
+        "type": "address"
+      }
+    ],
+    "name": "setStaker",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint16",
         "name": "apr",
         "type": "uint16"
@@ -1436,6 +1452,19 @@
     "name": "setTemplateLoanGracePeriod",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "staker",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1486,6 +1515,19 @@
     "name": "updateDraftOffer",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "weightedAvgAPR",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

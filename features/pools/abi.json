@@ -153,37 +153,6 @@
         "type": "uint256"
       }
     ],
-    "name": "LoanClosed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "borrower",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "stakerLoss",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "lenderLoss",
-        "type": "uint256"
-      }
-    ],
     "name": "LoanDefaulted",
     "type": "event"
   },
@@ -204,31 +173,6 @@
       }
     ],
     "name": "LoanDeskSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "borrower",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "LoanFundsReleased",
     "type": "event"
   },
   {
@@ -287,17 +231,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "prevAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newAmount",
+        "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "OfferLiquidityUpdated",
+    "name": "OfferLiquidityDeallocated",
     "type": "event"
   },
   {
@@ -351,7 +289,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "wallet",
+        "name": "treasury",
         "type": "address"
       },
       {
@@ -361,7 +299,7 @@
         "type": "uint256"
       }
     ],
-    "name": "ProtocolRevenueCollected",
+    "name": "ProtocolRevenue",
     "type": "event"
   },
   {
@@ -443,7 +381,7 @@
         "type": "uint256"
       }
     ],
-    "name": "StakerEarningsCollected",
+    "name": "StakerEarnings",
     "type": "event"
   },
   {
@@ -463,6 +401,25 @@
       }
     ],
     "name": "StakerLoss",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "prevAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "StakerSet",
     "type": "event"
   },
   {
@@ -509,6 +466,25 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "prevAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "TreasurySet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "account",
         "type": "address"
       }
@@ -520,32 +496,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "wallet",
-        "type": "address"
-      }
-    ],
-    "name": "WithdrawalRequestCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "wallet",
         "type": "address"
@@ -555,65 +506,21 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
-      }
-    ],
-    "name": "WithdrawalRequestFulfilled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "wallet",
-        "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "prevSharesLocked",
+        "name": "timeFrom",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sharesLocked",
+        "name": "timeTo",
         "type": "uint256"
       }
     ],
-    "name": "WithdrawalRequestUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "wallet",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "sharesLocked",
-        "type": "uint256"
-      }
-    ],
-    "name": "WithdrawalRequested",
+    "name": "WithdrawalAllowanceRequested",
     "type": "event"
   },
   {
@@ -712,47 +619,17 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "tokenBalance",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "rawLiquidity",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "poolFunds",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "allocatedFunds",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "strategizedFunds",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "withdrawalRequestedShares",
+        "name": "preSettledYield",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
         "name": "stakedShares",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stakerEarnings",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "protocolRevenue",
         "type": "uint256"
       }
     ],
@@ -763,7 +640,36 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "totalOfferedAmount",
+        "name": "interestAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "breakdownEarnings",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -776,19 +682,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "cancelWithdrawalRequest",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -809,32 +702,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "collectProtocolRevenue",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "collectStakerEarnings",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -869,11 +736,6 @@
       {
         "internalType": "uint16",
         "name": "targetLiquidityPercent",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "weightedAvgStrategyAPR",
         "type": "uint16"
       },
       {
@@ -941,45 +803,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "freeLenderLiquidity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "fulfillWithdrawalRequestById",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "count",
-        "type": "uint256"
-      }
-    ],
-    "name": "fulfillWithdrawalRequests",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -999,95 +822,10 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "i",
-        "type": "uint256"
-      }
-    ],
-    "name": "getWithdrawalRequestAt",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "wallet",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "sharesLocked",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "prev",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "next",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct WithdrawalRequestQueue.Request",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "getWithdrawalRequestById",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "wallet",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "sharesLocked",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "prev",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "next",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct WithdrawalRequestQueue.Request",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
+    "inputs": [],
+    "name": "initialMint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1108,9 +846,14 @@
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "_stakerRole",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "_treasury",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_stakerAddress",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -1152,80 +895,13 @@
         "type": "uint256"
       },
       {
-        "internalType": "address",
-        "name": "borrower",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "apr",
-        "type": "uint16"
-      }
-    ],
-    "name": "onBorrow",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "apr",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountRepaid",
+        "name": "principalLoss",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "remainingDifference",
-        "type": "uint256"
-      }
-    ],
-    "name": "onCloseLoan",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "apr",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "carryAmountUsed",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "loss",
+        "name": "yieldLoss",
         "type": "uint256"
       }
     ],
@@ -1253,7 +929,7 @@
         "type": "uint256"
       }
     ],
-    "name": "onOffer",
+    "name": "onOfferAllocate",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1262,16 +938,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "prevAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "onOfferUpdate",
+    "name": "onOfferDeallocate",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1294,18 +965,8 @@
         "type": "address"
       },
       {
-        "internalType": "uint16",
-        "name": "apr",
-        "type": "uint16"
-      },
-      {
         "internalType": "uint256",
         "name": "transferAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paymentAmount",
         "type": "uint256"
       },
       {
@@ -1348,7 +1009,7 @@
   },
   {
     "inputs": [],
-    "name": "poolFundsLimit",
+    "name": "poolFunds",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1361,12 +1022,12 @@
   },
   {
     "inputs": [],
-    "name": "poolStakerRole",
+    "name": "poolFundsLimit",
     "outputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "uint256",
         "name": "",
-        "type": "bytes32"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1447,11 +1108,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "shares",
+        "name": "_amount",
         "type": "uint256"
       }
     ],
-    "name": "requestWithdrawal",
+    "name": "requestWithdrawalAllowance",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1478,6 +1139,19 @@
       }
     ],
     "name": "setProtocolEarningPercent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_staker",
+        "type": "address"
+      }
+    ],
+    "name": "setStaker",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1530,6 +1204,26 @@
       }
     ],
     "name": "setTargetStakePercent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_treasury",
+        "type": "address"
+      }
+    ],
+    "name": "setTreasury",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "settleYield",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1614,6 +1308,19 @@
   },
   {
     "inputs": [],
+    "name": "staker",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "strategyLiquidity",
     "outputs": [
       {
@@ -1650,6 +1357,19 @@
   },
   {
     "inputs": [],
+    "name": "treasury",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "unpause",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1664,24 +1384,6 @@
       }
     ],
     "name": "unstake",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newShareAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "updateWithdrawalRequest",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1707,17 +1409,22 @@
         "type": "address"
       }
     ],
-    "name": "withdrawalRequestStates",
+    "name": "withdrawalAllowances",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "sharesLocked",
+        "name": "amount",
         "type": "uint256"
       },
       {
-        "internalType": "uint8",
-        "name": "countOutstanding",
-        "type": "uint8"
+        "internalType": "uint256",
+        "name": "timeFrom",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timeTo",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1725,7 +1432,7 @@
   },
   {
     "inputs": [],
-    "name": "withdrawalRequestsLength",
+    "name": "yieldSettledTime",
     "outputs": [
       {
         "internalType": "uint256",

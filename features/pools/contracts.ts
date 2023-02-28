@@ -34,6 +34,7 @@ export interface CoreContract
     tokenConfig: ContractFunction<TokenConfig>
     config: ContractFunction<PoolConfig>
     balances: ContractFunction<PoolBalance>
+    poolFunds: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [account: string]>
     stake: ContractFunction<ContractTransaction, [amount: BigNumber]>

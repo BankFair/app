@@ -100,7 +100,7 @@ export const fetchStats = createAsyncThunk(
     'pools/fetchStats',
     async (poolAddress: string) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            7,
+            8,
             contract.attach(poolAddress),
         )
         const [
@@ -109,6 +109,7 @@ export const fetchStats = createAsyncThunk(
             amountDepositable,
             apyBreakdown,
             poolBalances,
+            poolFunds,
             poolConfig,
             blockNumber,
         ] = await Promise.all([
@@ -117,6 +118,7 @@ export const fetchStats = createAsyncThunk(
             connected.amountDepositable(),
             connected.currentAPY(),
             connected.balances(),
+            connected.poolFunds(),
             connected.config(),
             provider.getCurrentBlockNumber(),
         ])
@@ -136,7 +138,7 @@ export const fetchStats = createAsyncThunk(
             loans: loansCount.toNumber(),
             balanceStaked: balanceStaked.toHexString() as Hexadecimal,
             amountDepositable: amountDepositable.toHexString() as Hexadecimal,
-            poolFunds: poolBalances.poolFunds.toHexString() as Hexadecimal,
+            poolFunds: poolFunds.toHexString() as Hexadecimal,
             poolLiquidity: poolBalances.rawLiquidity.toHexString() as Hexadecimal,
             apy: convertPercent(apyBreakdown.lenderComponent),
             exitFeePercent: convertPercent(poolConfig.exitFeePercent),
