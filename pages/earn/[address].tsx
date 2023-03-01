@@ -110,7 +110,6 @@ const Earn: NextPage<{ address: string }> = ({ address }) => {
                     <ApplyForLenderAccess pool={pool} poolAddress={address} />
                 </Main>
             )}
-            <Earnings pool={pool} poolAddress={address} />
             {/* <div>
                 Pool address: <EtherscanLink address={address} />
             </div> */}
@@ -434,130 +433,6 @@ function YourMoney({
                 verb="withdrawing"
                 feePercent={stats ? stats.exitFeePercent : 0}
             />
-        </Box>
-    )
-}
-
-function Earnings({
-    pool: { managerAddress, liquidityTokenDecimals },
-    poolAddress,
-}: {
-    pool: Pool
-    poolAddress: string
-}) {
-    const [isLoading, setIsLoading] = useState(false)
-    const [earnings, setEarnings] = useState<{
-        amount: BigNumber
-        account: string
-    } | null>(null)
-    const account = useAccount()
-    const provider = useProvider()
-    const dispatch = useDispatch()
-
-    useEffect(() => {
-        if (!account || managerAddress !== account) return
-        contract
-            .attach(poolAddress)
-            .balances()
-            .then((balances) => {
-                if (!balances.stakerEarnings.gt(BigNumber.from(0))) return
-                setEarnings({
-                    amount: balances.stakerEarnings,
-                    account,
-                })
-            })
-            .catch((error) => {
-                console.error(error)
-            })
-    }, [account, poolAddress])
-
-    if (!earnings || !provider) return null
-
-    const handleSubmit: FormEventHandler<HTMLFormElement> | undefined =
-        isLoading
-            ? undefined
-            : (event) => {
-                  event.preventDefault()
-
-                  setIsLoading(true)
-
-                  //TODO remake revenue withdrawal UI with customizable amount
-                  let withdrawAmount = BigNumber.from(0);
-                  contract
-                        .attach(poolAddress)
-                        .balances()
-                        .then((balances) => {
-                            withdrawAmount = balances.stakerEarnings;
-                        })
-                        .catch((error) => {
-                            setIsLoading(false)
-                            console.error(error)
-                        })
-
-                  contract
-                      .attach(poolAddress)
-                      .connect(provider.getSigner())
-                      .collectStakerEarnings(withdrawAmount)
-                      .then((tx) =>
-                          trackTransaction(dispatch, {
-                              name: 'Withdraw earnings',
-                              tx,
-                          }),
-                      )
-                      .then(() => {
-                          setIsLoading(false)
-                          setEarnings({
-                              account: account!,
-                              amount: BigNumber.from(0),
-                          })
-                      })
-                      .catch((error) => {
-                          console.error(error)
-                          setIsLoading(false)
-                      })
-              }
-
-    return (
-        <Box>
-            <style jsx>{`
-                h4 {
-                    margin-top: 0;
-                    margin-bottom: 10px;
-                    text-align: center;
-                }
-                div {
-                    text-align: center;
-                    margin-bottom: 8px;
-                }
-
-                form > :global(button) {
-                    display: block;
-                    margin: 0 auto;
-                }
-            `}</style>
-            <form className="section">
-                <h4>Earnings</h4>
-
-                <div>
-                    Your earnings:{' '}
-                    {earnings &&
-                        earnings.account === account &&
-                        formatToken(
-                            earnings.amount,
-                            liquidityTokenDecimals,
-                        )}{' '}
-                    {TOKEN_SYMBOL}
-                </div>
-                <Button
-                    type="submit"
-                    loading={isLoading}
-                    disabled={
-                        true
-                    }
-                >
-                    Withdraw
-                </Button>
-            </form>
         </Box>
     )
 }
