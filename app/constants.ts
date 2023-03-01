@@ -113,8 +113,8 @@ export const poolsConfig =
               },
               {
                   name: 'Training Pool',
+                  managerName: 'Training Pool Manager',
                   address: '0x24c6ec0283EbCe4703f4667880Dd8b048e48e850' as Address,
-                  manager: '' as Address,
                   block: 33598587,
               },
           ]
