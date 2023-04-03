@@ -21,7 +21,7 @@ export const CHAIN_ID =
         : chains.polygon
 export const RPC_URL =
     CHAIN_ID === chains.polygon
-        ? 'https://matic-mainnet.chainstacklabs.com'
+        ? 'https://polygon-rpc.com/'
         : CHAIN_ID === chains.mumbai
         ? 'https://matic-mumbai.chainstacklabs.com'
         : CHAIN_ID === chains.optimism
