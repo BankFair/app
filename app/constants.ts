@@ -129,7 +129,7 @@ export const poolsConfig =
 
 export const TOKEN_SYMBOL = 'USDT'
 export const USDT_DECIMALS = 6
-export const oneHundredPercent = 1000
+export const oneHundredPercent = 100000000
 export const ONE_HUNDRED_PERCENT = BigNumber.from(oneHundredPercent)
 export const USD_TO_UGX_FX = 3850.0;
 export const UGX_CODE = 'UGX';

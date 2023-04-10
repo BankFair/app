@@ -1,5 +1,10 @@
 [
   {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -269,15 +274,15 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "prevValue",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "newValue",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "ProtocolFeePercentSet",
@@ -332,15 +337,15 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "prevValue",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "newValue",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "StakerEarnFactorMaxSet",
@@ -351,15 +356,15 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "prevValue",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "newValue",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "StakerEarnFactorSet",
@@ -427,15 +432,15 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "prevValue",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "newValue",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "TargetLiquidityPercentSet",
@@ -446,15 +451,15 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "prevValue",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "newValue",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "TargetStakePercentSet",
@@ -619,11 +624,6 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "rawLiquidity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "preSettledYield",
         "type": "uint256"
       },
@@ -714,34 +714,34 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "targetStakePercent",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "protocolFeePercent",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "stakerEarnFactorMax",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "stakerEarnFactor",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "targetLiquidityPercent",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "exitFeePercent",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -754,24 +754,24 @@
       {
         "components": [
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "totalPoolAPY",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "protocolRevenueComponent",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "stakerEarningsComponent",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "lenderComponent",
-            "type": "uint16"
+            "type": "uint32"
           }
         ],
         "internalType": "struct IPoolContext.APYBreakdown",
@@ -791,13 +791,6 @@
       }
     ],
     "name": "deposit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "disableIntitializers",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -859,6 +852,19 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "liquidity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -973,6 +979,11 @@
         "internalType": "uint256",
         "name": "interestPayable",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "borrowedTime",
+        "type": "uint256"
       }
     ],
     "name": "onRepay",
@@ -1005,6 +1016,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "percentDecimals",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1061,14 +1085,14 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_protocolFeePercent",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_stakerEarnFactor",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "projectedAPYBreakdown",
@@ -1076,24 +1100,24 @@
       {
         "components": [
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "totalPoolAPY",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "protocolRevenueComponent",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "stakerEarningsComponent",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
             "name": "lenderComponent",
-            "type": "uint16"
+            "type": "uint32"
           }
         ],
         "internalType": "struct IPoolContext.APYBreakdown",
@@ -1133,9 +1157,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_protocolEarningPercent",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "setProtocolEarningPercent",
@@ -1159,9 +1183,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_stakerEarnFactor",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "setStakerEarnFactor",
@@ -1172,9 +1196,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_stakerEarnFactorMax",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "setStakerEarnFactorMax",
@@ -1185,9 +1209,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_targetLiquidityPercent",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "setTargetLiquidityPercent",
@@ -1198,9 +1222,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_targetStakePercent",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "setTargetStakePercent",
@@ -1242,52 +1266,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint16",
-        "name": "strategyRate",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_avgStrategyAPR",
-        "type": "uint256"
-      }
-    ],
-    "name": "simpleProjectedAPY",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint16",
-            "name": "totalPoolAPY",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "protocolRevenueComponent",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "stakerEarningsComponent",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "lenderComponent",
-            "type": "uint16"
-          }
-        ],
-        "internalType": "struct IPoolContext.APYBreakdown",
-        "name": "",
-        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -1432,7 +1410,7 @@
   },
   {
     "inputs": [],
-    "name": "yieldSettledTime",
+    "name": "yieldSettledDay",
     "outputs": [
       {
         "internalType": "uint256",

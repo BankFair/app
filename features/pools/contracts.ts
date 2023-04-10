@@ -14,6 +14,7 @@ import {
 } from '../../app'
 import abi from './abi.json'
 import loanDeskAbi from './loanDeskAbi.json'
+import {WithdrawalAllowance} from "./poolsSlice";
 
 type TypedEvent<
     T extends readonly unknown[],
@@ -36,6 +37,7 @@ export interface CoreContract
     config: ContractFunction<PoolConfig>
     balances: ContractFunction<PoolBalance>
     poolFunds: ContractFunction<BigNumber>
+    liquidity: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [account: string]>
     stake: ContractFunction<ContractTransaction, [amount: BigNumber]>
@@ -89,7 +91,6 @@ export interface PoolConfig {
 }
 
 export interface PoolBalance {
-    rawLiquidity: BigNumber
     preSettledYield: BigNumber
     stakedShares: BigNumber
 }
@@ -359,7 +360,6 @@ export interface EVMLoanDetails {
     loanId: BigNumber
     totalAmountRepaid: BigNumber
     principalAmountRepaid: BigNumber
-    interestPaid: BigNumber
     interestPaidTillTime: BigNumber
 }
 

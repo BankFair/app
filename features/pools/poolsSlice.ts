@@ -108,7 +108,7 @@ export const fetchStats = createAsyncThunk(
             balanceStaked,
             amountDepositable,
             apyBreakdown,
-            poolBalances,
+            poolLiquidity,
             poolFunds,
             poolConfig,
             blockNumber,
@@ -117,7 +117,7 @@ export const fetchStats = createAsyncThunk(
             connected.balanceStaked(),
             connected.amountDepositable(),
             connected.currentAPY(),
-            connected.balances(),
+            connected.liquidity(),
             connected.poolFunds(),
             connected.config(),
             provider.getCurrentBlockNumber(),
@@ -139,7 +139,7 @@ export const fetchStats = createAsyncThunk(
             balanceStaked: balanceStaked.toHexString() as Hexadecimal,
             amountDepositable: amountDepositable.toHexString() as Hexadecimal,
             poolFunds: poolFunds.toHexString() as Hexadecimal,
-            poolLiquidity: poolBalances.rawLiquidity.toHexString() as Hexadecimal,
+            poolLiquidity: poolLiquidity.toHexString() as Hexadecimal,
             apy: convertPercent(apyBreakdown.lenderComponent),
             exitFeePercent: convertPercent(poolConfig.exitFeePercent),
             blockNumber,
@@ -629,7 +629,7 @@ export function transformToStateLoanDetails(
 ): LoanDetails {
     return {
         baseAmountRepaid: details.principalAmountRepaid.toString() as Hexadecimal,
-        interestPaid: details.interestPaid.toString() as Hexadecimal,
+        interestPaid: details.totalAmountRepaid.sub(details.principalAmountRepaid).toString() as Hexadecimal,
         totalAmountRepaid: details.totalAmountRepaid.toString() as Hexadecimal,
         interestPaidUntil: details.interestPaidTillTime.toNumber(),
     }

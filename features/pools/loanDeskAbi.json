@@ -1,5 +1,10 @@
 [
   {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -536,48 +541,12 @@
   },
   {
     "inputs": [],
-    "name": "allocatedFunds",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "applicationsCount",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "balances",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "allocatedFunds",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lentFunds",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "weightedAvgAPR",
-        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -698,13 +667,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "disableIntitializers",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -737,9 +699,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_apr",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "draftOffer",
@@ -843,11 +805,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "requestedTime",
-        "type": "uint256"
-      },
-      {
         "internalType": "enum ILoanDesk.LoanApplicationStatus",
         "name": "status",
         "type": "uint8"
@@ -889,133 +846,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
-      }
-    ],
-    "name": "loanById",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "loanDeskAddress",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "applicationId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "borrower",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "duration",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gracePeriod",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "installmentAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint16",
-            "name": "installments",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "apr",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint256",
-            "name": "borrowedTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum ILoanDesk.LoanStatus",
-            "name": "status",
-            "type": "uint8"
-          }
-        ],
-        "internalType": "struct ILoanDesk.Loan",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
-      }
-    ],
-    "name": "loanDetailById",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "loanId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalAmountRepaid",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "principalAmountRepaid",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "interestPaid",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "interestPaidTillTime",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct ILoanDesk.LoanDetail",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -1035,11 +865,6 @@
       {
         "internalType": "uint256",
         "name": "principalAmountRepaid",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "interestPaid",
         "type": "uint256"
       },
       {
@@ -1097,18 +922,13 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "apr",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "internalType": "uint256",
         "name": "lockedTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "offeredTime",
         "type": "uint256"
       }
     ],
@@ -1140,9 +960,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "apr",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -1204,9 +1024,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "apr",
-        "type": "uint16"
+        "type": "uint32"
       },
       {
         "internalType": "uint256",
@@ -1286,6 +1106,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "percentDecimals",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1431,9 +1264,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "apr",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "setTemplateLoanAPR",
@@ -1507,9 +1340,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "_apr",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "name": "updateDraftOffer",
@@ -1522,9 +1355,9 @@
     "name": "weightedAvgAPR",
     "outputs": [
       {
-        "internalType": "uint16",
+        "internalType": "uint32",
         "name": "",
-        "type": "uint16"
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
