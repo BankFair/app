@@ -1,4 +1,4 @@
-import { BigNumberish } from '@ethersproject/bignumber'
+import {BigNumber, BigNumberish} from '@ethersproject/bignumber'
 import { createAsyncThunk, createSlice, Draft } from '@reduxjs/toolkit'
 import {
     contract,
@@ -57,10 +57,19 @@ interface ManagerInfo {
     blockNumber: number
 }
 
-interface AccountInfo {
+export interface AccountInfo {
     balance: Hexadecimal
     withdrawable: Hexadecimal
+    withdrawalAllowance: Hexadecimal
+    withdrawalAllowanceTimeFrom: number
+    withdrawalAllowanceTimeTo: number
     blockNumber: number
+}
+
+export interface EVMWithdrawalAllowance {
+    amount: BigNumber
+    timeFrom: BigNumber
+    timeTo: BigNumber
 }
 
 export interface BorrowInfo {
@@ -108,7 +117,7 @@ export const fetchStats = createAsyncThunk(
             balanceStaked,
             amountDepositable,
             apyBreakdown,
-            poolBalances,
+            poolLiquidity,
             poolFunds,
             poolConfig,
             blockNumber,
@@ -117,7 +126,7 @@ export const fetchStats = createAsyncThunk(
             connected.balanceStaked(),
             connected.amountDepositable(),
             connected.currentAPY(),
-            connected.balances(),
+            connected.liquidity(),
             connected.poolFunds(),
             connected.config(),
             provider.getCurrentBlockNumber(),
@@ -139,7 +148,7 @@ export const fetchStats = createAsyncThunk(
             balanceStaked: balanceStaked.toHexString() as Hexadecimal,
             amountDepositable: amountDepositable.toHexString() as Hexadecimal,
             poolFunds: poolFunds.toHexString() as Hexadecimal,
-            poolLiquidity: poolBalances.rawLiquidity.toHexString() as Hexadecimal,
+            poolLiquidity: poolLiquidity.toHexString() as Hexadecimal,
             apy: convertPercent(apyBreakdown.lenderComponent),
             exitFeePercent: convertPercent(poolConfig.exitFeePercent),
             blockNumber,
@@ -182,19 +191,23 @@ const fetchAccountInfo = createAsyncThunk(
         account: string
     }) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            3,
+            4,
             contract.attach(poolAddress),
         )
 
-        const [balance, withdrawable, blockNumber] = await Promise.all([
+        const [balance, withdrawable, evmWithdrawalAllowance, blockNumber] = await Promise.all([
             connected.balanceOf(account),
             connected.amountWithdrawable(account),
+            connected.withdrawalAllowances(account),
             provider.getCurrentBlockNumber(),
         ])
 
         const accountInfo: AccountInfo = {
             balance: balance.toHexString() as Hexadecimal,
             withdrawable: withdrawable.toHexString() as Hexadecimal,
+            withdrawalAllowance: evmWithdrawalAllowance.amount.toString() as Hexadecimal,
+            withdrawalAllowanceTimeFrom: evmWithdrawalAllowance.timeFrom.toNumber(),
+            withdrawalAllowanceTimeTo: evmWithdrawalAllowance.timeTo.toNumber(),
             blockNumber,
         }
 
@@ -629,7 +642,7 @@ export function transformToStateLoanDetails(
 ): LoanDetails {
     return {
         baseAmountRepaid: details.principalAmountRepaid.toString() as Hexadecimal,
-        interestPaid: details.interestPaid.toString() as Hexadecimal,
+        interestPaid: details.totalAmountRepaid.sub(details.principalAmountRepaid).toString() as Hexadecimal,
         totalAmountRepaid: details.totalAmountRepaid.toString() as Hexadecimal,
         interestPaidUntil: details.interestPaidTillTime.toNumber(),
     }

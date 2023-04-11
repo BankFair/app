@@ -122,14 +122,14 @@ export const poolsConfig =
               {
                   name: 'Test Pool 1',
                   managerName: 'Test Manager',
-                  address: '0xC8A5E515EB748F453a1cE89dF96dB167A368BaA2' as Address,
-                  block: 32537474,
+                  address: '0xEf34aC360fe058675e67f91A4069969DC804B005' as Address,
+                  block: 34247098,
               },
           ]
 
 export const TOKEN_SYMBOL = 'USDT'
 export const USDT_DECIMALS = 6
-export const oneHundredPercent = 1000
+export const oneHundredPercent = 100000000
 export const ONE_HUNDRED_PERCENT = BigNumber.from(oneHundredPercent)
 export const USD_TO_UGX_FX = 3850.0;
 export const UGX_CODE = 'UGX';

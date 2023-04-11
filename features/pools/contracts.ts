@@ -14,6 +14,7 @@ import {
 } from '../../app'
 import abi from './abi.json'
 import loanDeskAbi from './loanDeskAbi.json'
+import { EVMWithdrawalAllowance } from "./poolsSlice";
 
 type TypedEvent<
     T extends readonly unknown[],
@@ -36,16 +37,18 @@ export interface CoreContract
     config: ContractFunction<PoolConfig>
     balances: ContractFunction<PoolBalance>
     poolFunds: ContractFunction<BigNumber>
+    liquidity: ContractFunction<BigNumber>
     balanceStaked: ContractFunction<BigNumber>
     balanceOf: ContractFunction<BigNumber, [account: string]>
     stake: ContractFunction<ContractTransaction, [amount: BigNumber]>
     unstake: ContractFunction<ContractTransaction, [amount: BigNumber]>
     deposit: ContractFunction<ContractTransaction, [amount: BigNumber]>
     withdraw: ContractFunction<ContractTransaction, [amount: BigNumber]>
+    requestWithdrawalAllowance: ContractFunction<ContractTransaction, [amount: BigNumber]>
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber, [account: string]>
-
+    withdrawalAllowances: ContractFunction<EVMWithdrawalAllowance, [account: string]>
     currentAPY: ContractFunction<APYBreakdown>
 
     collectProtocolRevenue: ContractFunction<ContractTransaction, [amount: BigNumber]>
@@ -89,7 +92,6 @@ export interface PoolConfig {
 }
 
 export interface PoolBalance {
-    rawLiquidity: BigNumber
     preSettledYield: BigNumber
     stakedShares: BigNumber
 }
@@ -346,7 +348,6 @@ export interface EVMLoan {
     borrower: string
     amount: BigNumber
     apr: number
-    loanDeskAddress: string
     applicationId: BigNumber
     duration: BigNumber
     gracePeriod: BigNumber
@@ -359,7 +360,6 @@ export interface EVMLoanDetails {
     loanId: BigNumber
     totalAmountRepaid: BigNumber
     principalAmountRepaid: BigNumber
-    interestPaid: BigNumber
     interestPaidTillTime: BigNumber
 }
 
