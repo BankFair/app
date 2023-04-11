@@ -33,6 +33,7 @@ import {
     PageLoading,
     Skeleton,
     useAmountForm,
+    useWithdrawalAmountForm,
     Button,
     ExitAlert,
     BackToPools,
@@ -362,12 +363,12 @@ function YourMoney({
 
     const isManager = managerAddress === account
 
-    const { form, value } = useAmountForm({
+    const { form, value } = useWithdrawalAmountForm({
         type: 'Withdraw',
         onSumbit: (contract, amount) => contract.withdraw(amount),
         refetch: () => Promise.all([refetchAccountInfo(), refetchStats()]),
         poolAddress,
-        liquidityTokenAddress,
+        accountInfo: info,
         liquidityTokenDecimals,
         disabled: Boolean(isManager || !stats),
         max,

@@ -14,7 +14,7 @@ import {
 } from '../../app'
 import abi from './abi.json'
 import loanDeskAbi from './loanDeskAbi.json'
-import {WithdrawalAllowance} from "./poolsSlice";
+import { EVMWithdrawalAllowance } from "./poolsSlice";
 
 type TypedEvent<
     T extends readonly unknown[],
@@ -44,10 +44,11 @@ export interface CoreContract
     unstake: ContractFunction<ContractTransaction, [amount: BigNumber]>
     deposit: ContractFunction<ContractTransaction, [amount: BigNumber]>
     withdraw: ContractFunction<ContractTransaction, [amount: BigNumber]>
+    requestWithdrawalAllowance: ContractFunction<ContractTransaction, [amount: BigNumber]>
     amountDepositable: ContractFunction<BigNumber>
     amountUnstakable: ContractFunction<BigNumber>
     amountWithdrawable: ContractFunction<BigNumber, [account: string]>
-
+    withdrawalAllowances: ContractFunction<EVMWithdrawalAllowance, [account: string]>
     currentAPY: ContractFunction<APYBreakdown>
 
     collectProtocolRevenue: ContractFunction<ContractTransaction, [amount: BigNumber]>
@@ -347,7 +348,6 @@ export interface EVMLoan {
     borrower: string
     amount: BigNumber
     apr: number
-    loanDeskAddress: string
     applicationId: BigNumber
     duration: BigNumber
     gracePeriod: BigNumber

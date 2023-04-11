@@ -1,4 +1,4 @@
-import { BigNumberish } from '@ethersproject/bignumber'
+import {BigNumber, BigNumberish} from '@ethersproject/bignumber'
 import { createAsyncThunk, createSlice, Draft } from '@reduxjs/toolkit'
 import {
     contract,
@@ -57,10 +57,19 @@ interface ManagerInfo {
     blockNumber: number
 }
 
-interface AccountInfo {
+export interface AccountInfo {
     balance: Hexadecimal
     withdrawable: Hexadecimal
+    withdrawalAllowance: Hexadecimal
+    withdrawalAllowanceTimeFrom: number
+    withdrawalAllowanceTimeTo: number
     blockNumber: number
+}
+
+export interface EVMWithdrawalAllowance {
+    amount: BigNumber
+    timeFrom: BigNumber
+    timeTo: BigNumber
 }
 
 export interface BorrowInfo {
@@ -182,19 +191,23 @@ const fetchAccountInfo = createAsyncThunk(
         account: string
     }) => {
         const { provider, contract: connected } = getBatchProviderAndContract(
-            3,
+            4,
             contract.attach(poolAddress),
         )
 
-        const [balance, withdrawable, blockNumber] = await Promise.all([
+        const [balance, withdrawable, evmWithdrawalAllowance, blockNumber] = await Promise.all([
             connected.balanceOf(account),
             connected.amountWithdrawable(account),
+            connected.withdrawalAllowances(account),
             provider.getCurrentBlockNumber(),
         ])
 
         const accountInfo: AccountInfo = {
             balance: balance.toHexString() as Hexadecimal,
             withdrawable: withdrawable.toHexString() as Hexadecimal,
+            withdrawalAllowance: evmWithdrawalAllowance.amount.toString() as Hexadecimal,
+            withdrawalAllowanceTimeFrom: evmWithdrawalAllowance.timeFrom.toNumber(),
+            withdrawalAllowanceTimeTo: evmWithdrawalAllowance.timeTo.toNumber(),
             blockNumber,
         }
 
