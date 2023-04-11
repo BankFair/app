@@ -619,8 +619,6 @@ function LoansAwaitingApproval({
                             .attach(loanDeskAddress)
                             .connect(provider!.getSigner())
 
-                        console.log(offerModalRequest)
-
                         return (
                             contract
                                 .offerLoan(offerModalRequest.id)
